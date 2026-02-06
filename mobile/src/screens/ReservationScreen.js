@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { Button } from '../components';
 import { formatPickupTime, calculateSavingsPercent } from '../data/mockData';
@@ -22,7 +23,7 @@ const ReservationScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+      <Animated.View entering={FadeInUp.duration(280)} style={styles.content}>
         <View style={styles.successIcon}>
           <Text style={styles.checkmark}>✓</Text>
         </View>
@@ -85,7 +86,7 @@ const ReservationScreen = ({ route, navigation }) => {
             Late pickups may not be honored.
           </Text>
         </View>
-      </View>
+      </Animated.View>
 
       <View style={styles.buttonContainer}>
         <Button

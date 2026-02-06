@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Rescue Bag",
-    "slug": "rescue-bag",
+    "name": "Spare",
+    "slug": "spare",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,7 +12,8 @@
       "backgroundColor": "#0A1F13"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {

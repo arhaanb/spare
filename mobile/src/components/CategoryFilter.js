@@ -1,14 +1,16 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import Animated, {
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
 
-// Placeholder images - replace with actual images later
-const categoryImages = {
-  breakfast: null, // Will be: require('../../assets/images/categories/breakfast.png')
-  dinner: null,    // Will be: require('../../assets/images/categories/dinner.png')
-  grocery: null,   // Will be: require('../../assets/images/categories/grocery.png')
-  dessert: null,   // Will be: require('../../assets/images/categories/dessert.png')
-};
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 // Placeholder illustrations using emoji for now
 const categoryEmojis = {
@@ -21,22 +23,54 @@ const categoryEmojis = {
 
 const CategoryCard = ({ category, isSelected, onPress }) => {
   const emoji = categoryEmojis[category.id] || '🍽️';
+  const pressed = useSharedValue(1);
+  const selectedProgress = useSharedValue(isSelected ? 1 : 0);
+
+  React.useEffect(() => {
+    selectedProgress.value = withTiming(isSelected ? 1 : 0, { duration: 160 });
+  }, [isSelected, selectedProgress]);
+
+  const cardAnimatedStyle = useAnimatedStyle(() => {
+    const backgroundColor = interpolateColor(
+      selectedProgress.value,
+      [0, 1],
+      [COLORS.inactiveCategory, COLORS.activeCategory],
+    );
+    return {
+      backgroundColor,
+      transform: [{ scale: pressed.value }],
+    };
+  });
+
+  const textAnimatedStyle = useAnimatedStyle(() => {
+    const color = interpolateColor(
+      selectedProgress.value,
+      [0, 1],
+      [COLORS.inactiveCategoryText, COLORS.activeCategoryText],
+    );
+    return { color };
+  });
 
   return (
-    <TouchableOpacity
-      style={[styles.categoryCard, isSelected && styles.categoryCardSelected]}
+    <AnimatedTouchable
+      style={[styles.categoryCard, cardAnimatedStyle]}
       onPress={() => onPress(category.id)}
       activeOpacity={0.7}
+      onPressIn={() => {
+        pressed.value = withSpring(0.96, { damping: 20, stiffness: 520, mass: 0.55 });
+      }}
+      onPressOut={() => {
+        pressed.value = withSequence(
+          withSpring(1.02, { damping: 16, stiffness: 620, mass: 0.55 }),
+          withSpring(1, { damping: 18, stiffness: 520, mass: 0.55 }),
+        );
+      }}
     >
       <View style={styles.imageContainer}>
-        <Text style={[styles.placeholderEmoji, isSelected && styles.placeholderEmojiSelected]}>
-          {emoji}
-        </Text>
+        <Text style={[styles.placeholderEmoji, isSelected && styles.placeholderEmojiSelected]}>{emoji}</Text>
       </View>
-      <Text style={[styles.categoryText, isSelected && styles.categoryTextSelected]}>
-        {category.name}
-      </Text>
-    </TouchableOpacity>
+      <Animated.Text style={[styles.categoryText, textAnimatedStyle]}>{category.name}</Animated.Text>
+    </AnimatedTouchable>
   );
 };
 
@@ -71,13 +105,9 @@ const styles = StyleSheet.create({
     width: '23%', // Roughly 4 cards per row
     aspectRatio: 0.85,
     borderRadius: BORDER_RADIUS.lg,
-    backgroundColor: COLORS.inactiveCategory,
     alignItems: 'center',
     justifyContent: 'center',
     padding: SPACING.xs,
-  },
-  categoryCardSelected: {
-    backgroundColor: COLORS.activeCategory,
   },
   imageContainer: {
     flex: 1,
@@ -93,13 +123,9 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: FONT_SIZES.md,
-    color: COLORS.inactiveCategoryText,
     fontFamily: 'Gargoyle',
     fontWeight: '600',
     marginBottom: SPACING.xs,
-  },
-  categoryTextSelected: {
-    color: COLORS.activeCategoryText,
   },
 });
 

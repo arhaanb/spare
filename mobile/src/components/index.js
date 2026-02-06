@@ -6,3 +6,5 @@ export { default as RestaurantCard } from './RestaurantCard';
 export { default as BagOptionCard } from './BagOptionCard';
 export { default as ReviewSlider } from './ReviewSlider';
 export { default as SearchBar } from './SearchBar';
+export { default as AnimatedMeshGradient } from './mesh-gradient';
+export { default as AppleSignInButton } from './AppleSignInButton';

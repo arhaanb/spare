@@ -26,11 +26,11 @@ export const categories = [
 
 // User's current location (mock)
 export const userLocation = {
-  address: '21/76, Block 21, Lodi Colony',
-  city: 'New Delhi',
+  address: 'Ashoka University',
+  city: 'Sonipat',
   coordinates: {
-    latitude: 28.5921,
-    longitude: 77.2190,
+    latitude: 28.9833,
+    longitude: 77.0167,
   },
 };
 
