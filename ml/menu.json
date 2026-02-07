@@ -1,149 +1,148 @@
 {
-    "menu": [
-      {
-        "food_type": "bread",
-        "food_name": "Sourdough Loaf",
-        "veg": true,
-        "price": 220.0,
-        "nutritional_value": {
-          "calories": 180,
-          "protein": 6,
-          "fat": 1,
-          "carbs": 36
-        }
-      },
-      {
-        "food_type": "bread",
-        "food_name": "Multigrain Bread",
-        "veg": true,
-        "price": 180.0,
-        "nutritional_value": {
-          "calories": 160,
-          "protein": 7,
-          "fat": 2,
-          "carbs": 30
-        }
-      },
-      {
-        "food_type": "cake",
-        "food_name": "Chocolate Truffle Pastry",
-        "veg": true,
-        "price": 140.0,
-        "nutritional_value": {
-          "calories": 320,
-          "protein": 4,
-          "fat": 18,
-          "carbs": 36
-        }
-      },
-      {
-        "food_type": "cake",
-        "food_name": "Red Velvet Slice",
-        "veg": true,
-        "price": 160.0,
-        "nutritional_value": {
-          "calories": 340,
-          "protein": 5,
-          "fat": 17,
-          "carbs": 40
-        }
-      },
-      {
-        "food_type": "cake",
-        "food_name": "Blueberry Cheesecake Slice",
-        "veg": true,
-        "price": 210.0,
-        "nutritional_value": {
-          "calories": 380,
-          "protein": 6,
-          "fat": 22,
-          "carbs": 35
-        }
-      },
-      {
-        "food_type": "snack",
-        "food_name": "Chicken Puff",
-        "veg": false,
-        "price": 90.0,
-        "nutritional_value": {
-          "calories": 280,
-          "protein": 10,
-          "fat": 16,
-          "carbs": 24
-        }
-      },
-      {
-        "food_type": "snack",
-        "food_name": "Paneer Puff",
-        "veg": true,
-        "price": 85.0,
-        "nutritional_value": {
-          "calories": 300,
-          "protein": 9,
-          "fat": 18,
-          "carbs": 25
-        }
-      },
-      {
-        "food_type": "cookie",
-        "food_name": "Chocolate Chip Cookies (Pack of 4)",
-        "veg": true,
-        "price": 150.0,
-        "nutritional_value": {
-          "calories": 420,
-          "protein": 5,
-          "fat": 20,
-          "carbs": 55
-        }
-      },
-      {
-        "food_type": "cookie",
-        "food_name": "Oatmeal Raisin Cookies (Pack of 4)",
-        "veg": true,
-        "price": 160.0,
-        "nutritional_value": {
-          "calories": 380,
-          "protein": 6,
-          "fat": 14,
-          "carbs": 58
-        }
-      },
-      {
-        "food_type": "beverage",
-        "food_name": "Cold Coffee",
-        "veg": true,
-        "price": 170.0,
-        "nutritional_value": {
-          "calories": 210,
-          "protein": 6,
-          "fat": 8,
-          "carbs": 28
-        }
-      },
-      {
-        "food_type": "beverage",
-        "food_name": "Cappuccino",
-        "veg": true,
-        "price": 150.0,
-        "nutritional_value": {
-          "calories": 120,
-          "protein": 5,
-          "fat": 4,
-          "carbs": 14
-        }
-      },
-      {
-        "food_type": "dessert",
-        "food_name": "Chocolate Brownie",
-        "veg": true,
-        "price": 120.0,
-        "nutritional_value": {
-          "calories": 310,
-          "protein": 4,
-          "fat": 17,
-          "carbs": 34
-        }
+  "menu": [
+    {
+      "food_type": "bakery",
+      "food_name": "Pain Au Chocolate",
+      "veg": true,
+      "price": 95,
+      "nutritional_value": {
+        "calories": 320,
+        "protein": 6,
+        "fat": 18,
+        "carbs": 34
       }
-    ]
-  }
-  
+    },
+    {
+      "food_type": "bakery",
+      "food_name": "Korean Bun",
+      "veg": true,
+      "price": 72,
+      "nutritional_value": {
+        "calories": 300,
+        "protein": 7,
+        "fat": 12,
+        "carbs": 40
+      }
+    },
+    {
+      "food_type": "bakery",
+      "food_name": "pistachio croissant",
+      "veg": true,
+      "price": 118,
+      "nutritional_value": {
+        "calories": 300,
+        "protein": 7,
+        "fat": 12,
+        "carbs": 40
+      }
+    },
+    {
+      "food_type": "bakery",
+      "food_name": "butter croissant",
+      "veg": true,
+      "price": 64,
+      "nutritional_value": {
+        "calories": 300,
+        "protein": 7,
+        "fat": 12,
+        "carbs": 40
+      }
+    },
+    {
+      "food_type": "dessert",
+      "food_name": "Mocha Brownie",
+      "veg": true,
+      "price": 130,
+      "nutritional_value": {
+        "calories": 340,
+        "protein": 5,
+        "fat": 19,
+        "carbs": 36
+      }
+    },
+    {
+      "food_type": "bakery",
+      "food_name": "Almond Croissant",
+      "veg": true,
+      "price": 142,
+      "nutritional_value": {
+        "calories": 330,
+        "protein": 8,
+        "fat": 19,
+        "carbs": 32
+      }
+    },
+    {
+      "food_type": "savory_bakery",
+      "food_name": "Mushroom Cream Cheese Croissata",
+      "veg": true,
+      "price": 88,
+      "nutritional_value": {
+        "calories": 380,
+        "protein": 11,
+        "fat": 22,
+        "carbs": 36
+      }
+    },
+    {
+      "food_type": "savory_bakery",
+      "food_name": "Roasted Tomatoes Croissata",
+      "veg": true,
+      "price": 105,
+      "nutritional_value": {
+        "calories": 360,
+        "protein": 9,
+        "fat": 18,
+        "carbs": 38
+      }
+    },
+    {
+      "food_type": "bakery",
+      "food_name": "Chocolate Hazelnut Croissant",
+      "veg": true,
+      "price": 149,
+      "nutritional_value": {
+        "calories": 350,
+        "protein": 7,
+        "fat": 20,
+        "carbs": 36
+      }
+    },
+    {
+      "food_type": "cookie",
+      "food_name": "Brownie Crinkle Cookie",
+      "veg": true,
+      "price": 58,
+      "nutritional_value": {
+        "calories": 260,
+        "protein": 4,
+        "fat": 12,
+        "carbs": 32
+      }
+    },
+    {
+      "food_type": "beverage",
+      "food_name": "Cold Brew Coffee (Canned)",
+      "veg": true,
+      "price": 83,
+      "nutritional_value": {
+        "calories": 15,
+        "protein": 1,
+        "fat": 0,
+        "carbs": 3
+      }
+    },
+    {
+      "food_type": "beverage",
+      "food_name": "bottled juice",
+      "veg": true,
+      "price": 47,
+      "nutritional_value": {
+        "calories": 15,
+        "protein": 1,
+        "fat": 0,
+        "carbs": 3
+      }
+    }
+  ]
+}

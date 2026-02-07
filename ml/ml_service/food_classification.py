@@ -1,12 +1,13 @@
 import configparser
 import requests
 import json
-import base64
 import time
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Dict
 
-from .models import FoodItem, FoodClassificationResponse
-from .prompt import get_food_classification_prompt
+from .prompt import (
+    FOOD_CLASSIFICATION_SYSTEM_PROMPT,
+    RESCUE_BAG_CREATION_SYSTEM_PROMPT,
+)
 
 # Load config
 config = configparser.ConfigParser()
@@ -14,37 +15,29 @@ config.read("config.ini")
 
 LLM_API_KEY = config["GEMINI"]["api_key"]
 GEMINI_URL = config["GEMINI"]["api_url"]
+REGULAR_BAG_PRICE = float(config["RESCUE_BAG"]["regular_bag_price"])
+LARGE_BAG_PRICE = float(config["RESCUE_BAG"]["large_bag_price"])
 
 
 def classify_food_from_image(
     image_base64: str,
     menu_json: Optional[List[Any]] = None,
-) -> FoodClassificationResponse:
+) -> Dict[str, Any]:
     """
     Classify food items from a base64-encoded image using Gemini API.
-    Uses the provided menu JSON to match detected items and quantify.
-
-    Args:
-        image_base64: Base64-encoded image string
-        menu_json: Optional list of menu item dicts (e.g. from menu.json "menu" key).
-                   Each item typically has food_name, food_type, veg, price, etc.
-
-    Returns:
-        FoodClassificationResponse with detected items (type, quantity, closest_menu_item, confidence)
     """
     start_time = time.time()
 
-    system_prompt = get_food_classification_prompt(menu_json or [])
+    system_prompt = FOOD_CLASSIFICATION_SYSTEM_PROMPT
+    if menu_json:
+        system_prompt += "\n\nRestaurant menu (match by food_name):\n" + json.dumps(menu_json, indent=2)
 
     headers = {
         "Content-Type": "application/json",
         "X-goog-api-key": LLM_API_KEY,
     }
-
     payload = {
-        "systemInstruction": {
-            "parts": [{"text": system_prompt}],
-        },
+        "systemInstruction": {"parts": [{"text": system_prompt}]},
         "contents": [
             {
                 "role": "user",
@@ -61,49 +54,57 @@ def classify_food_from_image(
     }
 
     response = requests.post(GEMINI_URL, headers=headers, json=payload)
+    llm_json_str = response.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+    food_classification_output = json.loads(llm_json_str)
 
-    if response.status_code != 200:
-        raise Exception(f"Gemini API error: {response.status_code} - {response.text}")
+    # Attach prices to food classification output
+    if menu_json:
+        menu_by_name = {item.get("food_name"): item for item in menu_json}
+        for item in food_classification_output:
+            closest_item = item.get("closest_menu_item", "")
+            
+            if closest_item.lower() == "not found":
+                continue
+            
+            menu_item = menu_by_name.get(closest_item)
+            if menu_item:
+                item["price"] = float(menu_item.get("price"))
 
-    response_json = response.json()
-    llm_output = response_json["candidates"][0]["content"]["parts"][0]["text"]
-
-    try:
-        items_data = json.loads(llm_output)
-    except json.JSONDecodeError:
-        if "```json" in llm_output:
-            json_str = llm_output.split("```json")[1].split("```")[0].strip()
-            items_data = json.loads(json_str)
-        elif "```" in llm_output:
-            json_str = llm_output.split("```")[1].split("```")[0].strip()
-            items_data = json.loads(json_str)
-        else:
-            raise Exception(f"Failed to parse JSON from LLM output: {llm_output}")
-
-    items = [FoodItem(**item) for item in items_data]
-    processing_time = (time.time() - start_time) * 1000
-
-    return FoodClassificationResponse(
-        items=items,
-        total_items=len(items),
-        processing_time_ms=round(processing_time, 2),
-    )
+    return food_classification_output
 
 
-def classify_food_from_file(
-    image_path: str,
-    menu_json: Optional[List[Any]] = None,
-) -> FoodClassificationResponse:
+def rescue_bag_creation(
+    food_classification_output: List[Dict[str, Any]],
+) -> Dict[str, Any]:
     """
-    Classify food items from an image file.
-
-    Args:
-        image_path: Path to image file
-        menu_json: Optional list of menu item dicts (same format as menu.json "menu" array)
-
-    Returns:
-        FoodClassificationResponse with detected items
+    Create rescue bags from leftover food items with prices already attached.
+    Uses regular_bag_price and large_bag_price from config.ini [RESCUE_BAG].
     """
-    with open(image_path, "rb") as f:
-        image_base64 = base64.b64encode(f.read()).decode("utf-8")
-    return classify_food_from_image(image_base64, menu_json)
+
+    user_message = {
+        "regular_bag_price": REGULAR_BAG_PRICE,
+        "large_bag_price": LARGE_BAG_PRICE,
+        "leftover_food_items": food_classification_output,
+    }
+
+    headers = {
+        "Content-Type": "application/json",
+        "X-goog-api-key": LLM_API_KEY,
+    }
+
+    payload = {
+        "systemInstruction": {"parts": [{"text": RESCUE_BAG_CREATION_SYSTEM_PROMPT}]},
+        "contents": [
+            {
+                "role": "user",
+                "parts": [{"text": json.dumps(user_message, indent=2)}],
+            }
+        ],
+    }
+
+    response = requests.post(GEMINI_URL, headers=headers, json=payload)
+    llm_json_str = response.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+    rescue_bag_creation_output = json.loads(llm_json_str)
+    
+    return rescue_bag_creation_output
+
