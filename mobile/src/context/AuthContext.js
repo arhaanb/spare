@@ -61,25 +61,16 @@ const AuthProvider = ({ children }) => {
     const handleUnauthorized = async () => {
       console.log("Session expired or invalid, regenerating token...");
       await AsyncStorage.removeItem(TOKEN_KEY);
+      setSignedIn(false);
       // Force a new sign in
       signIn();
     };
 
-    // We need to import this from the client file. 
-    // Since we can't easily change the import here without seeing the top, 
-    // I will assume I need to import it. 
-    // Wait, I can't add an import here. 
-    // I will do it in a separate step or assume I can access it if I imported `client`.
-    // Actually, `client` is imported as default. I need to update the import in a previous step or verify `client` exports `setUnauthorizedHandler`.
-    // Let's assume I will update the import in the next tool call or usage.
+    setUnauthorizedHandler(handleUnauthorized);
 
-    // Using the client import from line 3:
-    // client.setUnauthorizedHandler is not valid if it's a default export of the axios instance.
-    // I updated client.js to export `setUnauthorizedHandler`.
-    // I need to update the import to: `import client, { setUnauthorizedHandler } from '../api/client';`
-
-    // For now, let's put the logic here assuming I fix the import.
-    // ... logic is strictly inside useEffect ...
+    return () => {
+      setUnauthorizedHandler(() => { });
+    };
   }, []);
 
   useEffect(() => {

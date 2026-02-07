@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
@@ -81,6 +81,7 @@ const HomeContent = ({
   handleActiveOrderPress,
   currentLocation,
   onLocationPress,
+  isLoading,
 }) => {
   const { hasActiveOrder, activeOrder } = useOrder();
   const { getCartItemCount } = useCart();
@@ -112,103 +113,112 @@ const HomeContent = ({
         onNotifPress={() => navigation.navigate('Notifications')}
       />
 
-      <CategoryFilter
-        categories={categories}
-        selectedCategory={selectedCategory}
-        onSelectCategory={handleCategorySelect}
-      />
-
-      {user && hasActiveOrder && activeOrder && (
-        <ActiveOrderBanner onPress={handleActiveOrderPress} />
-      )}
-
-      <SearchBar
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        onFilterPress={handleFilterPress}
-        activeFiltersCount={activeFiltersCount}
-      />
-
-      {(searchQuery.length > 0 || selectedCategory || hasActiveFilters) ? (
-        // Grid View for Search/Category Results
-        <Animated.View
-          key="grid"
-          style={styles.section}
-          entering={FadeIn.duration(220)}
-          exiting={FadeOut.duration(160)}
-          layout={Layout.springify().damping(18).stiffness(180)}
-        >
-          <View style={{ marginLeft: SPACING.lg, marginBottom: SPACING.md }}>
-            <Text style={styles.sectionTitle}>
-              {searchQuery ? 'Search Results' : 'Available Restaurants'}
-            </Text>
-            {selectedCategory && !searchQuery && (
-              <Text style={styles.categorySubtitle}>
-                in <Text style={{ color: COLORS.primaryAccent, fontWeight: '700' }}>
-                  {categories.find(c => c.id === selectedCategory)?.name}
-                </Text>
-              </Text>
-            )}
-          </View>
-          {allFilteredRestaurants.length > 0 ? (
-            <View style={styles.gridContainer}>
-              {allFilteredRestaurants.map((restaurant) => (
-                <Animated.View
-                  key={restaurant.id}
-                  style={styles.gridItem}
-                  layout={Layout.springify().damping(28).stiffness(150)}
-                  entering={FadeIn.duration(180)}
-                  exiting={FadeOut.duration(140)}
-                >
-                  <RestaurantCard
-                    restaurant={restaurant}
-                    onPress={handleRestaurantPress}
-                    variant="grid"
-                  />
-                </Animated.View>
-              ))}
-            </View>
-          ) : (
-            <Text style={styles.emptyText}>
-              No restaurants found.
-            </Text>
-          )}
-        </Animated.View>
+      {isLoading ? (
+        <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={{ marginTop: SPACING.md, color: COLORS.textSecondary, fontFamily: 'Saans' }}>Finding restaurants...</Text>
+        </View>
       ) : (
-        // Standard Home View
-        <Animated.View
-          key="home"
-          entering={FadeIn.duration(220)}
-          exiting={FadeOut.duration(160)}
-          layout={Layout.springify().damping(18).stiffness(180)}
-        >
-          {relevantRestaurants.length > 0 && (
-            <RestaurantSection
-              title="Most Relevant"
-              restaurants={relevantRestaurants}
-              onRestaurantPress={handleRestaurantPress}
-              onSeeAll={() => handleSeeAll('relevant')}
-            />
+        <>
+          <CategoryFilter
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelectCategory={handleCategorySelect}
+          />
+
+          {user && hasActiveOrder && activeOrder && (
+            <ActiveOrderBanner onPress={handleActiveOrderPress} />
           )}
 
-          {popularRestaurants.length > 0 && (
-            <RestaurantSection
-              title="Most Popular Near You"
-              restaurants={popularRestaurants}
-              onRestaurantPress={handleRestaurantPress}
-              onSeeAll={() => handleSeeAll('popular')}
-            />
-          )}
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onFilterPress={handleFilterPress}
+            activeFiltersCount={activeFiltersCount}
+          />
 
-          {newlyAddedRestaurants.length > 0 && (
-            <RestaurantSection
-              title="New Added Rescue Bags"
-              restaurants={newlyAddedRestaurants}
-              onRestaurantPress={handleRestaurantPress}
-              onSeeAll={() => handleSeeAll('new')}
-            />
+          {(searchQuery.length > 0 || selectedCategory || hasActiveFilters) ? (
+            // Grid View for Search/Category Results
+            <Animated.View
+              key="grid"
+              style={styles.section}
+              entering={FadeIn.duration(220)}
+              exiting={FadeOut.duration(160)}
+              layout={Layout.springify().damping(18).stiffness(180)}
+            >
+              <View style={{ marginLeft: SPACING.lg, marginBottom: SPACING.md }}>
+                <Text style={styles.sectionTitle}>
+                  {searchQuery ? 'Search Results' : 'Available Restaurants'}
+                </Text>
+                {selectedCategory && !searchQuery && (
+                  <Text style={styles.categorySubtitle}>
+                    in <Text style={{ color: COLORS.primaryAccent, fontWeight: '700' }}>
+                      {categories.find(c => c.id === selectedCategory)?.name}
+                    </Text>
+                  </Text>
+                )}
+              </View>
+              {allFilteredRestaurants.length > 0 ? (
+                <View style={styles.gridContainer}>
+                  {allFilteredRestaurants.map((restaurant) => (
+                    <Animated.View
+                      key={restaurant.id}
+                      style={styles.gridItem}
+                      layout={Layout.springify().damping(28).stiffness(150)}
+                      entering={FadeIn.duration(180)}
+                      exiting={FadeOut.duration(140)}
+                    >
+                      <RestaurantCard
+                        restaurant={restaurant}
+                        onPress={handleRestaurantPress}
+                        variant="grid"
+                      />
+                    </Animated.View>
+                  ))}
+                </View>
+              ) : (
+                <Text style={styles.emptyText}>
+                  No restaurants found.
+                </Text>
+              )}
+            </Animated.View>
+          ) : (
+            // Standard Home View
+            <Animated.View
+              key="home"
+              entering={FadeIn.duration(220)}
+              exiting={FadeOut.duration(160)}
+              layout={Layout.springify().damping(18).stiffness(180)}
+            >
+              {relevantRestaurants.length > 0 && (
+                <RestaurantSection
+                  title="Most Relevant"
+                  restaurants={relevantRestaurants}
+                  onRestaurantPress={handleRestaurantPress}
+                  onSeeAll={() => handleSeeAll('relevant')}
+                />
+              )}
+
+              {popularRestaurants.length > 0 && (
+                <RestaurantSection
+                  title="Most Popular Near You"
+                  restaurants={popularRestaurants}
+                  onRestaurantPress={handleRestaurantPress}
+                  onSeeAll={() => handleSeeAll('popular')}
+                />
+              )}
+
+              {newlyAddedRestaurants.length > 0 && (
+                <RestaurantSection
+                  title="New Added Rescue Bags"
+                  restaurants={newlyAddedRestaurants}
+                  onRestaurantPress={handleRestaurantPress}
+                  onSeeAll={() => handleSeeAll('new')}
+                />
+              )}
+            </Animated.View>
           )}
-        </Animated.View>
+        </>
       )}
 
       <View style={[
@@ -237,7 +247,7 @@ const HomeScreen = ({ navigation, route }) => {
     const fetchRestaurants = async () => {
       try {
         const { data } = await client.get('/data/home');
-        if (data.success) {
+        if (data.success && data.data && data.data.length > 0) {
           setRestaurants(data.data);
         } else {
           setRestaurants(mockRestaurants);
@@ -328,7 +338,7 @@ const HomeScreen = ({ navigation, route }) => {
     }
 
     return result;
-  }, [selectedCategory, searchQuery, filters]);
+  }, [restaurants, selectedCategory, searchQuery, filters]);
 
   const relevantRestaurants = useMemo(() => {
     return getRelevantRestaurants(allFilteredRestaurants).slice(0, 6);
@@ -374,15 +384,6 @@ const HomeScreen = ({ navigation, route }) => {
   };
 
   const renderContent = () => {
-    if (isLoading) {
-      return (
-        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-          <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
-          <Text style={{ color: COLORS.textPrimary, fontFamily: 'Gargoyle', fontSize: 24 }}>Loading...</Text>
-        </View>
-      );
-    }
-
     switch (activeTab) {
       case 'explore':
         return (

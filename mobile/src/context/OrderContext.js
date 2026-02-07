@@ -70,7 +70,7 @@ export const OrderProvider = ({ children }) => {
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newOrder));
 
             // Send to API
-            await client.post('/user/orders', {
+            await client.post('/user/order', {
                 orderCode,
                 restaurantId: restaurant.id,
                 restaurantName: restaurant.name,
