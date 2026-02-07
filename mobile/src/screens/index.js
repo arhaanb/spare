@@ -7,6 +7,7 @@ import OnboardingScreen from './OnboardingScreen';
 import LoginScreen from './LoginScreen';
 import CartScreen from './CartScreen';
 import OrderConfirmationScreen from './OrderConfirmationScreen';
+import NotificationsScreen from './NotificationsScreen';
 
 export {
   HomeScreen,
@@ -18,4 +19,5 @@ export {
   LoginScreen,
   CartScreen,
   OrderConfirmationScreen,
+  NotificationsScreen,
 };

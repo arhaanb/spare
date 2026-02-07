@@ -73,8 +73,9 @@ const HomeContent = ({
   allFilteredRestaurants,
   hasActiveFilters,
   activeFiltersCount,
-  handleActiveOrderPress,
   activeTab, // Added prop
+  handleActiveOrderPress,
+  navigation, // Added navigation prop
 }) => {
   const { activeOrder } = useOrder();
   const { user } = useAuth();
@@ -92,6 +93,7 @@ const HomeContent = ({
       <LocationHeader
         location={userLocation}
         onPress={() => console.log('Location pressed')}
+        onNotifPress={() => navigation.navigate('Notifications')}
       />
 
       <CategoryFilter
@@ -345,6 +347,7 @@ const HomeScreen = ({ navigation, route }) => {
               activeFiltersCount={activeFiltersCount}
               activeTab={activeTab}
               handleActiveOrderPress={handleActiveOrderPress}
+              navigation={navigation}
             />
           </Animated.View>
         );

@@ -22,6 +22,7 @@ import {
   LoginScreen,
   CartScreen,
   OrderConfirmationScreen,
+  NotificationsScreen,
 } from './src/screens';
 import {
   LocationHeader,
@@ -67,6 +68,7 @@ const AppStack = () => (
     <Stack.Screen name="Reservation" component={ReservationScreen} />
     <Stack.Screen name="Cart" component={CartScreen} />
     <Stack.Screen name="OrderConfirmation" component={OrderConfirmationScreen} />
+    <Stack.Screen name="Notifications" component={NotificationsScreen} />
   </Stack.Navigator>
 );
 

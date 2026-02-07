@@ -875,3 +875,31 @@ export default {
   formatPickupTime,
   calculateSavingsPercent,
 };
+
+// Mock notifications data
+export const notifications = [
+  {
+    id: '1',
+    type: 'badge',
+    title: 'New Badge Earned!',
+    message: 'You earned the Sustainability Hero badge for saving 5 bags this week 🌿',
+    time: '2h ago',
+    icon: '🏆',
+  },
+  {
+    id: '2',
+    type: 'order',
+    title: 'Order Delivered',
+    message: 'Your Rescue Bag from Theobroma has been successfully picked up! 🥐',
+    time: '5h ago',
+    icon: '✅',
+  },
+  {
+    id: '3',
+    type: 'promo',
+    title: 'New Restaurants Nearby',
+    message: '3 new spots just joined Spare! Check out what they have today 📍',
+    time: '1d ago',
+    icon: '✨',
+  }
+];

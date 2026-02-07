@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
 
-const LocationHeader = ({ location, onPress }) => {
+const LocationHeader = ({ location, onPress, onNotifPress }) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.headerIconBox} onPress={onPress}>
@@ -23,7 +23,7 @@ const LocationHeader = ({ location, onPress }) => {
         </Text>
       </View>
 
-      <TouchableOpacity style={styles.headerIconBox}>
+      <TouchableOpacity style={styles.headerIconBox} onPress={onNotifPress}>
         <View style={styles.iconWrapper}>
           <Image
             source={require('../../assets/notif.png')}
