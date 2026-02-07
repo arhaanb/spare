@@ -130,6 +130,9 @@ const ProfileScreen = () => {
                                 '@favorites',
                             ]);
 
+                            // Reset stats
+                            await resetStats();
+
                             // Sign out (will update auth state)
                             signOut();
                         } catch (error) {
@@ -146,7 +149,7 @@ const ProfileScreen = () => {
 
     const handleMenuPress = (item) => {
         if (item === 'order_history') {
-            Alert.alert('Order History', 'You have rescued 23 bags so far! 🌿');
+            Alert.alert('Order History', `You have rescued ${stats.bagsRescued} bags so far! 🌿`);
         } else if (item === 'notifications') {
             navigation.navigate('Notifications');
         } else if (item === 'addresses') {
@@ -210,7 +213,7 @@ const ProfileScreen = () => {
                 {/* Quick Stats */}
                 <View style={styles.quickStats}>
                     <View style={styles.statItem}>
-                        <Text style={styles.statNumber}>23</Text>
+                        <Text style={styles.statNumber}>{stats.bagsRescued}</Text>
                         <Text style={styles.statLabel}>Bags Rescued</Text>
                     </View>
                     <View style={styles.statDivider} />
@@ -220,7 +223,7 @@ const ProfileScreen = () => {
                     </View>
                     <View style={styles.statDivider} />
                     <View style={styles.statItem}>
-                        <Text style={styles.statNumber}>₹2.3k</Text>
+                        <Text style={styles.statNumber}>{formatMoneySaved()}</Text>
                         <Text style={styles.statLabel}>Saved</Text>
                     </View>
                 </View>
@@ -243,7 +246,7 @@ const ProfileScreen = () => {
                         icon="receipt-outline"
                         label="Order History"
                         onPress={() => handleMenuPress('order_history')}
-                        badge="23"
+                        badge={stats.bagsRescued > 0 ? String(stats.bagsRescued) : null}
                     />
                 </View>
 
@@ -274,9 +277,9 @@ const ProfileScreen = () => {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Your Impact</Text>
                     <SustainabilityBadges
-                        moneySaved={USER_SUSTAINABILITY_TOTALS.moneySaved}
-                        carbonOffset={USER_SUSTAINABILITY_TOTALS.carbonOffset}
-                        foodSaved={USER_SUSTAINABILITY_TOTALS.foodSaved}
+                        moneySaved={stats.moneySaved}
+                        carbonOffset={stats.carbonOffset}
+                        foodSaved={stats.foodSaved}
                     />
                 </View>
 
