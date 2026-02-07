@@ -23,6 +23,7 @@ import { useCart } from '../context/CartContext';
 import { useOrder } from '../context/OrderContext';
 import RegularBagIcon from '../../assets/images/assets/bags/regular.svg';
 import LargeBagIcon from '../../assets/images/assets/bags/large.svg';
+import SustainabilityBadges from '../components/SustainabilityBadges';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -286,6 +287,18 @@ const CartScreen = ({ navigation }) => {
                             </Animated.View>
                         )}
 
+                        {/* Sustainability Badges */}
+                        <View style={styles.sustainabilitySection}>
+                            <SustainabilityBadges
+                                moneySaved={savings}
+                                carbonOffset={items.reduce((acc, item) => acc + (item.quantity * 0.8), 0)}
+                                foodSaved={items.reduce((acc, item) => {
+                                    const baseWeight = item.bagOption.role === 'large' ? 1.2 : 0.8;
+                                    return acc + (item.quantity * baseWeight);
+                                }, 0)}
+                            />
+                        </View>
+
                         <View style={styles.bottomPadding} />
                     </ScrollView>
 
@@ -495,6 +508,9 @@ const styles = StyleSheet.create({
         fontSize: FONT_SIZES.sm,
         color: COLORS.activeCategory,
         flex: 1,
+    },
+    sustainabilitySection: {
+        marginTop: SPACING.lg,
     },
     bottomPadding: {
         height: 120,

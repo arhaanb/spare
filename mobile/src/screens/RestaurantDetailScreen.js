@@ -331,7 +331,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
     }
   };
 
-  const handleDiyAddToCart = (selectedItems) => {
+  const handleDiyAddToCart = (selectedItems, diyPreference) => {
     if (selectedBag) {
       // Create a unique bag option for this specific selection
       // We append a timestamp or random string to ID to allow multiple DIY bags with different items
@@ -344,8 +344,11 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
         isCustom: true
       };
 
+      // Use the preference from the modal (allows user to change it within the modal)
+      const preferenceToUse = diyPreference || selectedPreference;
+
       // Add to cart with quantity 1 (since it's a specific custom bag)
-      addToCart(customBag, 1, selectedPreference, restaurant);
+      addToCart(customBag, 1, preferenceToUse, restaurant);
     }
   };
 
@@ -587,6 +590,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
           sheetRef={itemSelectionRef}
           bagOption={selectedBag}
           restaurant={restaurant}
+          selectedPreference={selectedPreference}
           onAddToCart={handleDiyAddToCart}
         />
 
