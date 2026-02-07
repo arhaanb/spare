@@ -1,1 +1,4 @@
 __pycache__/
+mock_data/
+images/
+.env

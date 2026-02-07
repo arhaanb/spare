@@ -3,11 +3,15 @@ import requests
 from prompts import SYSTEM_PROMPT
 import json
 import base64
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-LLM_API_KEY = config['GEMINI']['api_key']
+LLM_API_KEY = os.getenv("GEMINI_API_KEY")
 URL = config['GEMINI']['api_url']
 IMAGE_PATH = "images/test_img.jpeg"  
 
@@ -40,7 +44,19 @@ payload = {
 
 response = requests.post(URL, headers=headers, json=payload)
 
+print(f"Status Code: {response.status_code}")
+print(f"Response: {response.text}")
+
 response_json = json.loads(response.text)
+
+if "error" in response_json:
+    print(f"API Error: {response_json['error']}")
+    exit(1)
+
+if "candidates" not in response_json:
+    print(f"Unexpected response format: {response_json}")
+    exit(1)
+
 llm_output = response_json["candidates"][0]["content"]["parts"][0]["text"]
 
 with open("llm_output.json", "w") as f:

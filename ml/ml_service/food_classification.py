@@ -1,76 +1,54 @@
 import configparser
 import requests
 import json
-import base64
 import time
-from typing import List, Optional
-from .models import FoodItem, FoodClassificationResponse
+from typing import List, Optional, Any, Dict
+import os
+from dotenv import load_dotenv
+
+from .prompt import (
+    FOOD_CLASSIFICATION_SYSTEM_PROMPT,
+    RESCUE_BAG_CREATION_SYSTEM_PROMPT,
+)
+from .db_helper import get_merchant_menu, get_merchant_bag_pricing
+
+load_dotenv()
 
 # Load config
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read("config.ini")
 
-LLM_API_KEY = config['GEMINI']['api_key']
-GEMINI_URL = config['GEMINI']['api_url']
-
-
-def get_system_prompt(menu_items: Optional[List[str]] = None) -> str:
-    """Generate system prompt with optional menu items"""
-    base_prompt = """You are a food recognition assistant. Your task is to analyze images of restaurant food and identify food items.
-
-For each food item you detect in the image, provide the following information in JSON format:
-1. Type of food item - the name/type of the food you see
-2. Quantity - the number of that specific food item present
-3. Closest menu item - match it to the closest item from the provided restaurant menu
-4. Confidence level - your confidence score (0-100) for the classification
-
-Output your response as a valid JSON array, where each object represents one food item detected. Format:
-[
-  {
-    "type": "food item name",
-    "quantity": number,
-    "closest_menu_item": "menu item name",
-    "confidence": number (0-100)
-  }
-]
-
-Be thorough and identify all visible food items in the image. If you cannot confidently match an item to the menu, still provide the type and quantity, but indicate low confidence or "not found" for the menu match.
-
-Don't include backticks in your response. Only the JSON body."""
-
-    if menu_items:
-        menu_list = "\n".join([f"- {item}" for item in menu_items])
-        base_prompt += f"\n\nAvailable menu items:\n{menu_list}"
-    
-    return base_prompt
+LLM_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_URL = config["GEMINI"]["api_url"]
 
 
-def classify_food_from_image(image_base64: str, menu_items: Optional[List[str]] = None) -> FoodClassificationResponse:
+def classify_food_from_image(
+    merchant_id: str,
+    image_base64: str,
+) -> List[Dict[str, Any]]:
     """
-    Classify food items from a base64-encoded image using Gemini API
-    
+    Classify food items from a base64-encoded image.
+
     Args:
-        image_base64: Base64-encoded image string
-        menu_items: Optional list of menu items for matching
-        
+        merchant_id: Merchant UUID
+        image_base64: Base64 encoded image
+
     Returns:
-        FoodClassificationResponse with detected items
+        List[Dict[str, Any]]: List of food items as a JSON
     """
-    start_time = time.time()
     
-    # Prepare system prompt
-    system_prompt = get_system_prompt(menu_items)
-    
-    # Prepare API request
+    # Pull menu from DB
+    menu_json = get_merchant_menu(merchant_id)
+
+    system_prompt = FOOD_CLASSIFICATION_SYSTEM_PROMPT
+    system_prompt += "\n\nRestaurant menu (match by food_name):\n" + json.dumps(menu_json, indent=2)
+
     headers = {
         "Content-Type": "application/json",
-        "X-goog-api-key": LLM_API_KEY
+        "X-goog-api-key": LLM_API_KEY,
     }
-    
     payload = {
-        "systemInstruction": {
-            "parts": [{"text": system_prompt}]
-        },
+        "systemInstruction": {"parts": [{"text": system_prompt}]},
         "contents": [
             {
                 "role": "user",
@@ -78,64 +56,132 @@ def classify_food_from_image(image_base64: str, menu_items: Optional[List[str]] 
                     {
                         "inline_data": {
                             "mime_type": "image/jpeg",
-                            "data": image_base64
+                            "data": image_base64,
                         }
-                    }
-                ]
+                    },
+                ],
             }
-        ]
+        ],
     }
-    
-    # Call Gemini API
+
     response = requests.post(GEMINI_URL, headers=headers, json=payload)
-    
-    if response.status_code != 200:
-        raise Exception(f"Gemini API error: {response.status_code} - {response.text}")
-    
-    # Parse response
     response_json = response.json()
-    llm_output = response_json["candidates"][0]["content"]["parts"][0]["text"]
+    llm_raw_output = response_json["candidates"][0]["content"]["parts"][0]["text"].strip()
+    food_classification_output = json.loads(llm_raw_output)
+
+    # Attach prices and non_veg field to food classification output
+    menu_by_name: Dict[str, Any] = {item.get("food_name"): item for item in menu_json}
     
-    # Parse JSON output (handle string-wrapped JSON)
-    try:
-        items_data = json.loads(llm_output)
-    except json.JSONDecodeError:
-        # Try to extract JSON if wrapped in markdown code blocks
-        if "```json" in llm_output:
-            json_str = llm_output.split("```json")[1].split("```")[0].strip()
-            items_data = json.loads(json_str)
-        elif "```" in llm_output:
-            json_str = llm_output.split("```")[1].split("```")[0].strip()
-            items_data = json.loads(json_str)
-        else:
-            raise Exception(f"Failed to parse JSON from LLM output: {llm_output}")
-    
-    # Convert to FoodItem objects
-    items = [FoodItem(**item) for item in items_data]
-    
-    # Calculate processing time
-    processing_time = (time.time() - start_time) * 1000  # Convert to milliseconds
-    
-    return FoodClassificationResponse(
-        items=items,
-        total_items=len(items),
-        processing_time_ms=round(processing_time, 2)
-    )
+    matched_food_items = []
+    for item in food_classification_output:
+        closest_item = item.get("closest_menu_item", "")
+        
+        # skip if the closest item is not found in the menu
+        if closest_item.lower() == "not found":
+            continue
+     
+        menu_item = menu_by_name.get(closest_item)
+        if menu_item:
+            item["price"] = float(menu_item.get("price"))
+            item["non_veg"] = menu_item.get("non_veg", False)
+            matched_food_items.append(item)
+
+    return matched_food_items
 
 
-def classify_food_from_file(image_path: str, menu_items: Optional[List[str]] = None) -> FoodClassificationResponse:
+def check_veg_rescue_bag_creation(
+    suggested_rescue_bags: List[Dict[str, Any]],
+    menu_json: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
     """
-    Classify food items from an image file
+    Check if the suggested rescue bags are valid.
+    If a non-veg item is found in a veg rescue bag, remove it and recalculate the total price.
     
     Args:
-        image_path: Path to image file
-        menu_items: Optional list of menu items for matching
-        
-    Returns:
-        FoodClassificationResponse with detected items
-    """
-    # Read and encode image
-    with open(image_path, "rb") as f:
-        image_base64 = base64.b64encode(f.read()).decode("utf-8")
+        suggested_rescue_bags: List of rescue bags from LLM
+        menu_json: Menu items list to check non_veg status
     
-    return classify_food_from_image(image_base64, menu_items)
+    Returns:
+        List of validated and corrected rescue bags
+    """
+    # Create lookup map from menu to check non_veg status
+    menu_by_name = {item.get("food_name"): item for item in menu_json}
+    
+    for bag in suggested_rescue_bags:
+        bag_type = bag.get("bag_type", "")
+        
+        # Only check veg bags
+        if bag_type == "regular_veg" or bag_type == "large_veg":
+            items_to_remove = []
+            
+            for item in bag["items"]:
+                food_name = item.get("food_name")
+                
+                # Check if this food item is non-veg in menu.json
+                menu_item = menu_by_name.get(food_name)
+                if menu_item and menu_item.get("non_veg", False):
+                    items_to_remove.append(item)
+                    print(f"Warning: Removing non-veg item '{food_name}' from {bag_type} bag")
+            
+            # Remove all non-veg items
+            for item in items_to_remove:
+                bag["items"].remove(item)
+            
+            # Recalculate the estimated total value after removing non-veg items
+            bag["estimated_total_value"] = sum(
+                item.get("quantity", 1) * item.get("unit_price", 0) 
+                for item in bag["items"]
+            )
+    
+    # Filter out any bags that are now empty after removing non-veg items
+    return [bag for bag in suggested_rescue_bags if len(bag.get("items", [])) > 0]
+
+def rescue_bag_creation(
+    merchant_id: str,
+    food_classification_output: List[Dict[str, Any]],
+    menu_json: List[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """
+    Create rescue bags from leftover food items with prices already attached.
+    
+    Args:
+        merchant_id: Merchant UUID
+        food_classification_output: List of leftover food items with prices and non_veg field
+        menu_json: Full menu list to validate veg/non-veg status
+    """
+    
+    # Get bag pricing from merchant
+    bag_pricing = get_merchant_bag_pricing(merchant_id)
+
+    user_message = {
+        "regular_bag_price": bag_pricing["regular_bag_price"],
+        "large_bag_price": bag_pricing["large_bag_price"],
+        "leftover_food_items": food_classification_output,
+    }
+
+    headers = {
+        "Content-Type": "application/json",
+        "X-goog-api-key": LLM_API_KEY,
+    }
+
+    payload = {
+        "systemInstruction": {"parts": [{"text": RESCUE_BAG_CREATION_SYSTEM_PROMPT}]},
+        "contents": [
+            {
+                "role": "user",
+                "parts": [{"text": json.dumps(user_message, indent=2)}],
+            }
+        ],
+    }
+
+    response = requests.post(GEMINI_URL, headers=headers, json=payload)
+    response_json = response.json()
+    
+    llm_raw_output = response_json["candidates"][0]["content"]["parts"][0]["text"].strip()
+    suggested_rescue_bags = json.loads(llm_raw_output)
+    
+    # Validate and fix veg bags - remove any non-veg items from menu.json
+    validated_rescue_bags = check_veg_rescue_bag_creation(suggested_rescue_bags, menu_json)
+    
+    return validated_rescue_bags
+

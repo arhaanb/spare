@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, File, UploadFile, Form
+from fastapi import FastAPI, HTTPException, File, UploadFile, Form, Body
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, List
 import base64
@@ -11,8 +11,14 @@ from .models import (
     PriceOptimizationResponse,
     ErrorResponse
 )
-from .food_classification import classify_food_from_image
+from .food_classification import classify_food_from_image, rescue_bag_creation
 from .price_optimization import get_price_optimizer
+from .db_helper import (
+    upsert_leftover_items,
+    get_leftover_items,
+    get_merchant_menu,
+    upsert_rescue_bags
+)
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -37,78 +43,56 @@ async def health_check():
     return {"status": "healthy", "service": "Spare ML Service"}
 
 
-@app.post(
-    "/api/ml/food-classification",
-    response_model=FoodClassificationResponse,
-    responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}}
-)
-async def food_classification_endpoint(request: FoodClassificationRequest):
+@app.post("/api/ml/food-extraction")
+async def food_extraction_endpoint(request: dict = Body(...)):
     """
-    Classify food items from a base64-encoded image
+    Extract food items from image, save to DB, return saved document.
     
-    Args:
-        request: FoodClassificationRequest with image_base64 and optional menu_items
-        
+    Required body parameters:
+        merchant_id: Merchant UUID
+        image_base64: Base64 encoded image string
+    
     Returns:
-        FoodClassificationResponse with detected food items
+        MongoDB document with leftover items
     """
-    try:
-        result = classify_food_from_image(
-            image_base64=request.image_base64,
-            menu_items=request.menu_items
-        )
-        return result
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Food classification failed: {str(e)}"
-        )
+    merchant_id = request.get("merchant_id")
+    image_base64 = request.get("image_base64")
+    
+    # Call LLM to classify food (pulls menu from DB internally)
+    leftover_items = classify_food_from_image(merchant_id=merchant_id, image_base64=image_base64)
+    
+    # Upsert to DB by merchant_id + date
+    saved_doc = upsert_leftover_items(merchant_id, leftover_items)
+    
+    return saved_doc
 
 
-@app.post(
-    "/api/ml/food-classification/upload",
-    response_model=FoodClassificationResponse,
-    responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}}
-)
-async def food_classification_upload_endpoint(
-    image: UploadFile = File(...),
-    menu_items: Optional[str] = Form(None)
-):
+@app.post("/api/ml/rescue-bag-creation")
+async def rescue_bag_creation_endpoint(request: dict = Body(...)):
     """
-    Classify food items from an uploaded image file
+    Create rescue bags from leftover food items in DB.
     
-    Args:
-        image: Image file upload
-        menu_items: Optional JSON string of menu items array
-        
+    Required body parameter:
+        merchant_id: Merchant UUID
+    
     Returns:
-        FoodClassificationResponse with detected food items
+        MongoDB document with rescue bags
     """
-    try:
-        # Read and encode image
-        image_bytes = await image.read()
-        image_base64 = base64.b64encode(image_bytes).decode("utf-8")
-        
-        # Parse menu items if provided
-        menu_items_list = None
-        if menu_items:
-            menu_items_list = json.loads(menu_items)
-        
-        result = classify_food_from_image(
-            image_base64=image_base64,
-            menu_items=menu_items_list
-        )
-        return result
-    except json.JSONDecodeError:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid menu_items JSON format"
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Food classification failed: {str(e)}"
-        )
+    merchant_id = request.get("merchant_id")
+    
+    # Pull leftover items from DB
+    leftover_items = get_leftover_items(merchant_id)
+    
+    # Pull menu from DB
+    menu = get_merchant_menu(merchant_id)
+    
+    # Call LLM to create rescue bags
+    rescue_bags = rescue_bag_creation(merchant_id=merchant_id, food_classification_output=leftover_items, menu_json=menu)
+    
+    # Upsert to DB by merchant_id + date
+    saved_doc = upsert_rescue_bags(merchant_id, rescue_bags)
+    
+    return saved_doc
 
 
 @app.post(
@@ -151,6 +135,8 @@ async def root():
         "version": "1.0.0",
         "endpoints": {
             "health": "/health",
+            "food_extraction": "/api/ml/food-extraction",
+            "rescue_bag_creation": "/api/ml/rescue-bag-creation",
             "food_classification": "/api/ml/food-classification",
             "food_classification_upload": "/api/ml/food-classification/upload",
             "price_optimization": "/api/ml/price-optimization"

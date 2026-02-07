@@ -1,0 +1,148 @@
+{
+  "menu": [
+    {
+      "food_type": "bakery",
+      "food_name": "Pain Au Chocolate",
+      "non_veg": false,
+      "price": 95,
+      "nutritional_value": {
+        "calories": 320,
+        "protein": 6,
+        "fat": 18,
+        "carbs": 34
+      }
+    },
+    {
+      "food_type": "bakery",
+      "food_name": "Korean Bun",
+      "non_veg": true,
+      "price": 72,
+      "nutritional_value": {
+        "calories": 300,
+        "protein": 7,
+        "fat": 12,
+        "carbs": 40
+      }
+    },
+    {
+      "food_type": "bakery",
+      "food_name": "pistachio croissant",
+      "non_veg": false,
+      "price": 118,
+      "nutritional_value": {
+        "calories": 300,
+        "protein": 7,
+        "fat": 12,
+        "carbs": 40
+      }
+    },
+    {
+      "food_type": "bakery",
+      "food_name": "butter croissant",
+      "non_veg": false,
+      "price": 64,
+      "nutritional_value": {
+        "calories": 300,
+        "protein": 7,
+        "fat": 12,
+        "carbs": 40
+      }
+    },
+    {
+      "food_type": "dessert",
+      "food_name": "Mocha Brownie",
+      "non_veg": false,
+      "price": 130,
+      "nutritional_value": {
+        "calories": 340,
+        "protein": 5,
+        "fat": 19,
+        "carbs": 36
+      }
+    },
+    {
+      "food_type": "bakery",
+      "food_name": "Almond Croissant",
+      "non_veg": true,
+      "price": 142,
+      "nutritional_value": {
+        "calories": 330,
+        "protein": 8,
+        "fat": 19,
+        "carbs": 32
+      }
+    },
+    {
+      "food_type": "savory_bakery",
+      "food_name": "Mushroom Cream Cheese Croissata",
+      "non_veg": true,
+      "price": 88,
+      "nutritional_value": {
+        "calories": 380,
+        "protein": 11,
+        "fat": 22,
+        "carbs": 36
+      }
+    },
+    {
+      "food_type": "savory_bakery",
+      "food_name": "Roasted Tomatoes Croissata",
+      "non_veg": true,
+      "price": 105,
+      "nutritional_value": {
+        "calories": 360,
+        "protein": 9,
+        "fat": 18,
+        "carbs": 38
+      }
+    },
+    {
+      "food_type": "bakery",
+      "food_name": "Chocolate Hazelnut Croissant",
+      "non_veg": false,
+      "price": 149,
+      "nutritional_value": {
+        "calories": 350,
+        "protein": 7,
+        "fat": 20,
+        "carbs": 36
+      }
+    },
+    {
+      "food_type": "cookie",
+      "food_name": "Brownie Crinkle Cookie",
+      "non_veg": false,
+      "price": 58,
+      "nutritional_value": {
+        "calories": 260,
+        "protein": 4,
+        "fat": 12,
+        "carbs": 32
+      }
+    },
+    {
+      "food_type": "beverage",
+      "food_name": "Cold Brew Coffee (Canned)",
+      "non_veg": false,
+      "price": 83,
+      "nutritional_value": {
+        "calories": 15,
+        "protein": 1,
+        "fat": 0,
+        "carbs": 3
+      }
+    },
+    {
+      "food_type": "beverage",
+      "food_name": "bottled juice",
+      "non_veg": false,
+      "price": 47,
+      "nutritional_value": {
+        "calories": 15,
+        "protein": 1,
+        "fat": 0,
+        "carbs": 3
+      }
+    }
+  ]
+}
