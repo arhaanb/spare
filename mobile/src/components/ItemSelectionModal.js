@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -11,17 +11,83 @@ import Animated, {
     useAnimatedStyle,
     withSpring,
     withSequence,
+    interpolateColor,
 } from 'react-native-reanimated';
 import {
     BottomSheetModal,
     BottomSheetView,
     BottomSheetBackdrop,
-    BottomSheetFlatList
+    BottomSheetScrollView
 } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
 
+import VegIcon from '../../assets/images/assets/foodtype/veg.svg';
+import VegIconDark from '../../assets/images/assets/foodtype/veg-dark.svg';
+import NonVegIcon from '../../assets/images/assets/foodtype/nonveg.svg';
+import NonVegIconDark from '../../assets/images/assets/foodtype/nonveg-dark.svg';
+import JainIcon from '../../assets/images/assets/foodtype/jain.svg';
+import JainIconDark from '../../assets/images/assets/foodtype/jain-dark.svg';
+
+const PREFERENCES = [
+    { id: 'veg', label: 'Veg', icon: VegIcon, iconDark: VegIconDark },
+    { id: 'nonveg', label: 'Non-Veg', icon: NonVegIcon, iconDark: NonVegIconDark },
+    { id: 'jain', label: 'Jain', icon: JainIcon, iconDark: JainIconDark },
+];
+
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+
+const PreferenceChip = ({ active, icon: Icon, iconDark: IconDark, label, onPress }) => {
+    const pressed = useSharedValue(1);
+    const progress = useSharedValue(active ? 1 : 0);
+    const selectionScale = useSharedValue(1);
+
+    useEffect(() => {
+        progress.value = withSpring(active ? 1 : 0, {
+            damping: 15,
+            stiffness: 200,
+            mass: 0.8
+        });
+        if (active) {
+            selectionScale.value = withSequence(
+                withSpring(1.05, { damping: 12, stiffness: 400 }),
+                withSpring(1, { damping: 15, stiffness: 300 })
+            );
+        }
+    }, [active, progress, selectionScale]);
+
+    const chipStyle = useAnimatedStyle(() => ({
+        backgroundColor: interpolateColor(progress.value, [0, 1], ['rgba(255,255,255,0.08)', COLORS.activeCategory]),
+        borderColor: interpolateColor(progress.value, [0, 1], ['rgba(255,255,255,0.15)', COLORS.activeCategory]),
+        transform: [{ scale: pressed.value * selectionScale.value }],
+    }));
+
+    const labelStyle = useAnimatedStyle(() => ({
+        color: interpolateColor(progress.value, [0, 1], [COLORS.textPrimary, COLORS.background]),
+    }));
+
+    return (
+        <AnimatedTouchable
+            style={[styles.preferenceChip, chipStyle]}
+            onPress={onPress}
+            activeOpacity={0.9}
+            onPressIn={() => {
+                pressed.value = withSpring(0.98, { damping: 25, stiffness: 400, mass: 0.8 });
+            }}
+            onPressOut={() => {
+                pressed.value = withSpring(1, { damping: 22, stiffness: 380, mass: 0.8 });
+            }}
+        >
+            <View style={styles.chipIconContainer}>
+                {active ? <IconDark height="100%" /> : <Icon height="100%" />}
+            </View>
+            <Animated.Text style={[styles.preferenceLabel, labelStyle]} numberOfLines={1}>
+                {label}
+            </Animated.Text>
+        </AnimatedTouchable>
+    );
+};
 
 const ItemRow = ({ item, quantity, onIncrement, onDecrement }) => {
     const minusScale = useSharedValue(1);
@@ -82,24 +148,70 @@ const ItemRow = ({ item, quantity, onIncrement, onDecrement }) => {
     );
 };
 
-const ItemSelectionModal = ({ sheetRef, bagOption, restaurant, onDismiss, onAddToCart }) => {
-    const [selectedItems, setSelectedItems] = React.useState({});
+// Default rescue items for restaurants that don't have custom ones
+const DEFAULT_RESCUE_ITEMS = {
+    veg: [
+        { id: 'default-v1', name: 'Paneer Sandwich', category: 'Savory', price: 80 },
+        { id: 'default-v2', name: 'Veg Puff', category: 'Savory', price: 60 },
+        { id: 'default-v3', name: 'Cheese Toast', category: 'Savory', price: 70 },
+        { id: 'default-v4', name: 'Veggie Wrap', category: 'Savory', price: 90 },
+        { id: 'default-v5', name: 'Samosa', category: 'Snack', price: 40 },
+        { id: 'default-v6', name: 'Aloo Paratha', category: 'Indian', price: 85 },
+    ],
+    nonveg: [
+        { id: 'default-nv1', name: 'Chicken Sandwich', category: 'Savory', price: 100 },
+        { id: 'default-nv2', name: 'Chicken Puff', category: 'Savory', price: 70 },
+        { id: 'default-nv3', name: 'Egg Roll', category: 'Savory', price: 80 },
+        { id: 'default-nv4', name: 'Chicken Wrap', category: 'Savory', price: 110 },
+        { id: 'default-nv5', name: 'Mutton Samosa', category: 'Snack', price: 60 },
+        { id: 'default-nv6', name: 'Keema Paratha', category: 'Indian', price: 95 },
+    ],
+    jain: [
+        { id: 'default-j1', name: 'Dry Fruit Sandwich', category: 'Savory', price: 90 },
+        { id: 'default-j2', name: 'Plain Puff', category: 'Savory', price: 55 },
+        { id: 'default-j3', name: 'Cheese Toast', category: 'Savory', price: 65 },
+        { id: 'default-j4', name: 'Fruit Bowl', category: 'Fresh', price: 80 },
+        { id: 'default-j5', name: 'Sabudana Vada', category: 'Snack', price: 50 },
+    ],
+};
+
+const ItemSelectionModal = ({ sheetRef, bagOption, restaurant, selectedPreference: initialPreference, onDismiss, onAddToCart }) => {
+    const [selectedItems, setSelectedItems] = useState({});
+    const [preference, setPreference] = useState(initialPreference || 'veg');
+
+    // Update preference when initial preference changes
+    useEffect(() => {
+        if (initialPreference) {
+            setPreference(initialPreference);
+        }
+    }, [initialPreference]);
 
     // Minimum items required for a custom bag
     const MIN_ITEMS = 3;
 
-    const rescueItems = restaurant?.rescueItems || [];
+    // Get rescue items based on preference
+    const rescueItems = useMemo(() => {
+        const items = restaurant?.rescueItems;
+
+        // If items is an object with preference keys (new format)
+        if (items && typeof items === 'object' && !Array.isArray(items)) {
+            return items[preference] || DEFAULT_RESCUE_ITEMS[preference] || [];
+        }
+
+        // If items is an array (old format) or doesn't exist, use defaults
+        return DEFAULT_RESCUE_ITEMS[preference] || [];
+    }, [restaurant?.rescueItems, preference]);
 
     // Calculate total selected items
     const totalItems = Object.values(selectedItems).reduce((sum, qty) => sum + qty, 0);
     const isValid = totalItems >= MIN_ITEMS;
 
-    // Reset selection when sheet is opened (optional, or keep state)
-    // For now, we'll keep it simple and reset when bagOption changes significantly or manual reset needed
-    // But since this is a controlled modal, we rely on parent to handle visibility.
-    // We can use onDismiss to reset if needed.
+    // Reset selection when preference changes
+    useEffect(() => {
+        setSelectedItems({});
+    }, [preference]);
 
-    const snapPoints = useMemo(() => ['60%', '90%'], []);
+    const snapPoints = useMemo(() => ['90%', '90%'], []);
 
     const handleIncrement = (item) => {
         setSelectedItems(prev => ({
@@ -128,7 +240,7 @@ const ItemSelectionModal = ({ sheetRef, bagOption, restaurant, onDismiss, onAddT
             return { ...item, quantity: qty };
         });
 
-        onAddToCart(itemsList);
+        onAddToCart(itemsList, preference);
         sheetRef.current?.dismiss();
     };
 
@@ -153,15 +265,14 @@ const ItemSelectionModal = ({ sheetRef, bagOption, restaurant, onDismiss, onAddT
     return (
         <BottomSheetModal
             ref={sheetRef}
-            snapPoints={snapPoints}
-            index={0}
+            enableDynamicSizing
             enablePanDownToClose
             backdropComponent={renderBackdrop}
             backgroundStyle={styles.sheetBackground}
             handleIndicatorStyle={styles.indicator}
             onDismiss={handleSheetDismiss}
         >
-            <View style={styles.container}>
+            <BottomSheetScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.header}>
                     <View>
                         <Text style={styles.title}>Build Your Bag</Text>
@@ -173,20 +284,17 @@ const ItemSelectionModal = ({ sheetRef, bagOption, restaurant, onDismiss, onAddT
 
                 <View style={styles.divider} />
 
-                <BottomSheetFlatList
-                    data={rescueItems}
-                    keyExtractor={item => item.id}
-                    renderItem={({ item }) => (
+                <View style={styles.itemsContainer}>
+                    {rescueItems.map((item) => (
                         <ItemRow
+                            key={item.id}
                             item={item}
                             quantity={selectedItems[item.id] || 0}
                             onIncrement={handleIncrement}
                             onDecrement={handleDecrement}
                         />
-                    )}
-                    contentContainerStyle={styles.listContent}
-                    showsVerticalScrollIndicator={false}
-                />
+                    ))}
+                </View>
 
                 <View style={styles.footer}>
                     <TouchableOpacity
@@ -202,7 +310,7 @@ const ItemSelectionModal = ({ sheetRef, bagOption, restaurant, onDismiss, onAddT
                         </Text>
                     </TouchableOpacity>
                 </View>
-            </View>
+            </BottomSheetScrollView>
         </BottomSheetModal>
     );
 };
@@ -215,15 +323,9 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255, 255, 255, 0.2)',
         width: 40,
     },
-    container: {
-        flex: 1,
-    },
     header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
         paddingHorizontal: SPACING.lg,
-        paddingBottom: SPACING.md,
+        paddingBottom: SPACING.sm,
     },
     title: {
         fontFamily: 'Gargoyle',
@@ -241,9 +343,11 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,0.1)',
         marginBottom: SPACING.sm,
     },
-    listContent: {
+    scrollContent: {
+        paddingBottom: SPACING.xl,
+    },
+    itemsContainer: {
         paddingHorizontal: SPACING.lg,
-        paddingBottom: 100, // Space for footer
     },
     itemRow: {
         flexDirection: 'row',
@@ -293,15 +397,9 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     footer: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        padding: SPACING.lg,
+        paddingHorizontal: SPACING.lg,
+        paddingTop: SPACING.md,
         paddingBottom: SPACING.xl,
-        backgroundColor: '#0F3A28',
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(255,255,255,0.1)',
     },
     addButton: {
         backgroundColor: COLORS.activeCategory,

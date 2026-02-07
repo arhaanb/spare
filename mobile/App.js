@@ -12,6 +12,7 @@ import { FavoritesProvider } from './src/context/FavoritesContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { CartProvider } from './src/context/CartContext';
 import { OrderProvider } from './src/context/OrderContext';
+import { StatsProvider } from './src/context/StatsContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
@@ -134,20 +135,22 @@ export default function App() {
           <CartProvider>
             <OrderProvider>
               <FavoritesProvider>
-                <SafeAreaProvider onLayout={onLayoutRootView}>
-                  <NavigationContainer
-                    ref={navigationRef}
-                    onStateChange={() => {
-                      const route = navigationRef.getCurrentRoute();
-                      setCurrentRoute(route?.name);
-                    }}
-                  >
-                    <StatusBar style="light" />
-                    <RootNavigator />
-                    <GlobalActiveOrderIndicator currentRouteName={currentRoute} />
-                    <CartIndicator currentRouteName={currentRoute} />
-                  </NavigationContainer>
-                </SafeAreaProvider>
+                <StatsProvider>
+                  <SafeAreaProvider onLayout={onLayoutRootView}>
+                    <NavigationContainer
+                      ref={navigationRef}
+                      onStateChange={() => {
+                        const route = navigationRef.getCurrentRoute();
+                        setCurrentRoute(route?.name);
+                      }}
+                    >
+                      <StatusBar style="light" />
+                      <RootNavigator />
+                      <GlobalActiveOrderIndicator currentRouteName={currentRoute} />
+                      <CartIndicator currentRouteName={currentRoute} />
+                    </NavigationContainer>
+                  </SafeAreaProvider>
+                </StatsProvider>
               </FavoritesProvider>
             </OrderProvider>
           </CartProvider>

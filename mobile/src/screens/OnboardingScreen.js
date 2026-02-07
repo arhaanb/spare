@@ -19,6 +19,10 @@ import { AnimatedMeshGradient, Button } from '../components';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
 
+import Onboarding1 from '../../assets/images/onboarding/1.svg';
+import Onboarding2 from '../../assets/images/onboarding/2.svg';
+import Onboarding3 from '../../assets/images/onboarding/3.svg';
+
 const SLIDES = [
   {
     key: 'save',
@@ -26,6 +30,7 @@ const SLIDES = [
     subtitle:
       'Reserve surplus dishes from top kitchens and enjoy great food at lower prices.',
     accent: 'Save up to 60%',
+    Image: Onboarding1,
   },
   {
     key: 'nearby',
@@ -33,6 +38,7 @@ const SLIDES = [
     subtitle:
       'Fresh offers nearby, updated daily so you can grab a deal on your way home.',
     accent: 'Local & affordable',
+    Image: Onboarding2,
   },
   {
     key: 'impact',
@@ -40,17 +46,19 @@ const SLIDES = [
     subtitle:
       'Every order keeps food in circulation and supports a more sustainable city.',
     accent: 'Sustainable choices',
+    Image: Onboarding3,
   },
 ];
 
 const OnboardingScreen = () => {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { completeOnboarding } = useAuth();
   const scrollX = useRef(new Animated.Value(0)).current;
   const listRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const transitionOpacity = useSharedValue(0);
+  const imageWidth = width * 0.75;
 
   const meshColors = useMemo(
     () => [
@@ -112,8 +120,11 @@ const OnboardingScreen = () => {
           onViewableItemsChanged={handleViewableItemsChanged}
           viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
           renderItem={({ item }) => (
-            <View style={[styles.slide, { width }]}> 
+            <View style={[styles.slide, { width }]}>
               <AnimatedRe.View style={styles.slideCard} entering={FadeInUp.duration(450)}>
+                <View style={[styles.imageContainer, { width: imageWidth }]}>
+                  <item.Image width="100%" height="100%" />
+                </View>
                 <Text style={styles.accent}>{item.accent}</Text>
                 <Text style={styles.title}>{item.title}</Text>
                 <Text style={styles.subtitle}>{item.subtitle}</Text>
@@ -218,6 +229,14 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.xxl,
     paddingVertical: SPACING.xxl,
     paddingHorizontal: SPACING.xl,
+    minHeight: 420,
+    alignItems: 'center',
+  },
+  imageContainer: {
+    height: 240,
+    marginBottom: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   accent: {
     fontFamily: COLORS.fontSansMedium,
@@ -226,6 +245,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1.6,
     marginBottom: SPACING.md,
+    alignSelf: 'stretch',
   },
   title: {
     fontFamily: COLORS.fontSerif,
@@ -233,12 +253,14 @@ const styles = StyleSheet.create({
     color: COLORS.textOnDark,
     lineHeight: 44,
     marginBottom: SPACING.md,
+    alignSelf: 'stretch',
   },
   subtitle: {
     fontFamily: COLORS.fontSans,
     fontSize: FONT_SIZES.lg,
     color: COLORS.textOnMuted,
     lineHeight: 24,
+    alignSelf: 'stretch',
   },
   pagination: {
     flexDirection: 'row',
