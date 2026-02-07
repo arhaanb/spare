@@ -39,26 +39,41 @@ You will be given three inputs:
    - food_name (string)
    - price (float, INR, per unit) — THIS IS THE ACTUAL ORIGINAL PRICE OF EACH ITEM
    - quantity (integer, number of leftover units available)
+   - non_veg (boolean) — whether the item is non-vegetarian
 
 CRITICAL MATH RULES:
 • For each item in a bag, unit_price MUST EXACTLY MATCH the price from leftover_food_items for that food_name.
 • estimated_total_value = sum of (quantity × unit_price) for all items in that bag.
 • Verify all calculations are correct. Do not approximate unit_price values.
 
+BAG TYPE CATEGORIES (4 categories):
+You must create bags in ONE of these 4 categories:
+1. "regular_veg" — regular-sized bag containing ONLY vegetarian items (non_veg: false)
+2. "regular_non_veg" — regular-sized bag that CAN contain both veg and non-veg items
+3. "large_veg" — large-sized bag containing ONLY vegetarian items (non_veg: false)
+4. "large_non_veg" — large-sized bag that CAN contain both veg and non-veg items
+
+CRITICAL DIETARY RULES:
+• "regular_veg" and "large_veg" bags MUST contain ONLY items where non_veg = false
+• "regular_non_veg" and "large_non_veg" bags CAN contain items with non_veg = true OR false (mixed is allowed)
+• NEVER put a non-veg item (non_veg: true) in a veg bag
+
 Your objective:
 • Create rescue bags using the available leftover items.
-• Produce approximately equal numbers of regular and large bags where possible.
+• Try to create a balanced distribution across all 4 bag types where inventory allows.
 • Each bag should contain items whose total original value (sum of quantity × unit_price) roughly aligns with:
-  - regular bags ≈ regular_bag_price (150 INR)
-  - large bags ≈ large_bag_price (450 INR)
-• For each bag, set target_price to the corresponding selling price (regular_bag_price for "regular", large_bag_price for "large").
+  - regular bags (regular_veg, regular_non_veg) ≈ regular_bag_price (150 INR)
+  - large bags (large_veg, large_non_veg) ≈ large_bag_price (450 INR)
+• For each bag, set target_price to:
+  - regular_bag_price for "regular_veg" or "regular_non_veg"
+  - large_bag_price for "large_veg" or "large_non_veg"
 • Do not exceed available quantities (the pool is shared across all bags).
 
 Output format (valid JSON array only):
 
 [
   {
-    "bag_type": "regular" | "large",
+    "bag_type": "regular_veg" | "regular_non_veg" | "large_veg" | "large_non_veg",
     "target_price": float,
     "items": [
       {
@@ -73,8 +88,9 @@ Output format (valid JSON array only):
 
 Rules:
 • USE THE EXACT PRICE VALUES from leftover_food_items. Do not round or approximate.
+• STRICTLY enforce dietary restrictions: veg bags must contain ONLY veg items.
 • Be realistic in grouping items.
-• Avoid large imbalance between bag counts unless inventory forces it.
+• Try to create a good mix of all 4 bag types if inventory allows.
 • Do not invent items not present in leftover_food_items.
 • Use only provided food quantities.
 • If you cannot form any bag from the inventory, return an empty array [].

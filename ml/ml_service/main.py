@@ -47,98 +47,36 @@ async def food_extraction_endpoint(image_base64: str = Body(...), menu: list = B
         menu: Full menu JSON list (e.g. from menu.json "menu" array) with food_name, price, etc.
     
     Returns:
-        List of detected food items with type, quantity, closest_menu_item, confidence, price
+        List[Dict[str, Any]]: List of food items as a JSON
     """
     result = classify_food_from_image(image_base64=image_base64, menu_json=menu)
+    
+    # TODO remove this after testing
+    with open("leftover_food_items_output.json", "w", encoding="utf-8") as f:
+        json.dump(result, f, indent=2)
+
     return result
 
 
 @app.post("/api/ml/rescue-bag-creation")
-async def rescue_bag_creation_endpoint(leftover_food_items: list = Body(...)):
+async def rescue_bag_creation_endpoint(leftover_food_items: list = Body(...), menu: list = Body(...)):
     """
     Create rescue bags from leftover food items.
     
-    Required body parameter:
-        leftover_food_items: List of items with closest_menu_item, quantity, price
+    Required body parameters:
+        leftover_food_items: List of items with closest_menu_item, quantity, price, non_veg
+        menu: Full menu JSON list (e.g. from menu.json "menu" array) for veg/non-veg validation
     
     Returns:
         List of rescue bags with bag_type, target_price, items, estimated_total_value
     """
-    result = rescue_bag_creation(food_classification_output=leftover_food_items)
+    result = rescue_bag_creation(food_classification_output=leftover_food_items, menu_json=menu)
+    
+    # TODO remove this after testing
+    with open("rescue_bag_creation_output.json", "w", encoding="utf-8") as f:
+        json.dump(result, f, indent=2)
+
     return result
-
-
-@app.post(
-    "/api/ml/food-classification",
-    response_model=FoodClassificationResponse,
-    responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}}
-)
-async def food_classification_endpoint(request: FoodClassificationRequest):
-    """
-    Classify food items from a base64-encoded image
-
-    Args:
-        request: FoodClassificationRequest with image_base64 and optional menu (JSON list)
-
-    Returns:
-        FoodClassificationResponse with detected food items
-    """
-    try:
-        result = classify_food_from_image(
-            image_base64=request.image_base64,
-            menu_json=request.menu,
-        )
-        return result
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Food classification failed: {str(e)}"
-        )
-
-
-@app.post(
-    "/api/ml/food-classification/upload",
-    response_model=FoodClassificationResponse,
-    responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}}
-)
-async def food_classification_upload_endpoint(
-    image: UploadFile = File(...),
-    menu: Optional[str] = Form(None),
-):
-    """
-    Classify food items from an uploaded image file.
-
-    Args:
-        image: Image file upload
-        menu: Optional JSON string: either {"menu": [...]} or direct array [...]
-
-    Returns:
-        FoodClassificationResponse with detected food items
-    """
-    try:
-        image_bytes = await image.read()
-        image_base64 = base64.b64encode(image_bytes).decode("utf-8")
-
-        menu_json = None
-        if menu:
-            parsed = json.loads(menu)
-            menu_json = parsed.get("menu", parsed) if isinstance(parsed, dict) else parsed
-
-        result = classify_food_from_image(
-            image_base64=image_base64,
-            menu_json=menu_json,
-        )
-        return result
-    except json.JSONDecodeError:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid menu JSON format",
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Food classification failed: {str(e)}"
-        )
 
 
 @app.post(
