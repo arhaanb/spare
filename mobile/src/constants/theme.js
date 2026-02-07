@@ -22,6 +22,10 @@ export const COLORS = {
   background: '#0A3522',
   cardBackground: '#085420',
   primaryAccent: '#22C55E',
+  surface: 'rgba(10, 20, 16, 0.55)',
+  surfaceStrong: 'rgba(8, 16, 13, 0.8)',
+  glass: 'rgba(255, 255, 255, 0.08)',
+  highlightPink: '#E296D7',
 
   // Header and Category specific
   headerBox: '#134631',
@@ -41,6 +45,8 @@ export const COLORS = {
   textPrimary: '#FFFFFF',
   textSecondary: '#9CA3AF',
   textMuted: '#6B7280',
+  textOnDark: '#F8FAFC',
+  textOnMuted: 'rgba(248, 250, 252, 0.7)',
 
   // Font Families
   fontSerif: 'Gargoyle',
@@ -70,6 +76,8 @@ export const COLORS = {
 
   // Overlay
   overlay: 'rgba(0, 0, 0, 0.5)',
+  overlaySoft: 'rgba(5, 10, 8, 0.35)',
+  overlayStrong: 'rgba(5, 10, 8, 0.6)',
 };
 
 export const SPACING = {

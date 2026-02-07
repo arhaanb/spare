@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 import { COLORS, SPACING, FONT_SIZES } from '../constants/theme';
 import { LocationHeader, CategoryFilter, RestaurantCard, SearchBar } from '../components';
 import BottomTabBar from '../components/BottomTabBar';
@@ -87,7 +88,13 @@ const HomeContent = ({
 
       {(searchQuery.length > 0 || selectedCategory) ? (
         // Grid View for Search/Category Results
-        <View style={styles.section}>
+        <Animated.View
+          key="grid"
+          style={styles.section}
+          entering={FadeIn.duration(220)}
+          exiting={FadeOut.duration(160)}
+          layout={Layout.springify().damping(18).stiffness(180)}
+        >
           <View style={{ marginLeft: SPACING.lg, marginBottom: SPACING.md }}>
             <Text style={styles.sectionTitle}>
               {searchQuery ? 'Search Results' : 'Available Restaurants'}
@@ -103,13 +110,19 @@ const HomeContent = ({
           {allFilteredRestaurants.length > 0 ? (
             <View style={styles.gridContainer}>
               {allFilteredRestaurants.map((restaurant) => (
-                <View key={restaurant.id} style={styles.gridItem}>
+                <Animated.View
+                  key={restaurant.id}
+                  style={styles.gridItem}
+                  layout={Layout.springify().damping(18).stiffness(180)}
+                  entering={FadeIn.duration(180)}
+                  exiting={FadeOut.duration(140)}
+                >
                   <RestaurantCard
                     restaurant={restaurant}
                     onPress={handleRestaurantPress}
                     variant="grid"
                   />
-                </View>
+                </Animated.View>
               ))}
             </View>
           ) : (
@@ -117,10 +130,15 @@ const HomeContent = ({
               No restaurants found.
             </Text>
           )}
-        </View>
+        </Animated.View>
       ) : (
         // Standard Home View
-        <>
+        <Animated.View
+          key="home"
+          entering={FadeIn.duration(220)}
+          exiting={FadeOut.duration(160)}
+          layout={Layout.springify().damping(18).stiffness(180)}
+        >
           {relevantRestaurants.length > 0 && (
             <RestaurantSection
               title="Most Relevant"
@@ -147,7 +165,7 @@ const HomeContent = ({
               onSeeAll={() => handleSeeAll('new')}
             />
           )}
-        </>
+        </Animated.View>
       )}
 
       <View style={styles.bottomPadding} />
@@ -211,28 +229,34 @@ const HomeScreen = ({ navigation }) => {
     switch (activeTab) {
       case 'explore':
         return (
-          <HomeContent
-            insets={insets}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            handleFilterPress={() => console.log('Filter')}
-            selectedCategory={selectedCategory}
-            handleCategorySelect={handleCategorySelect}
-            relevantRestaurants={relevantRestaurants}
-            popularRestaurants={popularRestaurants}
-            newlyAddedRestaurants={newlyAddedRestaurants}
-            handleRestaurantPress={handleRestaurantPress}
-            handleSeeAll={() => { }}
-            allFilteredRestaurants={allFilteredRestaurants}
-          />
+          <Animated.View entering={FadeIn.duration(300)} key="explore" style={styles.animatedContainer}>
+            <HomeContent
+              insets={insets}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              handleFilterPress={() => console.log('Filter')}
+              selectedCategory={selectedCategory}
+              handleCategorySelect={handleCategorySelect}
+              relevantRestaurants={relevantRestaurants}
+              popularRestaurants={popularRestaurants}
+              newlyAddedRestaurants={newlyAddedRestaurants}
+              handleRestaurantPress={handleRestaurantPress}
+              handleSeeAll={() => { }}
+              allFilteredRestaurants={allFilteredRestaurants}
+            />
+          </Animated.View>
         );
       case 'favourites':
         return (
-          <FavouritesScreen onRestaurantPress={handleRestaurantPress} />
+          <Animated.View entering={FadeIn.duration(300)} key="favourites" style={styles.animatedContainer}>
+            <FavouritesScreen onRestaurantPress={handleRestaurantPress} />
+          </Animated.View>
         );
       case 'profile':
         return (
-          <ProfileScreen />
+          <Animated.View entering={FadeIn.duration(300)} key="profile" style={styles.animatedContainer}>
+            <ProfileScreen />
+          </Animated.View>
         );
       default:
         return null;
@@ -254,6 +278,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  animatedContainer: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,

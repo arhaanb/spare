@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../context/AuthContext';
 
 const ProfileScreen = () => {
     const insets = useSafeAreaInsets();
+    const { signOut } = useAuth();
 
     return (
         <View style={[styles.container, { paddingTop: insets.top + SPACING.xl }]}>
@@ -35,7 +37,7 @@ const ProfileScreen = () => {
                 </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.logoutButton}>
+            <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
                 <Text style={styles.logoutText}>Log Out</Text>
             </TouchableOpacity>
         </View>
