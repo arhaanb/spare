@@ -16,7 +16,6 @@ const FavoriteSchema = new mongoose.Schema({
     }
 });
 
-// Compound index to ensure unique favorita per session/restaurant
 FavoriteSchema.index({ session: 1, restaurantId: 1 }, { unique: true });
 
 module.exports = mongoose.model('Favorite', FavoriteSchema);

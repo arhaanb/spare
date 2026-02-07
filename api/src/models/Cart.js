@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const CartItemSchema = new mongoose.Schema({
-    id: String, // Composite ID from frontend
-    bagOption: { type: mongoose.Schema.Types.Mixed }, // Store full object for simplicity or ref
+    id: String,
+    bagOption: { type: mongoose.Schema.Types.Mixed },
     quantity: Number,
     preference: String,
     addedAt: Date
@@ -13,10 +13,10 @@ const CartSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Session',
         required: true,
-        unique: true // One cart per session
+        unique: true
     },
     items: [CartItemSchema],
-    restaurantId: Number, // Enforce single restaurant rule
+    restaurantId: Number,
     lastUpdated: {
         type: Date,
         default: Date.now

@@ -8,8 +8,8 @@ const OrderSchema = new mongoose.Schema({
     },
     orderCode: String,
     restaurantId: Number,
-    restaurantName: String, // Snapshot name in case it changes
-    items: [mongoose.Schema.Types.Mixed], // Array of items snapshot
+    restaurantName: String,
+    items: [mongoose.Schema.Types.Mixed],
     total: Number,
     itemCount: Number,
     status: {
@@ -17,7 +17,7 @@ const OrderSchema = new mongoose.Schema({
         enum: ['active', 'completed', 'expired', 'cancelled'],
         default: 'active'
     },
-    expiresAt: Date, // For pickup window
+    expiresAt: Date,
     createdAt: {
         type: Date,
         default: Date.now

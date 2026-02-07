@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Session = require('../models/Session');
 
 // @route   POST /api/auth/login
@@ -12,18 +13,23 @@ router.post('/login', async (req, res) => {
         return res.status(400).json({ message: 'Token is required' });
     }
 
+    // DB Fallback
+    if (mongoose.connection.readyState !== 1) {
+        return res.status(201).json({
+            message: 'Session created (Offline Mode)',
+            session: { token, deviceId, isMock: true }
+        });
+    }
+
     try {
-        // Check if session already exists
         let session = await Session.findOne({ token });
 
         if (session) {
-            // Update last active
             session.lastActive = Date.now();
             await session.save();
             return res.status(200).json({ message: 'Session refreshed', session });
         }
 
-        // Create new session
         session = await Session.create({
             token,
             deviceId
@@ -32,6 +38,12 @@ router.post('/login', async (req, res) => {
         res.status(201).json({ message: 'Session created', session });
     } catch (error) {
         console.error(error);
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(201).json({
+                message: 'Session created (Offline Mode fallback)',
+                session: { token, deviceId, isMock: true }
+            });
+        }
         res.status(500).json({ message: 'Server error' });
     }
 });

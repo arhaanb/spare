@@ -1,17 +1,15 @@
 const mongoose = require('mongoose');
 
 const BagOptionSchema = new mongoose.Schema({
-    id: { type: Number, required: true }, // Keeping ID from mock data
+    id: { type: Number, required: true },
     type: { type: String, required: true },
     description: { type: String },
-    price: number = { type: Number, required: true },
+    price: { type: Number, required: true },
     originalPrice: { type: Number, required: true },
     pickupStart: { type: String },
     pickupEnd: { type: String },
-    // Available can be a number (total) or an object breakdown. Using Mixed to support both legacy/migrated data.
-    // Ideally we should standardize, but enabling Mixed for flexibility with current mock structure.
     available: { type: mongoose.Schema.Types.Mixed },
-    unavailableFor: [{ type: String }] // Array of strings like ['veg', 'jain']
+    unavailableFor: [{ type: String }]
 });
 
 const ItemSchema = new mongoose.Schema({
@@ -28,7 +26,7 @@ const RescueItemsSchema = new mongoose.Schema({
 });
 
 const RestaurantSchema = new mongoose.Schema({
-    id: { type: Number, required: true, unique: true }, // External ID from mock
+    id: { type: Number, required: true, unique: true },
     name: { type: String, required: true },
     location: { type: String, required: true },
     distance: Number,
@@ -39,10 +37,11 @@ const RestaurantSchema = new mongoose.Schema({
     vegOnly: Boolean,
     isAvailable: Boolean,
     popularityScore: Number,
-    dateAdded: String, // YYYY-MM-DD
+    dateAdded: String,
     image: String,
     bagOptions: [BagOptionSchema],
     possibleIngredients: [String],
+    tags: [String],
     rescueItems: RescueItemsSchema,
     reviews: {
         fairPortion: Number,
