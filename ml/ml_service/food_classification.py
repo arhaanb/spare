@@ -10,6 +10,7 @@ from .prompt import (
     FOOD_CLASSIFICATION_SYSTEM_PROMPT,
     RESCUE_BAG_CREATION_SYSTEM_PROMPT,
 )
+from .db_helper import get_merchant_menu, get_merchant_bag_pricing
 
 load_dotenv()
 
@@ -19,28 +20,28 @@ config.read("config.ini")
 
 LLM_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_URL = config["GEMINI"]["api_url"]
-REGULAR_BAG_PRICE = float(config["RESCUE_BAG"]["regular_bag_price"])
-LARGE_BAG_PRICE = float(config["RESCUE_BAG"]["large_bag_price"])
 
 
 def classify_food_from_image(
+    merchant_id: str,
     image_base64: str,
-    menu_json: Optional[List[Any]] = None,
 ) -> List[Dict[str, Any]]:
     """
     Classify food items from a base64-encoded image.
 
     Args:
+        merchant_id: Merchant UUID
         image_base64: Base64 encoded image
-        menu_json: Optional menu as list of items (e.g. from menu.json 'menu' array) for matching and quantification
 
     Returns:
         List[Dict[str, Any]]: List of food items as a JSON
     """
+    
+    # Pull menu from DB
+    menu_json = get_merchant_menu(merchant_id)
 
     system_prompt = FOOD_CLASSIFICATION_SYSTEM_PROMPT
-    if menu_json:
-        system_prompt += "\n\nRestaurant menu (match by food_name):\n" + json.dumps(menu_json, indent=2)
+    system_prompt += "\n\nRestaurant menu (match by food_name):\n" + json.dumps(menu_json, indent=2)
 
     headers = {
         "Content-Type": "application/json",
@@ -136,21 +137,25 @@ def check_veg_rescue_bag_creation(
     return [bag for bag in suggested_rescue_bags if len(bag.get("items", [])) > 0]
 
 def rescue_bag_creation(
+    merchant_id: str,
     food_classification_output: List[Dict[str, Any]],
     menu_json: List[Dict[str, Any]],
 ) -> Dict[str, Any]:
     """
     Create rescue bags from leftover food items with prices already attached.
-    Uses regular_bag_price and large_bag_price from config.ini [RESCUE_BAG].
     
     Args:
+        merchant_id: Merchant UUID
         food_classification_output: List of leftover food items with prices and non_veg field
         menu_json: Full menu list to validate veg/non-veg status
     """
+    
+    # Get bag pricing from merchant
+    bag_pricing = get_merchant_bag_pricing(merchant_id)
 
     user_message = {
-        "regular_bag_price": REGULAR_BAG_PRICE,
-        "large_bag_price": LARGE_BAG_PRICE,
+        "regular_bag_price": bag_pricing["regular_bag_price"],
+        "large_bag_price": bag_pricing["large_bag_price"],
         "leftover_food_items": food_classification_output,
     }
 

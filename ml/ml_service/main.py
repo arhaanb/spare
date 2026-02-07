@@ -13,6 +13,12 @@ from .models import (
 )
 from .food_classification import classify_food_from_image, rescue_bag_creation
 from .price_optimization import get_price_optimizer
+from .db_helper import (
+    upsert_leftover_items,
+    get_leftover_items,
+    get_merchant_menu,
+    upsert_rescue_bags
+)
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -38,45 +44,55 @@ async def health_check():
 
 
 @app.post("/api/ml/food-extraction")
-async def food_extraction_endpoint(image_base64: str = Body(...), menu: list = Body(...)):
+async def food_extraction_endpoint(request: dict = Body(...)):
     """
-    Extract food items from image with prices from menu.
+    Extract food items from image, save to DB, return saved document.
     
     Required body parameters:
+        merchant_id: Merchant UUID
         image_base64: Base64 encoded image string
-        menu: Full menu JSON list (e.g. from menu.json "menu" array) with food_name, price, etc.
     
     Returns:
-        List[Dict[str, Any]]: List of food items as a JSON
+        MongoDB document with leftover items
     """
-    result = classify_food_from_image(image_base64=image_base64, menu_json=menu)
+    merchant_id = request.get("merchant_id")
+    image_base64 = request.get("image_base64")
     
-    # TODO remove this after testing
-    with open("leftover_food_items_output.json", "w", encoding="utf-8") as f:
-        json.dump(result, f, indent=2)
-
-    return result
+    # Call LLM to classify food (pulls menu from DB internally)
+    leftover_items = classify_food_from_image(merchant_id=merchant_id, image_base64=image_base64)
+    
+    # Upsert to DB by merchant_id + date
+    saved_doc = upsert_leftover_items(merchant_id, leftover_items)
+    
+    return saved_doc
 
 
 @app.post("/api/ml/rescue-bag-creation")
-async def rescue_bag_creation_endpoint(leftover_food_items: list = Body(...), menu: list = Body(...)):
+async def rescue_bag_creation_endpoint(request: dict = Body(...)):
     """
-    Create rescue bags from leftover food items.
+    Create rescue bags from leftover food items in DB.
     
-    Required body parameters:
-        leftover_food_items: List of items with closest_menu_item, quantity, price, non_veg
-        menu: Full menu JSON list (e.g. from menu.json "menu" array) for veg/non-veg validation
+    Required body parameter:
+        merchant_id: Merchant UUID
     
     Returns:
-        List of rescue bags with bag_type, target_price, items, estimated_total_value
+        MongoDB document with rescue bags
     """
-    result = rescue_bag_creation(food_classification_output=leftover_food_items, menu_json=menu)
+    merchant_id = request.get("merchant_id")
     
-    # TODO remove this after testing
-    with open("rescue_bag_creation_output.json", "w", encoding="utf-8") as f:
-        json.dump(result, f, indent=2)
-
-    return result
+    # Pull leftover items from DB
+    leftover_items = get_leftover_items(merchant_id)
+    
+    # Pull menu from DB
+    menu = get_merchant_menu(merchant_id)
+    
+    # Call LLM to create rescue bags
+    rescue_bags = rescue_bag_creation(merchant_id=merchant_id, food_classification_output=leftover_items, menu_json=menu)
+    
+    # Upsert to DB by merchant_id + date
+    saved_doc = upsert_rescue_bags(merchant_id, rescue_bags)
+    
+    return saved_doc
 
 
 @app.post(
