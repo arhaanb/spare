@@ -4,10 +4,14 @@ import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import { useOrder } from '../context/OrderContext';
+import { useNavigation } from '@react-navigation/native';
 
 const ProfileScreen = () => {
     const insets = useSafeAreaInsets();
+    const navigation = useNavigation();
     const { signOut } = useAuth();
+    const { hasActiveOrder } = useOrder();
 
     return (
         <View style={[styles.container, { paddingTop: insets.top + SPACING.xl }]}>
@@ -25,6 +29,18 @@ const ProfileScreen = () => {
 
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Account</Text>
+
+                {hasActiveOrder && (
+                    <TouchableOpacity
+                        style={[styles.menuItem, { borderBottomColor: COLORS.activeCategory }]}
+                        onPress={() => navigation.navigate('OrderConfirmation')}
+                    >
+                        <Ionicons name="receipt" size={24} color={COLORS.activeCategory} />
+                        <Text style={[styles.menuText, { color: COLORS.activeCategory }]}>Active Order</Text>
+                        <Ionicons name="chevron-forward" size={20} color={COLORS.activeCategory} />
+                    </TouchableOpacity>
+                )}
+
                 <TouchableOpacity style={styles.menuItem}>
                     <Ionicons name="settings-outline" size={24} color={COLORS.textPrimary} />
                     <Text style={styles.menuText}>Settings</Text>

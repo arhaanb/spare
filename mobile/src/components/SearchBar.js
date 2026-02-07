@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
 
@@ -7,7 +7,8 @@ const SearchBar = ({
   value,
   onChangeText,
   placeholder = "Search menu, restaurant or etc",
-  onFilterPress
+  onFilterPress,
+  activeFiltersCount = 0,
 }) => {
   return (
     <View style={styles.container}>
@@ -21,6 +22,11 @@ const SearchBar = ({
       />
       <TouchableOpacity style={styles.filterButton} onPress={onFilterPress}>
         <Ionicons name="options-outline" size={20} color={COLORS.textSecondary} />
+        {activeFiltersCount > 0 ? (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{activeFiltersCount}</Text>
+          </View>
+        ) : null}
       </TouchableOpacity>
     </View>
   );
@@ -53,6 +59,24 @@ const styles = StyleSheet.create({
   filterButton: {
     marginLeft: SPACING.sm,
     opacity: 0.8,
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: -8,
+    right: -10,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: COLORS.activeCategory,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: COLORS.background,
+    fontSize: 10,
+    fontFamily: 'Saans-SemiBold',
   },
 });
 

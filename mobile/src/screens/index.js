@@ -5,6 +5,8 @@ import FavouritesScreen from './FavouritesScreen';
 import ProfileScreen from './ProfileScreen';
 import OnboardingScreen from './OnboardingScreen';
 import LoginScreen from './LoginScreen';
+import CartScreen from './CartScreen';
+import OrderConfirmationScreen from './OrderConfirmationScreen';
 
 export {
   HomeScreen,
@@ -14,4 +16,6 @@ export {
   ProfileScreen,
   OnboardingScreen,
   LoginScreen,
+  CartScreen,
+  OrderConfirmationScreen,
 };

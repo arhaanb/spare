@@ -78,6 +78,8 @@ const styles = StyleSheet.create({
         marginBottom: SPACING.lg,
         width: '100%',
         alignItems: 'center',
+        // Let the heart glow extend slightly without being clipped by the list.
+        overflow: 'visible',
     },
 });
 

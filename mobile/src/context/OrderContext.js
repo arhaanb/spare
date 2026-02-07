@@ -1,0 +1,105 @@
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const OrderContext = createContext();
+
+const STORAGE_KEY = '@active_order';
+
+export const useOrder = () => {
+    const context = useContext(OrderContext);
+    if (!context) {
+        throw new Error('useOrder must be used within an OrderProvider');
+    }
+    return context;
+};
+
+// Order pickup window is 2 hours
+const PICKUP_WINDOW_MS = 2 * 60 * 60 * 1000;
+
+export const OrderProvider = ({ children }) => {
+    const [activeOrder, setActiveOrder] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Load order from storage on mount
+    useEffect(() => {
+        const loadOrder = async () => {
+            try {
+                const savedOrder = await AsyncStorage.getItem(STORAGE_KEY);
+                if (savedOrder) {
+                    const parsed = JSON.parse(savedOrder);
+                    // Reconstitute Date object
+                    parsed.expiresAt = new Date(parsed.expiresAt);
+
+                    // Check if already expired
+                    if (Date.now() < parsed.expiresAt.getTime()) {
+                        setActiveOrder(parsed);
+                    } else {
+                        await AsyncStorage.removeItem(STORAGE_KEY);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading order:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadOrder();
+    }, []);
+
+    // Create a new active order
+    const createOrder = useCallback(async (orderCode, total, itemCount) => {
+        const now = Date.now();
+        const expiresAt = new Date(now + PICKUP_WINDOW_MS);
+
+        const newOrder = {
+            orderCode,
+            total,
+            itemCount,
+            createdAt: now,
+            expiresAt,
+        };
+
+        setActiveOrder(newOrder);
+        try {
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newOrder));
+        } catch (error) {
+            console.error('Error saving order:', error);
+        }
+    }, []);
+
+    // Mark order as complete/collected
+    const completeOrder = useCallback(async () => {
+        setActiveOrder(null);
+        try {
+            await AsyncStorage.removeItem(STORAGE_KEY);
+        } catch (error) {
+            console.error('Error removing order:', error);
+        }
+    }, []);
+
+    // Check if order has expired
+    const isOrderExpired = useCallback(() => {
+        if (!activeOrder) return false;
+        return Date.now() > activeOrder.expiresAt.getTime();
+    }, [activeOrder]);
+
+    // Get time remaining until expiry
+    const getTimeRemaining = useCallback(() => {
+        if (!activeOrder) return 0;
+        const remaining = activeOrder.expiresAt.getTime() - Date.now();
+        return Math.max(0, remaining);
+    }, [activeOrder]);
+
+    const value = {
+        activeOrder,
+        isLoading,
+        createOrder,
+        completeOrder,
+        isOrderExpired,
+        getTimeRemaining,
+        hasActiveOrder: !!activeOrder,
+    };
+
+    return <OrderContext.Provider value={value}>{children}</OrderContext.Provider>;
+};

@@ -108,7 +108,8 @@ const RestaurantCard = ({ restaurant, onPress, variant = 'default' }) => {
       {/* Image with overlays */}
       <View style={[
         styles.imageContainer,
-        (variant === 'large' || variant === 'grid') && styles.imageContainerLarge
+        variant === 'large' && styles.imageContainerLarge,
+        variant === 'grid' && styles.imageContainerGrid,
       ]}>
         <Image
           source={{ uri: restaurant.image }}
@@ -125,7 +126,10 @@ const RestaurantCard = ({ restaurant, onPress, variant = 'default' }) => {
 
         {/* Favorite Heart - Top Right */}
         <TouchableOpacity
-          style={styles.favoriteButton}
+          style={[
+            styles.favoriteButton,
+            variant === 'large' && styles.favoriteButtonLarge,
+          ]}
           onPress={handleFavoritePress}
           activeOpacity={0.7}
         >
@@ -204,6 +208,10 @@ const styles = StyleSheet.create({
     height: undefined,
     aspectRatio: 16 / 9,
   },
+  imageContainerGrid: {
+    height: undefined,
+    aspectRatio: 16 / 9,
+  },
   image: {
     width: '100%',
     height: '100%',
@@ -248,6 +256,11 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: 'rgba(0, 0, 0, 0.22)',
     overflow: 'visible',
+  },
+  favoriteButtonLarge: {
+    // Allow the glow to extend beyond the card without clipping
+    right: SPACING.sm,
+    top: SPACING.sm,
   },
   heartIconWrap: {
     width: 38,

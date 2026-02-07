@@ -2,11 +2,14 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
-import { COLORS, SPACING, FONT_SIZES } from '../constants/theme';
-import { LocationHeader, CategoryFilter, RestaurantCard, SearchBar } from '../components';
+import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
+import { LocationHeader, CategoryFilter, RestaurantCard, SearchBar, FilterBottomSheet, GlobalActiveOrderIndicator } from '../components';
 import BottomTabBar from '../components/BottomTabBar';
 import FavouritesScreen from './FavouritesScreen';
 import ProfileScreen from './ProfileScreen';
+import ActiveOrderBanner from '../components/ActiveOrderBanner';
+import { useOrder } from '../context/OrderContext';
+import { useAuth } from '../context/AuthContext';
 import {
   categories,
   userLocation,
@@ -15,6 +18,15 @@ import {
   getPopularRestaurants,
   getNewlyAddedRestaurants,
 } from '../data/mockData';
+
+const DEFAULT_FILTERS = {
+  onlyVeg: false,
+  availableOnly: true,
+  maxDistanceKm: null, // null | number
+  minRating: null, // null | number
+  sortBy: 'relevance', // relevance | rating | distance | priceAsc
+};
+
 
 const SectionHeader = ({ title, onSeeAll }) => (
   <View style={styles.sectionHeader}>
@@ -58,8 +70,15 @@ const HomeContent = ({
   newlyAddedRestaurants,
   handleRestaurantPress,
   handleSeeAll,
-  allFilteredRestaurants
+  allFilteredRestaurants,
+  hasActiveFilters,
+  activeFiltersCount,
+  handleActiveOrderPress,
+  activeTab, // Added prop
 }) => {
+  const { activeOrder } = useOrder();
+  const { user } = useAuth();
+
   return (
     <ScrollView
       style={styles.scrollView}
@@ -68,6 +87,7 @@ const HomeContent = ({
         styles.scrollContent,
         { paddingTop: insets.top + SPACING.sm }
       ]}
+      scrollEventThrottle={16} // Added scrollEventThrottle
     >
       <LocationHeader
         location={userLocation}
@@ -80,13 +100,18 @@ const HomeContent = ({
         onSelectCategory={handleCategorySelect}
       />
 
+      {user && activeOrder && (
+        <ActiveOrderBanner onPress={handleActiveOrderPress} />
+      )}
+
       <SearchBar
         value={searchQuery}
         onChangeText={setSearchQuery}
         onFilterPress={handleFilterPress}
+        activeFiltersCount={activeFiltersCount}
       />
 
-      {(searchQuery.length > 0 || selectedCategory) ? (
+      {(searchQuery.length > 0 || selectedCategory || hasActiveFilters) ? (
         // Grid View for Search/Category Results
         <Animated.View
           key="grid"
@@ -113,7 +138,7 @@ const HomeContent = ({
                 <Animated.View
                   key={restaurant.id}
                   style={styles.gridItem}
-                  layout={Layout.springify().damping(18).stiffness(180)}
+                  layout={Layout.springify().damping(28).stiffness(150)}
                   entering={FadeIn.duration(180)}
                   exiting={FadeOut.duration(140)}
                 >
@@ -168,19 +193,48 @@ const HomeContent = ({
         </Animated.View>
       )}
 
-      <View style={styles.bottomPadding} />
+      <View style={[
+        styles.bottomPadding,
+        { height: (activeOrder && activeTab !== 'profile') ? 160 : 100 }
+      ]} />
     </ScrollView>
   );
 };
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ navigation, route }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('explore');
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const bottomSheetRef = React.useRef(null);
 
   const insets = useSafeAreaInsets();
 
-  // Filter based on category AND search query
+  React.useEffect(() => {
+    if (route.params?.tab) {
+      setActiveTab(route.params.tab);
+    }
+  }, [route.params?.tab]);
+
+  const hasActiveFilters = useMemo(() => (
+    filters.onlyVeg !== DEFAULT_FILTERS.onlyVeg
+    || filters.availableOnly !== DEFAULT_FILTERS.availableOnly
+    || filters.maxDistanceKm !== DEFAULT_FILTERS.maxDistanceKm
+    || filters.minRating !== DEFAULT_FILTERS.minRating
+    || filters.sortBy !== DEFAULT_FILTERS.sortBy
+  ), [filters]);
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (filters.onlyVeg) count += 1;
+    if (!filters.availableOnly) count += 1;
+    if (filters.maxDistanceKm !== null) count += 1;
+    if (filters.minRating !== null) count += 1;
+    if (filters.sortBy !== 'relevance') count += 1;
+    return count;
+  }, [filters]);
+
+  // Filter based on category, search query, and user-selected filters.
   const allFilteredRestaurants = useMemo(() => {
     let result = restaurants;
 
@@ -194,12 +248,42 @@ const HomeScreen = ({ navigation }) => {
       const lowerQuery = searchQuery.toLowerCase();
       result = result.filter(r =>
         r.name.toLowerCase().includes(lowerQuery) ||
+        r.location.toLowerCase().includes(lowerQuery) ||
+        r.category.toLowerCase().includes(lowerQuery) ||
         r.tags?.some(tag => tag.toLowerCase().includes(lowerQuery))
       );
     }
 
+    if (filters.onlyVeg) {
+      result = result.filter((r) => r.vegOnly);
+    }
+
+    if (filters.availableOnly) {
+      result = result.filter((r) => r.isAvailable);
+    }
+
+    if (filters.maxDistanceKm !== null) {
+      result = result.filter((r) => r.distance <= filters.maxDistanceKm);
+    }
+
+    if (filters.minRating !== null) {
+      result = result.filter((r) => r.rating >= filters.minRating);
+    }
+
+    if (filters.sortBy === 'rating') {
+      result = [...result].sort((a, b) => b.rating - a.rating);
+    } else if (filters.sortBy === 'distance') {
+      result = [...result].sort((a, b) => a.distance - b.distance);
+    } else if (filters.sortBy === 'priceAsc') {
+      result = [...result].sort((a, b) => {
+        const aPrice = Math.min(...a.bagOptions.map((o) => o.price));
+        const bPrice = Math.min(...b.bagOptions.map((o) => o.price));
+        return aPrice - bPrice;
+      });
+    }
+
     return result;
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, filters]);
 
   const relevantRestaurants = useMemo(() => {
     return getRelevantRestaurants(allFilteredRestaurants).slice(0, 6);
@@ -217,7 +301,21 @@ const HomeScreen = ({ navigation }) => {
     setSelectedCategory(selectedCategory === categoryId ? null : categoryId);
   };
 
-  const handleRestaurantPress = (restaurant) => {
+  /* Navigation Handlers */
+  const { activeOrder } = useOrder();
+
+  const handleActiveOrderPress = () => {
+    if (activeOrder) {
+      navigation.navigate('OrderConfirmation', {
+        orderCode: activeOrder.orderCode,
+        total: activeOrder.total,
+        itemCount: activeOrder.itemCount,
+        expiresAt: activeOrder.expiresAt.toISOString(),
+      });
+    }
+  };
+
+  const handleRestaurantPress = (restaurant) => { // Renamed from handleRestaurantPress
     navigation.navigate('RestaurantDetail', { restaurant });
   };
 
@@ -234,7 +332,7 @@ const HomeScreen = ({ navigation }) => {
               insets={insets}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
-              handleFilterPress={() => console.log('Filter')}
+              handleFilterPress={() => bottomSheetRef.current?.present()}
               selectedCategory={selectedCategory}
               handleCategorySelect={handleCategorySelect}
               relevantRestaurants={relevantRestaurants}
@@ -243,6 +341,10 @@ const HomeScreen = ({ navigation }) => {
               handleRestaurantPress={handleRestaurantPress}
               handleSeeAll={() => { }}
               allFilteredRestaurants={allFilteredRestaurants}
+              hasActiveFilters={hasActiveFilters}
+              activeFiltersCount={activeFiltersCount}
+              activeTab={activeTab}
+              handleActiveOrderPress={handleActiveOrderPress}
             />
           </Animated.View>
         );
@@ -269,7 +371,16 @@ const HomeScreen = ({ navigation }) => {
 
       {renderContent()}
 
+      <FilterBottomSheet
+        ref={bottomSheetRef}
+        filters={filters}
+        resultsCount={allFilteredRestaurants.length}
+        onApply={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
+        onReset={() => setFilters(DEFAULT_FILTERS)}
+      />
+
       <BottomTabBar activeTab={activeTab} onTabPress={handleTabPress} />
+      {activeTab !== 'profile' && <GlobalActiveOrderIndicator />}
     </View>
   );
 };

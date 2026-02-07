@@ -23,6 +23,11 @@ const categoryEmojis = {
 
 const CategoryCard = ({ category, isSelected, onPress }) => {
   const emoji = categoryEmojis[category.id] || '🍽️';
+  const InactiveSvg = category.iconInactiveSvg;
+  const ActiveSvg = category.iconActiveSvg;
+  const IconSvg = isSelected ? ActiveSvg : InactiveSvg;
+  const iconSize = category.iconSize ?? 96;
+  const iconOffsetY = category.iconOffsetY ?? -32;
   const pressed = useSharedValue(1);
   const selectedProgress = useSharedValue(isSelected ? 1 : 0);
 
@@ -66,10 +71,23 @@ const CategoryCard = ({ category, isSelected, onPress }) => {
         );
       }}
     >
-      <View style={styles.imageContainer}>
-        <Text style={[styles.placeholderEmoji, isSelected && styles.placeholderEmojiSelected]}>{emoji}</Text>
+      <View style={[styles.imageContainer, { marginTop: iconOffsetY }]}>
+        {IconSvg ? (
+          <IconSvg width={iconSize} height={iconSize} />
+        ) : (
+          <Text style={[styles.placeholderEmoji, isSelected && styles.placeholderEmojiSelected]}>{emoji}</Text>
+        )}
       </View>
-      <Animated.Text style={[styles.categoryText, textAnimatedStyle]}>{category.name}</Animated.Text>
+      <Animated.Text
+        style={[styles.categoryText, textAnimatedStyle]}
+        numberOfLines={1}
+        ellipsizeMode="clip"
+        adjustsFontSizeToFit
+        minimumFontScale={0.75}
+        allowFontScaling={false}
+      >
+        {category.name}
+      </Animated.Text>
     </AnimatedTouchable>
   );
 };
@@ -102,17 +120,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   categoryCard: {
-    width: '23%', // Roughly 4 cards per row
-    aspectRatio: 0.85,
+    width: '23%',
+    aspectRatio: 1,
     borderRadius: BORDER_RADIUS.lg,
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: SPACING.xs,
+    justifyContent: 'space-between',
+    paddingTop: 0,
+    paddingBottom: SPACING.xs,
+    paddingHorizontal: 2,
+    overflow: 'hidden',
   },
   imageContainer: {
-    flex: 1,
+    height: 70,
+    width: '100%',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    marginBottom: 0,
   },
   placeholderEmoji: {
     fontSize: 40,
@@ -122,10 +145,13 @@ const styles = StyleSheet.create({
     opacity: 1,
   },
   categoryText: {
+    width: '100%',
+    textAlign: 'center',
     fontSize: FONT_SIZES.md,
+    lineHeight: 18,
     fontFamily: 'Gargoyle',
-    fontWeight: '600',
-    marginBottom: SPACING.xs,
+    marginBottom: 4,
+    paddingHorizontal: 2,
   },
 });
 
