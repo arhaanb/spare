@@ -25,7 +25,7 @@ import { formatPickupTime, restaurants } from '../data/mockData';
 import { RestaurantCard } from '../components';
 import BagSelectionModal from '../components/BagSelectionModal';
 import CartIndicator from '../components/CartIndicator';
-import GlobalActiveOrderIndicator from '../components/GlobalActiveOrderIndicator';
+import BottomTabBar from '../components/BottomTabBar';
 import { useCart } from '../context/CartContext';
 import RegularBagIconLocal from '../../assets/images/assets/bags/regular.svg';
 import LargeBagIconLocal from '../../assets/images/assets/bags/large.svg';
@@ -446,6 +446,17 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
 
         {/* Cart Indicator */}
         <CartIndicator onPress={handleViewCart} />
+
+        <BottomTabBar
+          activeTab="explore"
+          onTabPress={(tabId) => {
+            if (tabId === 'explore') {
+              navigation.navigate('Home', { tab: 'explore' });
+            } else {
+              navigation.navigate('Home', { tab: tabId });
+            }
+          }}
+        />
       </Animated.View>
     </SafeAreaView >
   );
@@ -463,7 +474,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: SPACING.xxxl,
+    paddingBottom: 120, // Increased to account for BottomTabBar
   },
   headerArea: {
     paddingTop: SPACING.md,

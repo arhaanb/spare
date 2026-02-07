@@ -73,7 +73,8 @@ const HomeContent = ({
   allFilteredRestaurants,
   hasActiveFilters,
   activeFiltersCount,
-  handleActiveOrderPress, // New prop
+  handleActiveOrderPress,
+  activeTab, // Added prop
 }) => {
   const { activeOrder } = useOrder();
   const { user } = useAuth();
@@ -200,7 +201,7 @@ const HomeContent = ({
   );
 };
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ navigation, route }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('explore');
@@ -208,6 +209,12 @@ const HomeScreen = ({ navigation }) => {
   const bottomSheetRef = React.useRef(null);
 
   const insets = useSafeAreaInsets();
+
+  React.useEffect(() => {
+    if (route.params?.tab) {
+      setActiveTab(route.params.tab);
+    }
+  }, [route.params?.tab]);
 
   const hasActiveFilters = useMemo(() => (
     filters.onlyVeg !== DEFAULT_FILTERS.onlyVeg
@@ -336,6 +343,8 @@ const HomeScreen = ({ navigation }) => {
               allFilteredRestaurants={allFilteredRestaurants}
               hasActiveFilters={hasActiveFilters}
               activeFiltersCount={activeFiltersCount}
+              activeTab={activeTab}
+              handleActiveOrderPress={handleActiveOrderPress}
             />
           </Animated.View>
         );
