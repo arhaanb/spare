@@ -108,7 +108,8 @@ const RestaurantCard = ({ restaurant, onPress, variant = 'default' }) => {
       {/* Image with overlays */}
       <View style={[
         styles.imageContainer,
-        (variant === 'large' || variant === 'grid') && styles.imageContainerLarge
+        variant === 'large' && styles.imageContainerLarge,
+        variant === 'grid' && styles.imageContainerGrid,
       ]}>
         <Image
           source={{ uri: restaurant.image }}
@@ -201,6 +202,13 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.border,
   },
   imageContainerLarge: {
+    height: undefined,
+    aspectRatio: 16 / 9,
+    // Inset so the favourite heart glow doesn’t clip on the favourites page.
+    paddingRight: 36,
+    paddingTop: 28,
+  },
+  imageContainerGrid: {
     height: undefined,
     aspectRatio: 16 / 9,
   },

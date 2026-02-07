@@ -20,19 +20,130 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
-import { formatPickupTime } from '../data/mockData';
+import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
+import { formatPickupTime, restaurants } from '../data/mockData';
+import { RestaurantCard } from '../components';
+import BagSelectionModal from '../components/BagSelectionModal';
+import CartIndicator from '../components/CartIndicator';
+import { useCart } from '../context/CartContext';
+import RegularBagIconLocal from '../../assets/images/assets/bags/regular.svg';
+import LargeBagIconLocal from '../../assets/images/assets/bags/large.svg';
+import MakeItYourselfIconLocal from '../../assets/images/assets/bags/makeyourown.svg';
+
+import VegIcon from '../../assets/images/assets/foodtype/veg.svg';
+import VegIconDark from '../../assets/images/assets/foodtype/veg-dark.svg';
+import NonVegIcon from '../../assets/images/assets/foodtype/nonveg.svg';
+import NonVegIconDark from '../../assets/images/assets/foodtype/nonveg-dark.svg';
+import JainIcon from '../../assets/images/assets/foodtype/jain.svg';
+import JainIconDark from '../../assets/images/assets/foodtype/jain-dark.svg';
 
 const PREFERENCES = [
-  { id: 'veg', label: 'Veg Only', icon: 'leaf-outline' },
-  { id: 'nonveg', label: 'Non-Veg', icon: 'restaurant-outline' },
-  { id: 'jain', label: 'Jain Only', icon: 'flower-outline' },
+  { id: 'veg', label: 'Veg Only', icon: VegIcon, iconDark: VegIconDark },
+  { id: 'nonveg', label: 'Non-Veg Only', icon: NonVegIcon, iconDark: NonVegIconDark },
+  { id: 'jain', label: 'Jain Only', icon: JainIcon, iconDark: JainIconDark },
 ];
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 const AnimatedIonicons = Animated.createAnimatedComponent(Ionicons);
 
-const PreferenceChip = ({ active, icon, label, onPress }) => {
+const BagCard = ({ bagOption, onPress, isSelected }) => {
+  const pressed = useSharedValue(1);
+  const borderWidth = useSharedValue(isSelected ? 2 : 0);
+  const checkmarkScale = useSharedValue(isSelected ? 1 : 0);
+
+  React.useEffect(() => {
+    borderWidth.value = withSpring(isSelected ? 2 : 0, { damping: 16, stiffness: 300 });
+    checkmarkScale.value = withSpring(isSelected ? 1 : 0, { damping: 14, stiffness: 280 });
+  }, [isSelected, borderWidth, checkmarkScale]);
+
+  const cardAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pressed.value }],
+    borderWidth: borderWidth.value,
+    borderColor: COLORS.activeCategory,
+  }));
+
+  const checkmarkStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: checkmarkScale.value }],
+    opacity: checkmarkScale.value,
+  }));
+
+  // Determine which icon to use based on bag role
+  const getBagIcon = () => {
+    const role = bagOption.role;
+
+    const configs = {
+      regular: { size: 52, marginTop: -16, alignItems: 'center' },
+      large: { size: 76, marginTop: -32, alignItems: 'center' },
+      diy: { size: 94, marginTop: -42, alignItems: 'flex-end', extraStyle: { marginRight: -20 } },
+    };
+
+    const config = configs[role] || configs.regular;
+
+    let icon;
+    if (role === 'large') {
+      icon = <LargeBagIconLocal height={config.size} />;
+    } else if (role === 'diy') {
+      icon = <MakeItYourselfIconLocal height={config.size} />;
+    } else {
+      icon = <RegularBagIconLocal height={config.size} />;
+    }
+
+    return { icon, marginTop: config.marginTop, alignItems: config.alignItems, extraStyle: config.extraStyle };
+  };
+
+  const { icon, marginTop, alignItems, extraStyle } = getBagIcon();
+
+  return (
+    <AnimatedTouchable
+      style={[styles.bagCard, cardAnimatedStyle]}
+      activeOpacity={0.9}
+      onPress={() => onPress(bagOption)}
+      onPressIn={() => {
+        pressed.value = withSpring(0.96, { damping: 20, stiffness: 520, mass: 0.55 });
+      }}
+      onPressOut={() => {
+        pressed.value = withSequence(
+          withSpring(1.02, { damping: 16, stiffness: 620, mass: 0.55 }),
+          withSpring(1, { damping: 18, stiffness: 520, mass: 0.55 }),
+        );
+      }}
+    >
+      <View style={styles.pillContainer}>
+        {bagOption.available <= 2 ? (
+          <View style={styles.stockPill}>
+            <Text style={styles.stockText}>Only {bagOption.available} Left</Text>
+          </View>
+        ) : null}
+      </View>
+
+      {/* Selection Checkmark */}
+      {isSelected && (
+        <Animated.View style={[styles.checkmarkBadge, checkmarkStyle]}>
+          <Ionicons name="checkmark-circle" size={24} color={COLORS.activeCategory} />
+        </Animated.View>
+      )}
+
+      <View style={styles.cardContent}>
+        <View style={[styles.bagIconWrap, { marginTop, alignItems }, extraStyle]}>
+          {icon}
+        </View>
+
+        <View style={styles.bagInfoBottom}>
+          <Text style={styles.bagTitle} numberOfLines={2}>
+            {bagOption.type}
+          </Text>
+
+          <View style={styles.priceRow}>
+            <Text style={styles.originalPrice}>₹{bagOption.originalPrice}</Text>
+            <Text style={styles.salePrice}>₹{bagOption.price}</Text>
+          </View>
+        </View>
+      </View>
+    </AnimatedTouchable>
+  );
+};
+
+const PreferenceChip = ({ active, icon: Icon, iconDark: IconDark, label, onPress }) => {
   const pressed = useSharedValue(1);
   const progress = useSharedValue(active ? 1 : 0);
 
@@ -41,7 +152,7 @@ const PreferenceChip = ({ active, icon, label, onPress }) => {
   }, [active, progress]);
 
   const chipStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(progress.value, [0, 1], ['#0C4D2A', COLORS.activeCategory]),
+    backgroundColor: interpolateColor(progress.value, [0, 1], ['#134631', COLORS.activeCategory]),
     borderColor: interpolateColor(progress.value, [0, 1], ['#1B6C41', COLORS.activeCategory]),
     transform: [{ scale: pressed.value }],
   }));
@@ -50,13 +161,9 @@ const PreferenceChip = ({ active, icon, label, onPress }) => {
     color: interpolateColor(progress.value, [0, 1], [COLORS.activeCategory, COLORS.background]),
   }));
 
-  const iconAnimatedProps = useAnimatedProps(() => ({
-    color: interpolateColor(progress.value, [0, 1], [COLORS.activeCategory, COLORS.background]),
-  }));
-
   return (
     <AnimatedTouchable
-      style={[styles.preferenceChip, active && styles.preferenceChipActive, chipStyle]}
+      style={[styles.preferenceChip, chipStyle]}
       onPress={onPress}
       activeOpacity={0.9}
       onPressIn={() => {
@@ -69,17 +176,25 @@ const PreferenceChip = ({ active, icon, label, onPress }) => {
         );
       }}
     >
-      <AnimatedIonicons name={icon} size={16} animatedProps={iconAnimatedProps} />
-      <Animated.Text style={[styles.preferenceLabel, active && styles.preferenceLabelActive, labelStyle]}>
-        {label}
-      </Animated.Text>
+      <View style={styles.chipIconContainer}>
+        {active ? <IconDark height="100%" /> : <Icon height="100%" />}
+      </View>
+      <View style={styles.chipLabelContainer}>
+        <Animated.Text style={[styles.preferenceLabel, labelStyle]} numberOfLines={1}>
+          {label}
+        </Animated.Text>
+      </View>
     </AnimatedTouchable>
   );
 };
 
 const RestaurantDetailScreen = ({ route, navigation }) => {
   const { restaurant } = route.params;
+  const { lockedPreference, addToCart, isInCart, getCartItem, clearCart } = useCart();
   const [selectedPreference, setSelectedPreference] = useState(restaurant.vegOnly ? 'veg' : 'nonveg');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedBag, setSelectedBag] = useState(null);
+  const [showPreferenceConfirm, setShowPreferenceConfirm] = useState(false);
 
   const pickupWindow = useMemo(() => {
     const firstOption = restaurant.bagOptions?.[0];
@@ -106,6 +221,40 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
     return `A rotating mix can include ${asText}. Fresh selections vary daily based on surplus availability.`;
   }, [restaurant.possibleIngredients]);
 
+  const similarRestaurants = useMemo(() => {
+    return restaurants.filter(r => r.category === restaurant.category && r.id !== restaurant.id);
+  }, [restaurant]);
+
+  const handleBagPress = (bagOption) => {
+    // Don't open modal for "Make it yourself" - will be handled differently later
+    if (bagOption.role === 'diy') {
+      return;
+    }
+
+    setSelectedBag(bagOption);
+    setModalVisible(true);
+  };
+
+  const handleAddToCart = (quantity) => {
+    if (selectedBag) {
+      addToCart(selectedBag, quantity, selectedPreference, restaurant);
+    }
+  };
+
+  const handlePreferenceChange = (preferenceId) => {
+    // If cart has items and preference is locked, show confirmation
+    if (lockedPreference && lockedPreference !== preferenceId) {
+      // For now, just prevent change - will add confirmation modal later
+      return;
+    }
+    setSelectedPreference(preferenceId);
+  };
+
+  const handleViewCart = () => {
+    // Navigate to cart screen (to be implemented)
+    console.log('Navigate to cart');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Animated.View entering={FadeIn.duration(260)} style={styles.animatedContainer}>
@@ -114,42 +263,45 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.8}>
-            <Ionicons name="arrow-back" size={20} color={COLORS.textPrimary} />
-            <Text style={styles.backText}>Back</Text>
-          </TouchableOpacity>
-
+          <View style={styles.headerArea}>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.8}>
+              <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+              <Text style={styles.backText}>Back</Text>
+            </TouchableOpacity>
+          </View>
           <View style={styles.heroCard}>
             <View style={styles.heroTopRow}>
               <Image source={{ uri: restaurant.image }} style={styles.restaurantImage} />
 
               <View style={styles.heroInfo}>
-                <Text style={styles.restaurantName}>{restaurant.name}</Text>
+                <Text style={styles.restaurantName} numberOfLines={1}>{restaurant.name}</Text>
 
                 <View style={styles.metaRow}>
                   <Text style={styles.metaAccent}>{restaurant.timeToReach}-{restaurant.timeToReach + 10} mins</Text>
                   <Text style={styles.metaSeparator}>|</Text>
                   <Text style={styles.metaDefault}>{restaurant.distance.toFixed(1)} kms</Text>
                   <Text style={styles.metaSeparator}>|</Text>
+                  <Ionicons name="location-sharp" size={12} color="#E8A7F8" />
                   <Text style={styles.metaDefault}>{restaurant.location}</Text>
+                  <Ionicons name="chevron-forward" size={12} color="#415B50" style={{ marginLeft: 2 }} />
                 </View>
               </View>
 
               <View style={styles.ratingPill}>
-                <Text style={styles.ratingPillValue}>{restaurant.rating.toFixed(1)} ★</Text>
-                <Text style={styles.ratingPillCaption}>{restaurant.reviewCount} ratings</Text>
+                <Text style={styles.ratingValue}>{restaurant.rating.toFixed(1)} <Text style={{ fontSize: 13 }}>★</Text></Text>
+                <Text style={styles.ratingCount}>{(restaurant.reviewCount / 100).toFixed(1)}k+ ratings</Text>
               </View>
             </View>
 
             <View style={styles.pickupRow}>
-              <Ionicons name="time-outline" size={18} color={COLORS.textSecondary} />
+              <Ionicons name="stopwatch-outline" size={16} color={COLORS.textSecondary} />
               <Text style={styles.pickupLabel}>Pickup window:</Text>
               <Text style={styles.pickupValue}>{pickupWindow}</Text>
             </View>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Preference for Rescue Bag</Text>
+            <Text style={styles.sectionTitle}>Diet Preference</Text>
             <View style={styles.preferenceRow}>
               {PREFERENCES.map((preference) => {
                 const isActive = selectedPreference === preference.id;
@@ -158,8 +310,9 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
                     key={preference.id}
                     active={isActive}
                     icon={preference.icon}
+                    iconDark={preference.iconDark}
                     label={preference.label}
-                    onPress={() => setSelectedPreference(preference.id)}
+                    onPress={() => handlePreferenceChange(preference.id)}
                   />
                 );
               })}
@@ -168,33 +321,37 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Rescue Bag</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.bagList}>
-              {restaurant.bagOptions.map((bagOption) => (
-                <TouchableOpacity
-                  key={bagOption.id}
-                  style={styles.bagCard}
-                  activeOpacity={0.9}
-                  onPress={() => navigation.navigate('Reservation', { restaurant, bagOption })}
-                >
-                  {bagOption.available <= 2 ? (
-                    <View style={styles.stockPill}>
-                      <Text style={styles.stockText}>Only {bagOption.available} Left</Text>
-                    </View>
-                  ) : null}
+            <View style={styles.bagList}>
+              {[
+                { role: 'regular', label: 'Regular' },
+                { role: 'large', label: 'Large' },
+                { role: 'diy', label: 'Make it yourself' },
+              ].map((config, index) => {
+                // Map mock data bagOptions to these roles by index
+                // ensuring we always show 3 bags as requested
+                const apiData = restaurant.bagOptions?.[index] || {};
+                const bagData = {
+                  ...apiData,
+                  role: config.role,
+                  type: config.label,
+                  // Use provided prices if missing in data
+                  price: apiData.price || (config.role === 'regular' ? 79 : config.role === 'large' ? 109 : 129),
+                  originalPrice: apiData.originalPrice || (config.role === 'diy' ? 299 : 199),
+                };
 
-                  <View style={styles.bagIconWrap}>
-                    <Ionicons name="bag-handle" size={72} color={COLORS.activeCategory} />
-                  </View>
+                const bagId = bagData.id || bagData.role;
+                const inCart = isInCart(restaurant.id, bagId);
 
-                  <Text style={styles.bagTitle}>{bagOption.type}</Text>
-
-                  <View style={styles.priceRow}>
-                    <Text style={styles.originalPrice}>₹{bagOption.originalPrice}</Text>
-                    <Text style={styles.salePrice}> ₹{bagOption.price}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+                return (
+                  <BagCard
+                    key={config.role}
+                    bagOption={bagData}
+                    isSelected={inCart}
+                    onPress={handleBagPress}
+                  />
+                );
+              })}
+            </View>
           </View>
 
           <View style={styles.section}>
@@ -217,8 +374,10 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
                 resizeMode="contain"
               />
             </View>
-            <Text style={styles.ratingHeader}>Community Rating</Text>
 
+            <View style={{ paddingHorizontal: SPACING.lg }}>
+              <Text style={{ fontSize: FONT_SIZES.sm, fontFamily: 'Saans-SemiBold', color: COLORS.textPrimary, marginBottom: SPACING.md, textAlign: 'center' }}>Rating Breakdown</Text>
+            </View>
 
             <View style={styles.breakdownRow}>
               {ratingBreakdown.map((item) => (
@@ -230,17 +389,49 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
             </View>
           </View>
 
-          <View style={styles.bottomPadding} />
+          {similarRestaurants.length > 0 && (
+            <View style={styles.similarSection}>
+              <Text style={[styles.sectionTitle, { paddingHorizontal: SPACING.lg }]}>Similar Restaurants</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalScrollContent}
+              >
+                {similarRestaurants.map((item) => (
+                  <RestaurantCard
+                    key={item.id}
+                    restaurant={item}
+                    onPress={(r) => navigation.push('RestaurantDetail', { restaurant: r })}
+                  />
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
+          {/* Bag Selection Modal */}
+          <BagSelectionModal
+            visible={modalVisible}
+            bagOption={selectedBag}
+            restaurant={restaurant}
+            onClose={() => setModalVisible(false)}
+            onAddToCart={handleAddToCart}
+            initialQuantity={selectedBag ? (getCartItem(restaurant.id, selectedBag.id || selectedBag.role)?.quantity || 1) : 1}
+          />
+
+          {/* Cart Indicator */}
+          <CartIndicator onPress={handleViewCart} />
+
+          {/* </View style={styles.bottomPadding} /> */}
         </ScrollView>
       </Animated.View>
-    </SafeAreaView>
+    </SafeAreaView >
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.background, // Dark green background for entire screen
   },
   animatedContainer: {
     flex: 1,
@@ -251,25 +442,32 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: SPACING.xxxl,
   },
+  headerArea: {
+    paddingTop: SPACING.md,
+    paddingBottom: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+  },
   backButton: {
-    marginTop: SPACING.sm,
-    marginHorizontal: SPACING.lg,
-    marginBottom: SPACING.md,
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.xs,
+    marginBottom: SPACING.xs,
   },
   backText: {
-    color: COLORS.textPrimary,
+    color: '#FFFFFF',
     fontFamily: 'Saans-SemiBold',
     fontSize: FONT_SIZES.sm,
     letterSpacing: 0.2,
   },
   heroCard: {
     marginHorizontal: SPACING.lg,
-    backgroundColor: '#F9FBFA',
-    borderRadius: BORDER_RADIUS.xxl,
-    padding: SPACING.lg,
+    marginTop: 0,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderColor: '#E2E8E5',
+    ...SHADOWS.sm,
   },
   heroTopRow: {
     flexDirection: 'row',
@@ -286,11 +484,11 @@ const styles = StyleSheet.create({
     marginHorizontal: SPACING.md,
   },
   restaurantName: {
-    fontFamily: 'Gargoyle',
-    fontSize: 30,
+    fontFamily: 'Saans-Bold',
+    fontSize: 24,
     color: '#0B271A',
-    lineHeight: 34,
-    marginBottom: 4,
+    lineHeight: 28,
+    marginBottom: 2,
   },
   metaRow: {
     flexDirection: 'row',
@@ -313,22 +511,25 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.sm,
   },
   ratingPill: {
-    minWidth: 86,
-    backgroundColor: COLORS.activeCategory,
-    borderRadius: BORDER_RADIUS.xl,
+    backgroundColor: '#C6F04D',
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
     alignItems: 'center',
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.sm,
+    justifyContent: 'center',
+    minWidth: 70,
   },
-  ratingPillValue: {
-    fontFamily: 'Saans-SemiBold',
-    fontSize: FONT_SIZES.lg,
+  ratingValue: {
+    fontFamily: 'Saans-Bold',
+    fontSize: 16,
     color: '#0A3522',
+    lineHeight: 20,
   },
-  ratingPillCaption: {
+  ratingCount: {
     fontFamily: 'Saans',
-    fontSize: 11,
+    fontSize: 9,
     color: '#35573F',
+    marginTop: -2,
   },
   pickupRow: {
     marginTop: SPACING.md,
@@ -351,8 +552,15 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.sm,
   },
   section: {
-    marginTop: SPACING.xxl,
+    marginTop: 42, // Increased gap as requested
     paddingHorizontal: SPACING.lg,
+  },
+  similarSection: {
+    marginTop: 42,
+  },
+  horizontalScrollContent: {
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.md,
   },
   sectionTitle: {
     fontFamily: 'Gargoyle',
@@ -367,44 +575,76 @@ const styles = StyleSheet.create({
   },
   preferenceChip: {
     flex: 1,
-    minHeight: 44,
-    borderRadius: BORDER_RADIUS.lg,
-    backgroundColor: '#0C4D2A',
-    borderWidth: 1,
-    borderColor: '#1B6C41',
+    height: 32,
+    borderRadius: 12,
+    backgroundColor: '#134631',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
+    overflow: 'hidden', // Ensures icon doesn't bleed out of rounded corners
   },
-  preferenceChipActive: {
-    backgroundColor: COLORS.activeCategory,
-    borderColor: COLORS.activeCategory,
+  chipIconContainer: {
+    height: '100%',
+    marginLeft: -14, // Pull icon towards the edge
+    justifyContent: 'center',
+  },
+  chipLabelContainer: {
+    flex: 1,
+    paddingRight: 6,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
   },
   preferenceLabel: {
-    fontFamily: 'Saans-SemiBold',
-    color: COLORS.activeCategory,
-    fontSize: FONT_SIZES.sm,
+    fontFamily: 'Gargoyle', // As seen in image
+    fontSize: 12,
+    textAlign: 'center',
+    marginLeft: -18
   },
   preferenceLabelActive: {
     color: COLORS.background,
   },
   bagList: {
-    paddingRight: SPACING.md,
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    width: '100%',
   },
   bagCard: {
-    width: 190,
+    flex: 1,
     backgroundColor: '#0B4E2A',
-    borderRadius: BORDER_RADIUS.xxl,
-    padding: SPACING.md,
-    marginRight: SPACING.md,
+    borderRadius: 10, // Less rounded than xl
+    paddingHorizontal: SPACING.xs,
+    paddingBottom: SPACING.xs,
+    paddingTop: 0, // Remove top padding to prevent cutting
+    alignItems: 'center',
+    minHeight: 140,
+    overflow: 'hidden', // Clip icons to card boundaries
+  },
+  checkmarkBadge: {
+    position: 'absolute',
+    top: SPACING.sm,
+    right: SPACING.sm,
+    zIndex: 10,
+  },
+  pillContainer: {
+    width: '100%',
+    height: 24,
+    marginTop: 8,
+    paddingHorizontal: SPACING.xs,
+    marginBottom: 4,
+  },
+  cardContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start', // Move items towards top
+    width: '100%',
+    paddingBottom: SPACING.xs,
   },
   stockPill: {
     alignSelf: 'flex-start',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
     borderRadius: BORDER_RADIUS.full,
     backgroundColor: COLORS.activeCategory,
+    marginLeft: 2, // Move slightly inwards
   },
   stockText: {
     color: COLORS.background,
@@ -412,20 +652,27 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.xs,
   },
   bagIconWrap: {
-    marginTop: SPACING.xs,
-    marginBottom: SPACING.sm,
     alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  bagInfoBottom: {
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: SPACING.xs,
   },
   bagTitle: {
     fontFamily: 'Gargoyle',
-    fontSize: 34,
+    fontSize: 22,
     color: COLORS.textPrimary,
-    lineHeight: 36,
+    lineHeight: 24,
     marginBottom: SPACING.xs,
+    textAlign: 'center',
   },
   priceRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'baseline',
+    gap: 4,
   },
   originalPrice: {
     textDecorationLine: 'line-through',
@@ -436,7 +683,7 @@ const styles = StyleSheet.create({
   salePrice: {
     color: '#F2A2ED',
     fontFamily: 'Saans-SemiBold',
-    fontSize: FONT_SIZES.xl,
+    fontSize: FONT_SIZES.lg,
   },
   description: {
     fontFamily: 'Saans',
@@ -446,7 +693,9 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   sectionDivider: {
-    marginTop: SPACING.lg,
+    // marginTop: SPACING.lg,
+    marginVertical: SPACING.md,
+    marginTop: 30,
     height: 1,
     backgroundColor: 'rgba(248, 250, 252, 0.16)',
   },
@@ -466,54 +715,49 @@ const styles = StyleSheet.create({
     marginHorizontal: -SPACING.md,
   },
   ratingLeafLeft: {
-    width: 170,
-    height: 108,
-    opacity: 0.72,
-    marginRight: -SPACING.xxl,
-    transform: [{ translateX: 26 }],
-    zIndex: 1,
+    width: 140,
+    height: 80,
+    opacity: 0.6,
+    marginRight: -45,
+    transform: [{ rotate: '-10deg' }],
   },
   ratingLeafRight: {
-    width: 170,
-    height: 108,
-    opacity: 0.72,
-    marginLeft: -SPACING.xxl,
-    transform: [{ scaleX: -1 }, { translateX: 26 }],
-    zIndex: 1,
+    width: 140,
+    height: 80,
+    opacity: 0.6,
+    marginLeft: -45,
+    transform: [{ scaleX: -1 }, { rotate: '-10deg' }],
   },
   bigRating: {
     textAlign: 'center',
-    fontFamily: 'Saans-SemiBold',
+    fontFamily: 'Saans-Bold',
     color: '#F2A2ED',
-    fontSize: 64,
-    lineHeight: 66,
-    marginHorizontal: 0,
-    zIndex: 2,
-    elevation: 2,
+    fontSize: 56,
+    lineHeight: 64,
   },
   breakdownRow: {
     marginTop: SPACING.md,
     flexDirection: 'row',
-    gap: SPACING.sm,
+    gap: 12,
   },
   breakdownCard: {
     flex: 1,
-    backgroundColor: '#0B4E2A',
-    borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: '#134631',
+    borderRadius: 16,
     paddingVertical: SPACING.md,
-    paddingHorizontal: SPACING.sm,
+    paddingHorizontal: 4,
     alignItems: 'center',
   },
   breakdownValue: {
-    fontFamily: 'Saans-SemiBold',
-    color: '#F2A2ED',
-    fontSize: FONT_SIZES.xxl,
-    marginBottom: 2,
+    fontFamily: 'Saans-Bold',
+    fontSize: 24,
+    color: '#E8A7F8',
+    marginBottom: 4,
   },
   breakdownLabel: {
     fontFamily: 'Saans',
-    color: COLORS.textPrimary,
-    fontSize: FONT_SIZES.xs,
+    color: COLORS.activeCategory,
+    fontSize: 12,
     textAlign: 'center',
   },
   bottomPadding: {

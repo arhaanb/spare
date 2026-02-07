@@ -9,6 +9,7 @@ import * as SplashScreen from 'expo-splash-screen';
 
 import { FavoritesProvider } from './src/context/FavoritesContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { CartProvider } from './src/context/CartContext';
 
 import {
   HomeScreen,
@@ -55,7 +56,10 @@ const AppStack = () => (
 );
 
 const RootNavigator = () => {
-  const { signedIn, onboardingComplete } = useAuth();
+  const { signedIn, onboardingComplete, authReady } = useAuth();
+  if (!authReady) {
+    return null;
+  }
   if (!signedIn) {
     return <AuthStack />;
   }
@@ -104,14 +108,16 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <FavoritesProvider>
-        <SafeAreaProvider onLayout={onLayoutRootView}>
-          <NavigationContainer>
-            <StatusBar style="light" />
-            <RootNavigator />
-          </NavigationContainer>
-        </SafeAreaProvider>
-      </FavoritesProvider>
+      <CartProvider>
+        <FavoritesProvider>
+          <SafeAreaProvider onLayout={onLayoutRootView}>
+            <NavigationContainer>
+              <StatusBar style="light" />
+              <RootNavigator />
+            </NavigationContainer>
+          </SafeAreaProvider>
+        </FavoritesProvider>
+      </CartProvider>
     </AuthProvider>
   );
 }
