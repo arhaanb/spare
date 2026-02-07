@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Image } from 'react-native';
+import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +10,14 @@ import { useFavorites } from '../context/FavoritesContext';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SustainabilityBadges from '../components/SustainabilityBadges';
+
+// Mocked user data
+const USER_DATA = {
+    name: 'Arhaan Bahadur',
+    email: 'hi@arhaanb.com',
+    phone: '+91 98765 43210',
+    profileImage: 'https://arhaanb.com/me.jpeg',
+};
 
 // Mocked user sustainability totals
 const USER_SUSTAINABILITY_TOTALS = {
@@ -22,10 +30,56 @@ const ProfileScreen = () => {
     const insets = useSafeAreaInsets();
     const navigation = useNavigation();
     const { signOut } = useAuth();
-    const { hasActiveOrder } = useOrder();
-    const { getCartItemCount } = useCart();
+    const { hasActiveOrder, completeOrder } = useOrder();
+    const { getCartItemCount, clearCart } = useCart();
+    const { toggleFavorite, favorites } = useFavorites();
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const paddingBottom = 100 + (getCartItemCount() > 0 ? 72 : 0) + (hasActiveOrder ? 72 : 0);
+
+    const handleLogout = async () => {
+        Alert.alert(
+            'Log Out',
+            'Are you sure you want to log out? Your cart and active order will be cleared.',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Log Out',
+                    style: 'destructive',
+                    onPress: async () => {
+                        setIsLoggingOut(true);
+                        try {
+                            // Clear all contexts
+                            clearCart();
+                            await completeOrder();
+                            
+                            // Clear all favorites
+                            favorites.forEach(id => toggleFavorite(id));
+
+                            // Clear all AsyncStorage keys
+                            await AsyncStorage.multiRemove([
+                                'spare.auth.v1',
+                                '@active_order',
+                                '@cart',
+                                '@favorites',
+                            ]);
+
+                            // Sign out (will update auth state)
+                            signOut();
+                        } catch (error) {
+                            console.error('Error during logout:', error);
+                            Alert.alert('Error', 'Failed to log out. Please try again.');
+                        } finally {
+                            setIsLoggingOut(false);
+                        }
+                    },
+                },
+            ]
+        );
+    };
 
     return (
         <ScrollView
@@ -64,21 +118,31 @@ const ProfileScreen = () => {
                     <Text style={styles.menuText}>Settings</Text>
                     <Ionicons name="chevron-forward" size={20} color={COLORS.textSecondary} />
                 </TouchableOpacity>
+                
                 <TouchableOpacity style={styles.menuItem}>
                     <Ionicons name="card-outline" size={24} color={COLORS.textPrimary} />
                     <Text style={styles.menuText}>Payment Methods</Text>
                     <Ionicons name="chevron-forward" size={20} color={COLORS.textSecondary} />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.menuItem}>
-                    <Ionicons name="card-outline" size={24} color={COLORS.textPrimary} />
-                    <Text style={styles.menuText}>Log out</Text>
-                    <Ionicons name="chevron-forward" size={20} color={COLORS.textSecondary} />
+                
+                <TouchableOpacity 
+                    style={[styles.menuItem, styles.logoutMenuItem]} 
+                    onPress={handleLogout}
+                    disabled={isLoggingOut}
+                >
+                    <Ionicons name="log-out-outline" size={24} color={COLORS.error} />
+                    <Text style={[styles.menuText, styles.logoutMenuText]}>Log Out</Text>
+                    {isLoggingOut ? (
+                        <ActivityIndicator size="small" color={COLORS.error} />
+                    ) : (
+                        <Ionicons name="chevron-forward" size={20} color={COLORS.error} />
+                    )}
                 </TouchableOpacity>
             </View>
 
 
             {/* Sustainability Impact Section */}
-            <View style={styles.section}>
+            <View style={[styles.section, { marginBottom: paddingBottom }]}>
                 <Text style={styles.sectionTitle}>Your Impact</Text>
                 <SustainabilityBadges
                     moneySaved={USER_SUSTAINABILITY_TOTALS.moneySaved}
@@ -86,10 +150,6 @@ const ProfileScreen = () => {
                     foodSaved={USER_SUSTAINABILITY_TOTALS.foodSaved}
                 />
             </View>
-
-            <TouchableOpacity style={[styles.logoutButton, { marginBottom: paddingBottom }]} onPress={signOut}>
-                <Text style={styles.logoutText}>Log Out</Text>
-            </TouchableOpacity>
         </ScrollView>
     );
 };
@@ -165,15 +225,11 @@ const styles = StyleSheet.create({
         color: COLORS.textPrimary,
         marginLeft: SPACING.md,
     },
-    logoutButton: {
-        paddingVertical: SPACING.md,
-        alignItems: 'center',
-        marginTop: 'auto',
-        // marginBottom is handled dynamically
+    logoutMenuItem: {
+        borderBottomWidth: 0,
+        marginTop: SPACING.xs,
     },
-    logoutText: {
-        fontFamily: 'Saans-Bold',
-        fontSize: FONT_SIZES.md,
+    logoutMenuText: {
         color: COLORS.error,
     },
 });
