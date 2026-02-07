@@ -1,15 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
-import { LocationHeader, CategoryFilter, RestaurantCard, SearchBar, FilterBottomSheet, GlobalActiveOrderIndicator } from '../components';
+import { LocationHeader, CategoryFilter, RestaurantCard, SearchBar, FilterBottomSheet } from '../components';
 import BottomTabBar from '../components/BottomTabBar';
 import FavouritesScreen from './FavouritesScreen';
 import ProfileScreen from './ProfileScreen';
 import ActiveOrderBanner from '../components/ActiveOrderBanner';
 import { useOrder } from '../context/OrderContext';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import {
   categories,
   userLocation,
@@ -68,17 +69,28 @@ const HomeContent = ({
   relevantRestaurants,
   popularRestaurants,
   newlyAddedRestaurants,
-  handleRestaurantPress,
-  handleSeeAll,
   allFilteredRestaurants,
-  hasActiveFilters,
   activeFiltersCount,
-  activeTab, // Added prop
+  hasActiveFilters,
+  navigation,
+  handleSeeAll,
+  handleRestaurantPress,
+  activeTab,
   handleActiveOrderPress,
-  navigation, // Added navigation prop
 }) => {
-  const { activeOrder } = useOrder();
+  const { hasActiveOrder, activeOrder } = useOrder();
+  const { getCartItemCount } = useCart();
   const { user } = useAuth();
+
+  const hasItems = getCartItemCount() > 0;
+
+  // Dynamic padding calculation
+  let paddingHeight = Platform.OS === 'ios' ? 105 : 85; // Base tab bar padding
+
+  if (activeTab !== 'profile') {
+    if (hasActiveOrder) paddingHeight += 72;
+    if (hasItems) paddingHeight += 72;
+  }
 
   return (
     <ScrollView
@@ -102,7 +114,7 @@ const HomeContent = ({
         onSelectCategory={handleCategorySelect}
       />
 
-      {user && activeOrder && (
+      {user && hasActiveOrder && activeOrder && (
         <ActiveOrderBanner onPress={handleActiveOrderPress} />
       )}
 
@@ -197,7 +209,7 @@ const HomeContent = ({
 
       <View style={[
         styles.bottomPadding,
-        { height: (activeOrder && activeTab !== 'profile') ? 160 : 100 }
+        { height: paddingHeight + 20 } // Add some extra buffer
       ]} />
     </ScrollView>
   );
@@ -383,7 +395,6 @@ const HomeScreen = ({ navigation, route }) => {
       />
 
       <BottomTabBar activeTab={activeTab} onTabPress={handleTabPress} />
-      {activeTab !== 'profile' && <GlobalActiveOrderIndicator />}
     </View>
   );
 };

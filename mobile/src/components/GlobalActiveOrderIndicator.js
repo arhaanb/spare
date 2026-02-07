@@ -8,22 +8,16 @@ import Animated, {
     FadeOutDown,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useNavigationState } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { navigationRef } from '../navigation/navigationRef';
 import { COLORS, SPACING, SHADOWS, BORDER_RADIUS, FONT_SIZES } from '../constants/theme';
 import { useOrder } from '../context/OrderContext';
 
 const { width } = Dimensions.get('window');
 
-const GlobalActiveOrderIndicator = () => {
+const GlobalActiveOrderIndicator = ({ currentRouteName }) => {
+    const insets = useSafeAreaInsets();
     const { hasActiveOrder, activeOrder } = useOrder();
-    const navigation = useNavigation();
-
-    // Get the current route name to hide the indicator on specific screens
-    const currentRouteName = useNavigationState(state => {
-        if (!state) return null;
-        const route = state.routes[state.index];
-        return route?.name;
-    });
 
     const scale = useSharedValue(1);
 
@@ -32,18 +26,36 @@ const GlobalActiveOrderIndicator = () => {
     }));
 
     const handlePress = () => {
-        navigation.navigate('OrderConfirmation');
+        if (navigationRef.isReady()) {
+            navigationRef.navigate('OrderConfirmation');
+        }
     };
 
     // Hide if no active order or if we are on restricted screens
-    const isRestrictedScreen = ['OrderConfirmation', 'Login', 'Onboarding'].includes(currentRouteName);
+    const isRestrictedScreen = ['Cart', 'OrderConfirmation', 'Login', 'Onboarding'].includes(currentRouteName);
     if (!hasActiveOrder || isRestrictedScreen) return null;
+
+    // Additional check: On RestaurantDetail, only show if it matches the current restaurant
+    if (currentRouteName === 'RestaurantDetail' && navigationRef.isReady()) {
+        const route = navigationRef.getCurrentRoute();
+        const currentRestaurantId = route?.params?.restaurant?.id;
+        if (currentRestaurantId && activeOrder?.restaurant && activeOrder.restaurant.id !== currentRestaurantId) {
+            return null;
+        }
+    }
+
+    const isTabScreen = ['Home'].includes(currentRouteName);
+    let bottomOffset = Platform.OS === 'ios' ? 105 : 85;
+
+    if (!isTabScreen) {
+        bottomOffset = insets.bottom + 8;
+    }
 
     return (
         <Animated.View
             entering={FadeInDown.springify().damping(20).stiffness(150)}
             exiting={FadeOutDown}
-            style={styles.container}
+            style={[styles.container, { bottom: bottomOffset }]}
         >
             <TouchableOpacity
                 activeOpacity={0.9}

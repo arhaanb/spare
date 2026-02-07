@@ -10,3 +10,4 @@ export { default as AnimatedMeshGradient } from './mesh-gradient';
 export { default as AppleSignInButton } from './AppleSignInButton';
 export { default as FilterBottomSheet } from './FilterBottomSheet';
 export { default as GlobalActiveOrderIndicator } from './GlobalActiveOrderIndicator';
+export { default as CartIndicator } from './CartIndicator';

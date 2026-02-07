@@ -19,6 +19,20 @@ export const CartProvider = ({ children }) => {
         const itemId = `${restaurant.id}-${bagOption.id || bagOption.role}-${preference}`;
 
         setItems((prevItems) => {
+            // Enforce single restaurant: if adding from a different restaurant, clear first
+            if (prevItems.length > 0 && prevItems[0].restaurant.id !== restaurant.id) {
+                return [
+                    {
+                        id: itemId,
+                        bagOption,
+                        quantity,
+                        preference,
+                        restaurant,
+                        addedAt: Date.now(),
+                    },
+                ];
+            }
+
             const existingIndex = prevItems.findIndex((item) => item.id === itemId);
 
             if (existingIndex >= 0) {
@@ -95,15 +109,20 @@ export const CartProvider = ({ children }) => {
         return items.find((item) => item.id === itemId);
     }, [items]);
 
-    // Get count of items for a specific preference
-    const getItemCountByPreference = useCallback((preference) => {
+    // Get count of items for a specific preference (optionally filtered by restaurant)
+    const getItemCountByPreference = useCallback((preference, restaurantId = null) => {
         return items
-            .filter((item) => item.preference === preference)
+            .filter((item) => {
+                const preferenceMatch = item.preference === preference;
+                const restaurantMatch = restaurantId ? item.restaurant.id === restaurantId : true;
+                return preferenceMatch && restaurantMatch;
+            })
             .reduce((count, item) => count + item.quantity, 0);
     }, [items]);
 
     const value = {
         items,
+        cartRestaurant: items[0]?.restaurant,
         addToCart,
         removeFromCart,
         updateQuantity,

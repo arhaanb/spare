@@ -22,10 +22,10 @@ import Animated, {
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { formatPickupTime, restaurants } from '../data/mockData';
-import { RestaurantCard } from '../components';
+import { RestaurantCard, ActiveOrderBanner } from '../components';
 import BagSelectionModal from '../components/BagSelectionModal';
-import CartIndicator from '../components/CartIndicator';
 import { useCart } from '../context/CartContext';
+import { useOrder } from '../context/OrderContext';
 import RegularBagIconLocal from '../../assets/images/assets/bags/regular.svg';
 import LargeBagIconLocal from '../../assets/images/assets/bags/large.svg';
 import MakeItYourselfIconLocal from '../../assets/images/assets/bags/makeyourown.svg';
@@ -46,7 +46,7 @@ const PREFERENCES = [
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 const AnimatedIonicons = Animated.createAnimatedComponent(Ionicons);
 
-const BagCard = ({ bagOption, onPress, isSelected }) => {
+const BagCard = ({ bagOption, onPress, isSelected, selectedPreference }) => {
   const pressed = useSharedValue(1);
   const borderWidth = useSharedValue(isSelected ? 2 : 0);
   const checkmarkScale = useSharedValue(isSelected ? 1 : 0);
@@ -129,6 +129,9 @@ const BagCard = ({ bagOption, onPress, isSelected }) => {
         </View>
 
         <View style={styles.bagInfoBottom}>
+          {/* <Text style={styles.bagPreference}>
+            {selectedPreference === 'veg' ? '🌱 Veg Only' : selectedPreference === 'nonveg' ? '🍖 Non-Veg' : '🙏 Jain Only'}
+          </Text> */}
           <Text style={styles.bagTitle} numberOfLines={2}>
             {bagOption.type}
           </Text>
@@ -210,8 +213,9 @@ const PreferenceChip = ({ active, icon: Icon, iconDark: IconDark, label, onPress
 
 const RestaurantDetailScreen = ({ route, navigation }) => {
   const { restaurant } = route.params;
-  const { addToCart, removeFromCart, isInCart, getCartItem, getItemCountByPreference } = useCart();
-  const [selectedPreference, setSelectedPreference] = useState(restaurant.vegOnly ? 'veg' : 'nonveg');
+  const { addToCart, removeFromCart, isInCart, getCartItem, getItemCountByPreference, getCartItemCount } = useCart();
+  const { hasActiveOrder, activeOrder } = useOrder();
+  const [selectedPreference, setSelectedPreference] = useState('veg');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedBag, setSelectedBag] = useState(null);
 
@@ -276,6 +280,17 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
     navigation.navigate('Cart');
   };
 
+  const handleActiveOrderPress = () => {
+    if (activeOrder) {
+      navigation.navigate('OrderConfirmation', {
+        orderCode: activeOrder.orderCode,
+        total: activeOrder.total,
+        itemCount: activeOrder.itemCount,
+        expiresAt: activeOrder.expiresAt.toISOString(),
+      });
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Animated.View entering={FadeIn.duration(260)} style={styles.animatedContainer}>
@@ -286,8 +301,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
         >
           <View style={styles.headerArea}>
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.8}>
-              <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-              <Text style={styles.backText}>Back</Text>
+              <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
           <View style={styles.heroCard}>
@@ -322,11 +336,11 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Diet Preference</Text>
+            <Text style={[styles.sectionTitle, { marginBottom: SPACING.md }]}>Diet Preference</Text>
             <View style={styles.preferenceRow}>
               {PREFERENCES.map((preference) => {
                 const isActive = selectedPreference === preference.id;
-                const count = getItemCountByPreference(preference.id);
+                const count = getItemCountByPreference(preference.id, restaurant.id);
                 return (
                   <PreferenceChip
                     key={preference.id}
@@ -343,7 +357,12 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Rescue Bag</Text>
+            <Text style={styles.sectionTitle}>
+              Rescue Bag
+            </Text>
+            <Text style={styles.sectionSubtitle}>
+              {PREFERENCES.find(p => p.id === selectedPreference)?.label || 'Selected'}
+            </Text>
             <View style={styles.bagList}>
               {[
                 { role: 'regular', label: 'Regular' },
@@ -370,6 +389,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
                     key={config.role}
                     bagOption={bagData}
                     isSelected={inCart}
+                    selectedPreference={selectedPreference}
                     onPress={handleBagPress}
                   />
                 );
@@ -378,7 +398,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>What you could get</Text>
+            <Text style={[styles.sectionTitle, { marginBottom: SPACING.md }]}>What you could get</Text>
             <Text style={styles.description}>{ingredientSummary}</Text>
             <View style={styles.sectionDivider} />
           </View>
@@ -414,7 +434,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
 
           {similarRestaurants.length > 0 && (
             <View style={styles.similarSection}>
-              <Text style={[styles.sectionTitle, { paddingHorizontal: SPACING.lg }]}>Similar Restaurants</Text>
+              <Text style={[styles.sectionTitle, { paddingHorizontal: SPACING.lg, marginBottom: SPACING.md }]}>Similar Restaurants</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -430,6 +450,11 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
               </ScrollView>
             </View>
           )}
+          {/* Dynamic Bottom Padding to account for CartIndicator and ActiveOrderBanner */}
+          <View style={[
+            styles.bottomPadding,
+            { height: (getCartItemCount() > 0 ? 80 : 0) + (hasActiveOrder ? 80 : 0) + 20 }
+          ]} />
         </ScrollView>
 
         {/* Bag Selection Modal */}
@@ -444,7 +469,6 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
         />
 
         {/* Cart Indicator */}
-        <CartIndicator onPress={handleViewCart} />
       </Animated.View>
     </SafeAreaView >
   );
@@ -470,16 +494,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
   },
   backButton: {
-    flexDirection: 'row',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
-    gap: SPACING.xs,
-    marginBottom: SPACING.xs,
-  },
-  backText: {
-    color: '#FFFFFF',
-    fontFamily: 'Saans-SemiBold',
-    fontSize: FONT_SIZES.sm,
-    letterSpacing: 0.2,
+    justifyContent: 'center',
   },
   heroCard: {
     marginHorizontal: SPACING.lg,
@@ -588,7 +608,14 @@ const styles = StyleSheet.create({
     fontFamily: 'Gargoyle',
     fontSize: 28,
     color: COLORS.textPrimary,
-    marginBottom: SPACING.md,
+  },
+  sectionSubtitle: {
+    fontFamily: 'Saans',
+    fontSize: FONT_SIZES.md,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+    marginBottom: SPACING.lg,
+    opacity: 0.9,
   },
   preferenceRow: {
     flexDirection: 'row',
@@ -701,6 +728,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     marginBottom: SPACING.xs,
+  },
+  bagPreference: {
+    fontFamily: 'Saans-Bold',
+    fontSize: 9,
+    color: COLORS.activeCategory,
+    textTransform: 'uppercase',
+    marginBottom: 2,
+    letterSpacing: 0.5,
+    opacity: 0.9,
   },
   bagTitle: {
     fontFamily: 'Gargoyle',

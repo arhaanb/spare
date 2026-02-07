@@ -78,11 +78,11 @@ const CartItemCard = ({ item, onIncrement, onDecrement, onRemove }) => {
             <View style={styles.itemDetails}>
                 <View style={styles.itemHeader}>
                     <Text style={styles.bagType}>{item.bagOption.type}</Text>
-                    <View style={[styles.preferenceBadge, { backgroundColor: `${preference.color}20` }]}>
+                    {/* <View style={[styles.preferenceBadge, { backgroundColor: `${preference.color}20` }]}>
                         <Text style={[styles.preferenceText, { color: preference.color }]}>
                             {preference.emoji} {preference.label}
                         </Text>
-                    </View>
+                    </View> */}
                 </View>
                 <Text style={styles.restaurantName} numberOfLines={1}>
                     {item.restaurant.name}
@@ -174,7 +174,7 @@ const CartScreen = ({ navigation }) => {
         const orderCode = `SP${Date.now().toString(36).toUpperCase()}`;
 
         // Create persistent order
-        await createOrder(orderCode, total, items.length);
+        await createOrder(orderCode, total, items.length, items[0]?.restaurant);
 
         navigation.navigate('OrderConfirmation', {
             orderCode,
@@ -209,7 +209,7 @@ const CartScreen = ({ navigation }) => {
                     onPress={() => navigation.goBack()}
                     activeOpacity={0.8}
                 >
-                    <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+                    <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Your Cart</Text>
                 <View style={styles.headerSpacer} />
