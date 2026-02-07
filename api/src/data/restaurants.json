@@ -1,0 +1,1567 @@
+[
+  {
+    "id": 1,
+    "name": "Theobroma",
+    "location": "Khan Market",
+    "distance": 1.2,
+    "timeToReach": 5,
+    "rating": 4.4,
+    "reviewCount": 128,
+    "category": "dessert",
+    "vegOnly": false,
+    "isAvailable": true,
+    "popularityScore": 95,
+    "dateAdded": "2025-12-01",
+    "image": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400",
+    "bagOptions": [
+      {
+        "id": 101,
+        "type": "Regular",
+        "description": "Assorted breads, pastries and baked goods",
+        "price": 79,
+        "originalPrice": 199,
+        "pickupStart": "20:00",
+        "pickupEnd": "21:00",
+        "available": {
+          "veg": 2,
+          "nonveg": 8,
+          "jain": 0
+        }
+      },
+      {
+        "id": 102,
+        "type": "Large",
+        "description": "Cakes, brownies and sweet treats",
+        "price": 109,
+        "originalPrice": 199,
+        "pickupStart": "20:30",
+        "pickupEnd": "21:30",
+        "available": {
+          "veg": 0,
+          "nonveg": 5,
+          "jain": 1
+        },
+        "unavailableFor": [
+          "veg"
+        ]
+      },
+      {
+        "id": 103,
+        "type": "Make it yourself",
+        "description": "Sandwiches, quiches and savory items",
+        "price": 129,
+        "originalPrice": 299,
+        "pickupStart": "19:30",
+        "pickupEnd": "20:30",
+        "available": 4
+      }
+    ],
+    "possibleIngredients": [
+      "Croissants",
+      "Brownies",
+      "Pastries",
+      "Bread",
+      "Muffins",
+      "Cookies"
+    ],
+    "rescueItems": {
+      "veg": [
+        {
+          "id": "t1-v",
+          "name": "Butter Croissant",
+          "category": "Pastry",
+          "price": 90
+        },
+        {
+          "id": "t2-v",
+          "name": "Chocolate Croissant",
+          "category": "Pastry",
+          "price": 110
+        },
+        {
+          "id": "t3-v",
+          "name": "Walnut Brownie",
+          "category": "Brownie",
+          "price": 120
+        },
+        {
+          "id": "t4-v",
+          "name": "Spinach Puff",
+          "category": "Savory",
+          "price": 80
+        },
+        {
+          "id": "t5-v",
+          "name": "Paneer Puff",
+          "category": "Savory",
+          "price": 90
+        },
+        {
+          "id": "t6-v",
+          "name": "Multigrain Loaf",
+          "category": "Bread",
+          "price": 60
+        },
+        {
+          "id": "t7-v",
+          "name": "Chocolate Mousse",
+          "category": "Dessert",
+          "price": 150
+        },
+        {
+          "id": "t8-v",
+          "name": "Red Velvet Cupcake",
+          "category": "Cupcake",
+          "price": 100
+        }
+      ],
+      "nonveg": [
+        {
+          "id": "t1-nv",
+          "name": "Butter Croissant",
+          "category": "Pastry",
+          "price": 90
+        },
+        {
+          "id": "t2-nv",
+          "name": "Pain au Chocolat",
+          "category": "Pastry",
+          "price": 110
+        },
+        {
+          "id": "t3-nv",
+          "name": "Chicken Puff",
+          "category": "Savory",
+          "price": 80
+        },
+        {
+          "id": "t4-nv",
+          "name": "Mutton Puff",
+          "category": "Savory",
+          "price": 90
+        },
+        {
+          "id": "t5-nv",
+          "name": "Egg Sandwich",
+          "category": "Savory",
+          "price": 95
+        },
+        {
+          "id": "t6-nv",
+          "name": "Chicken Quiche",
+          "category": "Savory",
+          "price": 130
+        },
+        {
+          "id": "t7-nv",
+          "name": "Chocolate Mousse",
+          "category": "Dessert",
+          "price": 150
+        },
+        {
+          "id": "t8-nv",
+          "name": "Bacon Danish",
+          "category": "Pastry",
+          "price": 120
+        }
+      ],
+      "jain": [
+        {
+          "id": "t1-j",
+          "name": "Plain Croissant",
+          "category": "Pastry",
+          "price": 85
+        },
+        {
+          "id": "t2-j",
+          "name": "Chocolate Cookie",
+          "category": "Cookie",
+          "price": 60
+        },
+        {
+          "id": "t3-j",
+          "name": "Fruit Tart",
+          "category": "Dessert",
+          "price": 110
+        },
+        {
+          "id": "t4-j",
+          "name": "Apple Turnover",
+          "category": "Pastry",
+          "price": 90
+        },
+        {
+          "id": "t5-j",
+          "name": "Coconut Macaroon",
+          "category": "Cookie",
+          "price": 70
+        },
+        {
+          "id": "t6-j",
+          "name": "Vanilla Cupcake",
+          "category": "Cupcake",
+          "price": 95
+        }
+      ]
+    },
+    "reviews": {
+      "fairPortion": 4.2,
+      "overallHygiene": 4.6,
+      "freshness": 4.3
+    }
+  },
+  {
+    "id": 2,
+    "name": "The French Loaf",
+    "location": "Saket",
+    "distance": 2.5,
+    "timeToReach": 10,
+    "rating": 4,
+    "reviewCount": 89,
+    "category": "dessert",
+    "vegOnly": true,
+    "isAvailable": true,
+    "popularityScore": 78,
+    "dateAdded": "2026-01-05",
+    "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400",
+    "bagOptions": [
+      {
+        "id": 1,
+        "type": "Regular",
+        "description": "Assorted breads, pastries and baked goods",
+        "price": 79,
+        "originalPrice": 199,
+        "pickupStart": "20:00",
+        "pickupEnd": "21:00",
+        "available": {
+          "veg": 5,
+          "nonveg": 2,
+          "jain": 4
+        }
+      },
+      {
+        "id": 2,
+        "type": "Large",
+        "description": "Cakes, brownies and sweet treats",
+        "price": 109,
+        "originalPrice": 199,
+        "pickupStart": "20:30",
+        "pickupEnd": "21:30",
+        "available": {
+          "veg": 3,
+          "nonveg": 0,
+          "jain": 2
+        },
+        "unavailableFor": [
+          "nonveg"
+        ]
+      },
+      {
+        "id": 3,
+        "type": "Make it yourself",
+        "description": "Sandwiches, quiches and savory items",
+        "price": 129,
+        "originalPrice": 299,
+        "pickupStart": "19:30",
+        "pickupEnd": "20:30",
+        "available": 8
+      }
+    ],
+    "possibleIngredients": [
+      "Baguettes",
+      "Croissants",
+      "Danish",
+      "Cookies",
+      "Bread Rolls"
+    ],
+    "rescueItems": {
+      "veg": [
+        {
+          "id": "f1-v",
+          "name": "French Baguette",
+          "category": "Bread",
+          "price": 80
+        },
+        {
+          "id": "f2-v",
+          "name": "Almond Croissant",
+          "category": "Pastry",
+          "price": 120
+        },
+        {
+          "id": "f3-v",
+          "name": "Chocolate Chip Cookie",
+          "category": "Cookie",
+          "price": 60
+        },
+        {
+          "id": "f4-v",
+          "name": "Spinach Quiche",
+          "category": "Savory",
+          "price": 110
+        },
+        {
+          "id": "f5-v",
+          "name": "Apple Danish",
+          "category": "Pastry",
+          "price": 100
+        },
+        {
+          "id": "f6-v",
+          "name": "Multigrain Roll",
+          "category": "Bread",
+          "price": 40
+        },
+        {
+          "id": "f7-v",
+          "name": "Cheese Croissant",
+          "category": "Pastry",
+          "price": 95
+        }
+      ],
+      "nonveg": [
+        {
+          "id": "f1-nv",
+          "name": "French Baguette",
+          "category": "Bread",
+          "price": 80
+        },
+        {
+          "id": "f2-nv",
+          "name": "Ham & Cheese Croissant",
+          "category": "Pastry",
+          "price": 130
+        },
+        {
+          "id": "f3-nv",
+          "name": "Chicken Sandwich",
+          "category": "Savory",
+          "price": 120
+        },
+        {
+          "id": "f4-nv",
+          "name": "Egg Quiche",
+          "category": "Savory",
+          "price": 110
+        },
+        {
+          "id": "f5-nv",
+          "name": "Bacon Roll",
+          "category": "Bread",
+          "price": 100
+        },
+        {
+          "id": "f6-nv",
+          "name": "Prawn Croissant",
+          "category": "Pastry",
+          "price": 140
+        }
+      ],
+      "jain": [
+        {
+          "id": "f1-j",
+          "name": "Plain Baguette",
+          "category": "Bread",
+          "price": 75
+        },
+        {
+          "id": "f2-j",
+          "name": "Plain Croissant",
+          "category": "Pastry",
+          "price": 85
+        },
+        {
+          "id": "f3-j",
+          "name": "Vanilla Cookie",
+          "category": "Cookie",
+          "price": 55
+        },
+        {
+          "id": "f4-j",
+          "name": "Fruit Danish",
+          "category": "Pastry",
+          "price": 95
+        },
+        {
+          "id": "f5-j",
+          "name": "Coconut Roll",
+          "category": "Bread",
+          "price": 50
+        }
+      ]
+    },
+    "reviews": {
+      "fairPortion": 4,
+      "overallHygiene": 4.2,
+      "freshness": 3.8
+    }
+  },
+  {
+    "id": 3,
+    "name": "Wenger's",
+    "location": "Connaught Place",
+    "distance": 0.8,
+    "timeToReach": 3,
+    "rating": 3.9,
+    "reviewCount": 156,
+    "category": "dessert",
+    "vegOnly": false,
+    "isAvailable": true,
+    "popularityScore": 88,
+    "dateAdded": "2025-11-15",
+    "image": "https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?w=400",
+    "bagOptions": [
+      {
+        "id": 1,
+        "type": "Regular",
+        "description": "Assorted breads, pastries and baked goods",
+        "price": 79,
+        "originalPrice": 199,
+        "pickupStart": "20:00",
+        "pickupEnd": "21:00",
+        "available": {
+          "veg": 0,
+          "nonveg": 5,
+          "jain": 3
+        }
+      },
+      {
+        "id": 2,
+        "type": "Large",
+        "description": "Cakes, brownies and sweet treats",
+        "price": 109,
+        "originalPrice": 199,
+        "pickupStart": "20:30",
+        "pickupEnd": "21:30",
+        "available": {
+          "veg": 4,
+          "nonveg": 2,
+          "jain": 0
+        },
+        "unavailableFor": [
+          "jain"
+        ]
+      },
+      {
+        "id": 3,
+        "type": "Make it yourself",
+        "description": "Sandwiches, quiches and savory items",
+        "price": 129,
+        "originalPrice": 299,
+        "pickupStart": "19:30",
+        "pickupEnd": "20:30",
+        "available": 6
+      }
+    ],
+    "possibleIngredients": [
+      "Patties",
+      "Cakes",
+      "Pastries",
+      "Sandwiches",
+      "Rolls",
+      "Biscuits"
+    ],
+    "reviews": {
+      "fairPortion": 3.8,
+      "overallHygiene": 4,
+      "freshness": 3.9
+    }
+  },
+  {
+    "id": 4,
+    "name": "L'Opera",
+    "location": "Greater Kailash",
+    "distance": 3.1,
+    "timeToReach": 12,
+    "rating": 4.5,
+    "reviewCount": 203,
+    "category": "dessert",
+    "vegOnly": false,
+    "isAvailable": true,
+    "popularityScore": 92,
+    "dateAdded": "2025-10-20",
+    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400",
+    "bagOptions": [
+      {
+        "id": 1,
+        "type": "Regular",
+        "description": "Assorted breads, pastries and baked goods",
+        "price": 79,
+        "originalPrice": 199,
+        "pickupStart": "20:00",
+        "pickupEnd": "21:00",
+        "available": {
+          "veg": 4,
+          "nonveg": 6,
+          "jain": 2
+        }
+      },
+      {
+        "id": 2,
+        "type": "Large",
+        "description": "Cakes, brownies and sweet treats",
+        "price": 109,
+        "originalPrice": 199,
+        "pickupStart": "20:30",
+        "pickupEnd": "21:30",
+        "available": {
+          "veg": 0,
+          "nonveg": 3,
+          "jain": 5
+        },
+        "unavailableFor": [
+          "veg"
+        ]
+      },
+      {
+        "id": 3,
+        "type": "Make it yourself",
+        "description": "Sandwiches, quiches and savory items",
+        "price": 129,
+        "originalPrice": 299,
+        "pickupStart": "19:30",
+        "pickupEnd": "20:30",
+        "available": 5
+      }
+    ],
+    "possibleIngredients": [
+      "Macarons",
+      "Eclairs",
+      "Tarts",
+      "Croissants",
+      "Sourdough",
+      "Quiche"
+    ],
+    "reviews": {
+      "fairPortion": 4.3,
+      "overallHygiene": 4.7,
+      "freshness": 4.5
+    }
+  },
+  {
+    "id": 5,
+    "name": "Karachi Bakery",
+    "location": "Defence Colony",
+    "distance": 1.8,
+    "timeToReach": 7,
+    "rating": 4.1,
+    "reviewCount": 312,
+    "category": "dessert",
+    "vegOnly": true,
+    "isAvailable": true,
+    "popularityScore": 85,
+    "dateAdded": "2025-09-10",
+    "image": "https://images.unsplash.com/photo-1558303292-0b34921f96c5?w=400",
+    "bagOptions": [
+      {
+        "id": 1,
+        "type": "Regular",
+        "description": "Assorted breads, pastries and baked goods",
+        "price": 79,
+        "originalPrice": 199,
+        "pickupStart": "20:00",
+        "pickupEnd": "21:00",
+        "available": {
+          "veg": 6,
+          "nonveg": 2,
+          "jain": 1
+        }
+      },
+      {
+        "id": 2,
+        "type": "Large",
+        "description": "Cakes, brownies and sweet treats",
+        "price": 109,
+        "originalPrice": 199,
+        "pickupStart": "20:30",
+        "pickupEnd": "21:30",
+        "available": {
+          "veg": 3,
+          "nonveg": 0,
+          "jain": 4
+        },
+        "unavailableFor": [
+          "nonveg"
+        ]
+      },
+      {
+        "id": 3,
+        "type": "Make it yourself",
+        "description": "Sandwiches, quiches and savory items",
+        "price": 129,
+        "originalPrice": 299,
+        "pickupStart": "19:30",
+        "pickupEnd": "20:30",
+        "available": 6
+      }
+    ],
+    "possibleIngredients": [
+      "Fruit Biscuits",
+      "Osmania Biscuits",
+      "Kaju Katli",
+      "Namkeen",
+      "Rusks"
+    ],
+    "reviews": {
+      "fairPortion": 4.4,
+      "overallHygiene": 4,
+      "freshness": 4.1
+    }
+  },
+  {
+    "id": 6,
+    "name": "Big Chill Cakery",
+    "location": "Khan Market",
+    "distance": 1,
+    "timeToReach": 4,
+    "rating": 4.3,
+    "reviewCount": 178,
+    "category": "dessert",
+    "vegOnly": false,
+    "isAvailable": true,
+    "popularityScore": 90,
+    "dateAdded": "2026-01-10",
+    "image": "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?w=400",
+    "bagOptions": [
+      {
+        "id": 1,
+        "type": "Regular",
+        "description": "Assorted breads, pastries and baked goods",
+        "price": 79,
+        "originalPrice": 199,
+        "pickupStart": "20:00",
+        "pickupEnd": "21:00",
+        "available": {
+          "veg": 2,
+          "nonveg": 1,
+          "jain": 5
+        }
+      },
+      {
+        "id": 2,
+        "type": "Large",
+        "description": "Cakes, brownies and sweet treats",
+        "price": 109,
+        "originalPrice": 199,
+        "pickupStart": "20:30",
+        "pickupEnd": "21:30",
+        "available": {
+          "veg": 5,
+          "nonveg": 4,
+          "jain": 0
+        },
+        "unavailableFor": [
+          "jain"
+        ]
+      },
+      {
+        "id": 3,
+        "type": "Make it yourself",
+        "description": "Sandwiches, quiches and savory items",
+        "price": 129,
+        "originalPrice": 299,
+        "pickupStart": "19:30",
+        "pickupEnd": "20:30",
+        "available": 3
+      }
+    ],
+    "possibleIngredients": [
+      "Cheesecake",
+      "Brownies",
+      "Cookies",
+      "Red Velvet",
+      "Tiramisu"
+    ],
+    "reviews": {
+      "fairPortion": 4.1,
+      "overallHygiene": 4.5,
+      "freshness": 4.4
+    }
+  },
+  {
+    "id": 7,
+    "name": "Subway",
+    "location": "Nehru Place",
+    "distance": 2.2,
+    "timeToReach": 9,
+    "rating": 3.8,
+    "reviewCount": 245,
+    "category": "dinner",
+    "vegOnly": false,
+    "isAvailable": true,
+    "popularityScore": 75,
+    "dateAdded": "2026-01-12",
+    "image": "https://images.unsplash.com/photo-1509722747041-616f39b57569?w=400",
+    "bagOptions": [
+      {
+        "id": 701,
+        "type": "Sub Surprise",
+        "description": "Assorted subs and wraps",
+        "price": 149,
+        "originalPrice": 450,
+        "pickupStart": "21:30",
+        "pickupEnd": "22:30",
+        "available": {
+          "veg": 3,
+          "nonveg": 6,
+          "jain": 2
+        }
+      },
+      {
+        "id": 702,
+        "type": "Veggie Delight",
+        "description": "Vegetarian subs only",
+        "price": 129,
+        "originalPrice": 380,
+        "pickupStart": "21:00",
+        "pickupEnd": "22:00",
+        "available": {
+          "veg": 2,
+          "nonveg": 1,
+          "jain": 0
+        },
+        "unavailableFor": [
+          "jain"
+        ]
+      },
+      {
+        "id": 703,
+        "type": "Cookie & Sides",
+        "description": "Cookies and side items",
+        "price": 79,
+        "originalPrice": 200,
+        "pickupStart": "22:00",
+        "pickupEnd": "23:00",
+        "available": {
+          "veg": 8,
+          "nonveg": 4,
+          "jain": 6
+        }
+      }
+    ],
+    "possibleIngredients": [
+      "Subs",
+      "Wraps",
+      "Cookies",
+      "Salads",
+      "Chips"
+    ],
+    "reviews": {
+      "fairPortion": 3.9,
+      "overallHygiene": 4,
+      "freshness": 3.7
+    }
+  },
+  {
+    "id": 8,
+    "name": "Haldiram",
+    "location": "Lajpat Nagar",
+    "distance": 1.5,
+    "timeToReach": 6,
+    "rating": 4.2,
+    "reviewCount": 420,
+    "category": "grocery",
+    "vegOnly": true,
+    "isAvailable": true,
+    "popularityScore": 88,
+    "dateAdded": "2025-08-15",
+    "image": "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400",
+    "bagOptions": [
+      {
+        "id": 801,
+        "type": "Snack Box",
+        "description": "Namkeens, sweets and snacks",
+        "price": 149,
+        "originalPrice": 400,
+        "pickupStart": "21:00",
+        "pickupEnd": "22:00",
+        "available": {
+          "veg": 1,
+          "nonveg": 2,
+          "jain": 5
+        }
+      },
+      {
+        "id": 802,
+        "type": "Sweet Selection",
+        "description": "Traditional Indian sweets",
+        "price": 199,
+        "originalPrice": 550,
+        "pickupStart": "20:30",
+        "pickupEnd": "21:30",
+        "available": {
+          "veg": 0,
+          "nonveg": 8,
+          "jain": 3
+        },
+        "unavailableFor": [
+          "veg"
+        ]
+      },
+      {
+        "id": 803,
+        "type": "Thali Box",
+        "description": "Ready-to-eat meal items",
+        "price": 129,
+        "originalPrice": 350,
+        "pickupStart": "21:30",
+        "pickupEnd": "22:30",
+        "available": {
+          "veg": 3,
+          "nonveg": 5,
+          "jain": 1
+        }
+      }
+    ],
+    "possibleIngredients": [
+      "Bhujia",
+      "Rasgulla",
+      "Samosa",
+      "Kachori",
+      "Ladoo",
+      "Namkeen"
+    ],
+    "reviews": {
+      "fairPortion": 4.5,
+      "overallHygiene": 4.1,
+      "freshness": 4
+    }
+  },
+  {
+    "id": 9,
+    "name": "Chaayos",
+    "location": "Cyber Hub",
+    "distance": 4,
+    "timeToReach": 15,
+    "rating": 4,
+    "reviewCount": 167,
+    "category": "breakfast",
+    "vegOnly": false,
+    "isAvailable": true,
+    "popularityScore": 72,
+    "dateAdded": "2026-01-15",
+    "image": "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400",
+    "bagOptions": [
+      {
+        "id": 901,
+        "type": "Breakfast Box",
+        "description": "Parathas, sandwiches and snacks",
+        "price": 129,
+        "originalPrice": 350,
+        "pickupStart": "10:30",
+        "pickupEnd": "11:30",
+        "available": {
+          "veg": 4,
+          "nonveg": 2,
+          "jain": 7
+        }
+      },
+      {
+        "id": 902,
+        "type": "Tea Time",
+        "description": "Snacks perfect with chai",
+        "price": 99,
+        "originalPrice": 280,
+        "pickupStart": "17:30",
+        "pickupEnd": "18:30",
+        "available": {
+          "veg": 5,
+          "nonveg": 1,
+          "jain": 0
+        },
+        "unavailableFor": [
+          "jain"
+        ]
+      },
+      {
+        "id": 903,
+        "type": "Evening Munchies",
+        "description": "Maggi, sandwiches, and more",
+        "price": 149,
+        "originalPrice": 400,
+        "pickupStart": "21:00",
+        "pickupEnd": "22:00",
+        "available": {
+          "veg": 2,
+          "nonveg": 5,
+          "jain": 3
+        }
+      }
+    ],
+    "possibleIngredients": [
+      "Paratha",
+      "Sandwich",
+      "Samosa",
+      "Maggi",
+      "Bun Maska"
+    ],
+    "reviews": {
+      "fairPortion": 3.8,
+      "overallHygiene": 4.2,
+      "freshness": 4
+    }
+  },
+  {
+    "id": 10,
+    "name": "Bahadur Bhandar",
+    "location": "Block 21, Lodi Colony",
+    "distance": 2.5,
+    "timeToReach": 10,
+    "rating": 4.4,
+    "reviewCount": 89,
+    "category": "dessert",
+    "vegOnly": true,
+    "isAvailable": true,
+    "popularityScore": 65,
+    "dateAdded": "2026-01-16",
+    "image": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=400",
+    "bagOptions": [
+      {
+        "id": 1001,
+        "type": "Local Favorites",
+        "description": "Fresh local bakery items",
+        "price": 79,
+        "originalPrice": 199,
+        "pickupStart": "20:30",
+        "pickupEnd": "21:30",
+        "available": {
+          "veg": 2,
+          "nonveg": 6,
+          "jain": 0
+        },
+        "unavailableFor": [
+          "veg"
+        ]
+      },
+      {
+        "id": 1002,
+        "type": "Family Pack",
+        "description": "Large assortment of bakery items",
+        "price": 149,
+        "originalPrice": 350,
+        "pickupStart": "20:30",
+        "pickupEnd": "21:30",
+        "available": {
+          "veg": 4,
+          "nonveg": 0,
+          "jain": 3
+        },
+        "unavailableFor": [
+          "nonveg"
+        ]
+      }
+    ],
+    "possibleIngredients": [
+      "Bread",
+      "Buns",
+      "Pastries",
+      "Biscuits",
+      "Cake Slices"
+    ],
+    "reviews": {
+      "fairPortion": 4.7,
+      "overallHygiene": 4.4,
+      "freshness": 4.6
+    }
+  },
+  {
+    "id": 11,
+    "name": "Mithas Restaurant",
+    "location": "Saket",
+    "distance": 3,
+    "timeToReach": 12,
+    "rating": 4.6,
+    "reviewCount": 156,
+    "category": "dinner",
+    "vegOnly": true,
+    "isAvailable": true,
+    "popularityScore": 82,
+    "dateAdded": "2026-01-14",
+    "image": "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=400",
+    "bagOptions": [
+      {
+        "id": 1101,
+        "type": "Dinner Special",
+        "description": "Assorted dinner items",
+        "price": 49,
+        "originalPrice": 199,
+        "pickupStart": "19:30",
+        "pickupEnd": "20:30",
+        "available": {
+          "veg": 8,
+          "nonveg": 4,
+          "jain": 5
+        }
+      },
+      {
+        "id": 1102,
+        "type": "Large Meal",
+        "description": "Complete family dinner pack",
+        "price": 99,
+        "originalPrice": 350,
+        "pickupStart": "19:30",
+        "available": {
+          "veg": 1,
+          "nonveg": 0,
+          "jain": 3
+        },
+        "unavailableFor": [
+          "nonveg"
+        ]
+      }
+    ],
+    "possibleIngredients": [
+      "Curries",
+      "Rice",
+      "Roti",
+      "Sweets",
+      "Dal"
+    ],
+    "reviews": {
+      "fairPortion": 4.5,
+      "overallHygiene": 4.6,
+      "freshness": 4.4
+    }
+  },
+  {
+    "id": 12,
+    "name": "Spice Symphony",
+    "location": "Greater Kailash",
+    "distance": 3.1,
+    "timeToReach": 12,
+    "rating": 4.7,
+    "reviewCount": 198,
+    "category": "dinner",
+    "vegOnly": false,
+    "isAvailable": true,
+    "popularityScore": 94,
+    "dateAdded": "2025-12-20",
+    "image": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400",
+    "bagOptions": [
+      {
+        "id": 1201,
+        "type": "Dinner Box",
+        "description": "Indian dinner items",
+        "price": 49,
+        "originalPrice": 199,
+        "pickupStart": "19:00",
+        "pickupEnd": "20:00",
+        "available": {
+          "veg": 0,
+          "nonveg": 5,
+          "jain": 2
+        }
+      },
+      {
+        "id": 1202,
+        "type": "Family Feast",
+        "description": "Large family dinner pack",
+        "price": 99,
+        "originalPrice": 350,
+        "pickupStart": "19:30",
+        "pickupEnd": "20:30",
+        "available": {
+          "veg": 3,
+          "nonveg": 7,
+          "jain": 1
+        },
+        "unavailableFor": [
+          "nonveg"
+        ]
+      }
+    ],
+    "possibleIngredients": [
+      "Biryani",
+      "Curries",
+      "Naan",
+      "Tandoori",
+      "Raita"
+    ],
+    "reviews": {
+      "fairPortion": 4.6,
+      "overallHygiene": 4.7,
+      "freshness": 4.5
+    }
+  },
+  {
+    "id": 13,
+    "name": "Curry Leaf",
+    "location": "Defence Colony",
+    "distance": 1.8,
+    "timeToReach": 7,
+    "rating": 4.6,
+    "reviewCount": 234,
+    "category": "dinner",
+    "vegOnly": false,
+    "isAvailable": true,
+    "popularityScore": 91,
+    "dateAdded": "2025-11-10",
+    "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400",
+    "bagOptions": [
+      {
+        "id": 1301,
+        "type": "South Indian",
+        "description": "South Indian delicacies",
+        "price": 49,
+        "originalPrice": 199,
+        "pickupStart": "18:30",
+        "pickupEnd": "19:30",
+        "available": {
+          "veg": 5,
+          "nonveg": 3,
+          "jain": 6
+        }
+      },
+      {
+        "id": 1302,
+        "type": "Large Feast",
+        "description": "Complete family meal",
+        "price": 199,
+        "originalPrice": 500,
+        "pickupStart": "18:30",
+        "pickupEnd": "19:30",
+        "available": {
+          "veg": 2,
+          "nonveg": 4,
+          "jain": 0
+        },
+        "unavailableFor": [
+          "jain"
+        ]
+      }
+    ],
+    "possibleIngredients": [
+      "Dosa",
+      "Idli",
+      "Vada",
+      "Sambar",
+      "Chutney"
+    ],
+    "reviews": {
+      "fairPortion": 4.5,
+      "overallHygiene": 4.6,
+      "freshness": 4.4
+    }
+  },
+  {
+    "id": 14,
+    "name": "Sagar Ratna",
+    "location": "Nehru Place",
+    "distance": 1.8,
+    "timeToReach": 7,
+    "rating": 4.7,
+    "reviewCount": 312,
+    "category": "dinner",
+    "vegOnly": true,
+    "isAvailable": true,
+    "popularityScore": 76,
+    "dateAdded": "2026-01-17",
+    "image": "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400",
+    "bagOptions": [
+      {
+        "id": 1401,
+        "type": "Thali Box",
+        "description": "Complete South Indian meal",
+        "price": 99,
+        "originalPrice": 249,
+        "pickupStart": "19:00",
+        "pickupEnd": "20:00",
+        "available": {
+          "veg": 3,
+          "nonveg": 5,
+          "jain": 2
+        }
+      },
+      {
+        "id": 1402,
+        "type": "Mega Thali",
+        "description": "Large South Indian feast",
+        "price": 199,
+        "originalPrice": 500,
+        "pickupStart": "19:00",
+        "pickupEnd": "20:00",
+        "available": {
+          "veg": 0,
+          "nonveg": 6,
+          "jain": 3
+        },
+        "unavailableFor": [
+          "veg"
+        ]
+      }
+    ],
+    "possibleIngredients": [
+      "Dosa",
+      "Uttapam",
+      "Vada",
+      "Rice",
+      "Rasam"
+    ],
+    "reviews": {
+      "fairPortion": 4.8,
+      "overallHygiene": 4.5,
+      "freshness": 4.6
+    }
+  },
+  {
+    "id": 15,
+    "name": "Tandoori Tales",
+    "location": "Connaught Place",
+    "distance": 3,
+    "timeToReach": 12,
+    "rating": 4.5,
+    "reviewCount": 178,
+    "category": "dinner",
+    "vegOnly": false,
+    "isAvailable": true,
+    "popularityScore": 74,
+    "dateAdded": "2026-01-17",
+    "image": "https://images.unsplash.com/photo-1544025162-d76694265947?w=400",
+    "bagOptions": [
+      {
+        "id": 1501,
+        "type": "Tandoori Box",
+        "description": "Tandoori specialties",
+        "price": 119,
+        "originalPrice": 280,
+        "pickupStart": "21:00",
+        "pickupEnd": "22:00",
+        "available": {
+          "veg": 2,
+          "nonveg": 1,
+          "jain": 4
+        }
+      },
+      {
+        "id": 1502,
+        "type": "Kebab Platter",
+        "description": "Large kebab selection",
+        "price": 199,
+        "originalPrice": 450,
+        "pickupStart": "21:30",
+        "pickupEnd": "22:30",
+        "available": {
+          "veg": 4,
+          "nonveg": 1,
+          "jain": 0
+        },
+        "unavailableFor": [
+          "jain"
+        ]
+      }
+    ],
+    "possibleIngredients": [
+      "Tandoori Chicken",
+      "Seekh Kebab",
+      "Naan",
+      "Raita",
+      "Paneer Tikka"
+    ],
+    "reviews": {
+      "fairPortion": 4.4,
+      "overallHygiene": 4.5,
+      "freshness": 4.3
+    }
+  },
+  {
+    "id": 16,
+    "name": "Modern Bazaar",
+    "location": "Vasant Vihar",
+    "distance": 4.5,
+    "timeToReach": 15,
+    "rating": 4.3,
+    "reviewCount": 342,
+    "category": "grocery",
+    "vegOnly": false,
+    "isAvailable": true,
+    "popularityScore": 80,
+    "dateAdded": "2026-01-10",
+    "image": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400",
+    "bagOptions": [
+      {
+        "id": 1601,
+        "type": "Fresh Produce",
+        "description": "Fruits and vegetables mix",
+        "price": 99,
+        "originalPrice": 300,
+        "pickupStart": "20:00",
+        "pickupEnd": "21:00",
+        "available": {
+          "veg": 7,
+          "nonveg": 3,
+          "jain": 5
+        }
+      },
+      {
+        "id": 1602,
+        "type": "Bakery Essentials",
+        "description": "Breads, buns and muffins",
+        "price": 149,
+        "originalPrice": 400,
+        "pickupStart": "20:30",
+        "pickupEnd": "21:30",
+        "available": {
+          "veg": 4,
+          "nonveg": 0,
+          "jain": 2
+        },
+        "unavailableFor": [
+          "jain"
+        ]
+      }
+    ],
+    "possibleIngredients": [
+      "Apples",
+      "Bananas",
+      "Spinach",
+      "Bread",
+      "Milk"
+    ],
+    "reviews": {
+      "fairPortion": 4.2,
+      "overallHygiene": 4.5,
+      "freshness": 4.4
+    }
+  },
+  {
+    "id": 17,
+    "name": "Needs Supermarket",
+    "location": "Gurgaon",
+    "distance": 8,
+    "timeToReach": 25,
+    "rating": 4,
+    "reviewCount": 150,
+    "category": "grocery",
+    "vegOnly": true,
+    "isAvailable": true,
+    "popularityScore": 70,
+    "dateAdded": "2026-01-12",
+    "image": "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=400",
+    "bagOptions": [
+      {
+        "id": 1701,
+        "type": "Dairy Box",
+        "description": "Milk, cheese and yogurts",
+        "price": 199,
+        "originalPrice": 500,
+        "pickupStart": "19:00",
+        "pickupEnd": "20:00",
+        "available": {
+          "veg": 1,
+          "nonveg": 4,
+          "jain": 2
+        }
+      },
+      {
+        "id": 1702,
+        "type": "Mega Dairy Pack",
+        "description": "Large assortment of dairy",
+        "price": 299,
+        "originalPrice": 800,
+        "pickupStart": "19:00",
+        "pickupEnd": "20:00",
+        "available": {
+          "veg": 0,
+          "nonveg": 0,
+          "jain": 0
+        },
+        "unavailableFor": [
+          "veg",
+          "jain"
+        ]
+      }
+    ],
+    "possibleIngredients": [
+      "Milk",
+      "Cheese",
+      "Yogurt",
+      "Paneer",
+      "Butter"
+    ],
+    "reviews": {
+      "fairPortion": 4,
+      "overallHygiene": 4.2,
+      "freshness": 3.9
+    }
+  },
+  {
+    "id": 18,
+    "name": "Blue Tokai",
+    "location": "Saket",
+    "distance": 2.8,
+    "timeToReach": 10,
+    "rating": 4.6,
+    "reviewCount": 210,
+    "category": "breakfast",
+    "vegOnly": false,
+    "isAvailable": true,
+    "popularityScore": 89,
+    "dateAdded": "2026-01-08",
+    "image": "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=400",
+    "bagOptions": [
+      {
+        "id": 1801,
+        "type": "Morning Brew",
+        "description": "Croissant and coffee beans",
+        "price": 199,
+        "originalPrice": 550,
+        "pickupStart": "11:00",
+        "pickupEnd": "12:00",
+        "available": {
+          "veg": 4,
+          "nonveg": 2,
+          "jain": 5
+        }
+      },
+      {
+        "id": 1802,
+        "type": "Breakfast Bagel",
+        "description": "Bagels and spreads",
+        "price": 149,
+        "originalPrice": 400,
+        "pickupStart": "10:30",
+        "pickupEnd": "11:30",
+        "available": {
+          "veg": 0,
+          "nonveg": 3,
+          "jain": 1
+        },
+        "unavailableFor": [
+          "veg"
+        ]
+      }
+    ],
+    "possibleIngredients": [
+      "Coffee",
+      "Bagel",
+      "Croissant",
+      "Muffin",
+      "Sandwich"
+    ],
+    "reviews": {
+      "fairPortion": 4.3,
+      "overallHygiene": 4.7,
+      "freshness": 4.8
+    }
+  },
+  {
+    "id": 19,
+    "name": "IHOP",
+    "location": "Cyber Hub",
+    "distance": 4.2,
+    "timeToReach": 16,
+    "rating": 4.1,
+    "reviewCount": 300,
+    "category": "breakfast",
+    "vegOnly": false,
+    "isAvailable": true,
+    "popularityScore": 78,
+    "dateAdded": "2025-12-25",
+    "image": "https://images.unsplash.com/photo-1598214886806-c87b84b7078b?w=400",
+    "bagOptions": [
+      {
+        "id": 1901,
+        "type": "Pancake Stack",
+        "description": "Assorted pancakes",
+        "price": 199,
+        "originalPrice": 600,
+        "pickupStart": "11:30",
+        "pickupEnd": "12:30",
+        "available": {
+          "veg": 2,
+          "nonveg": 5,
+          "jain": 1
+        }
+      },
+      {
+        "id": 1902,
+        "type": "Pancake Party",
+        "description": "Large stack for groups",
+        "price": 399,
+        "originalPrice": 1000,
+        "pickupStart": "11:30",
+        "pickupEnd": "12:30",
+        "available": {
+          "veg": 6,
+          "nonveg": 0,
+          "jain": 3
+        },
+        "unavailableFor": [
+          "nonveg"
+        ]
+      }
+    ],
+    "possibleIngredients": [
+      "Pancakes",
+      "Waffles",
+      "Syrup",
+      "Eggs",
+      "Bacon"
+    ],
+    "reviews": {
+      "fairPortion": 4.1,
+      "overallHygiene": 4.3,
+      "freshness": 4
+    }
+  },
+  {
+    "id": 20,
+    "name": "Nature Basket",
+    "location": "Defence Colony",
+    "distance": 1.5,
+    "timeToReach": 6,
+    "rating": 4.4,
+    "reviewCount": 180,
+    "category": "grocery",
+    "vegOnly": true,
+    "isAvailable": true,
+    "popularityScore": 82,
+    "dateAdded": "2026-01-02",
+    "image": "https://images.unsplash.com/photo-1579113800032-c38bd60604d6?w=400",
+    "bagOptions": [
+      {
+        "id": 2001,
+        "type": "Organic Veggies",
+        "description": "Mixed organic vegetables",
+        "price": 149,
+        "originalPrice": 450,
+        "pickupStart": "20:00",
+        "pickupEnd": "21:00",
+        "available": {
+          "veg": 6,
+          "nonveg": 3,
+          "jain": 4
+        }
+      },
+      {
+        "id": 2002,
+        "type": "Health Snack",
+        "description": "Granola bars and nuts",
+        "price": 199,
+        "originalPrice": 600,
+        "pickupStart": "19:30",
+        "pickupEnd": "20:30",
+        "available": {
+          "veg": 1,
+          "nonveg": 2,
+          "jain": 0
+        },
+        "unavailableFor": [
+          "jain"
+        ]
+      }
+    ],
+    "possibleIngredients": [
+      "Kale",
+      "Avocado",
+      "Granola",
+      "Almonds",
+      "Honey"
+    ],
+    "reviews": {
+      "fairPortion": 4.3,
+      "overallHygiene": 4.6,
+      "freshness": 4.5
+    }
+  }
+]
