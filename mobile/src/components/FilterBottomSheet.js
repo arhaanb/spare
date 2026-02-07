@@ -4,6 +4,7 @@ import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView } from '@gorhom/
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 
 const FilterChip = ({ label, active, onPress }) => (
     <TouchableOpacity
@@ -24,7 +25,7 @@ const FilterSection = ({ title, children }) => (
     </View>
 );
 
-const FilterBottomSheet = React.forwardRef(({ filters, onApply, onReset }, ref) => {
+const FilterBottomSheet = React.forwardRef(({ filters, onApply, onReset, resultsCount }, ref) => {
     const insets = useSafeAreaInsets();
     const snapPoints = useMemo(() => ['65%'], []);
 
@@ -34,9 +35,14 @@ const FilterBottomSheet = React.forwardRef(({ filters, onApply, onReset }, ref) 
                 {...props}
                 disappearsOnIndex={-1}
                 appearsOnIndex={0}
-                opacity={0.6}
-                style={[props.style, { backgroundColor: '#000' }]} // Darker backdrop
-            />
+                opacity={0.4}
+            >
+                <BlurView
+                    intensity={40}
+                    tint="dark"
+                    style={StyleSheet.absoluteFill}
+                />
+            </BottomSheetBackdrop>
         ),
         []
     );
@@ -134,6 +140,18 @@ const FilterBottomSheet = React.forwardRef(({ filters, onApply, onReset }, ref) 
                         onPress={() => onApply({ sortBy: 'priceAsc' })}
                     />
                 </FilterSection>
+
+                {/* Apply Button */}
+                <View style={[styles.footer, { paddingBottom: insets.bottom + SPACING.md }]}>
+                    <TouchableOpacity
+                        style={styles.applyButton}
+                        onPress={() => ref.current?.dismiss()}
+                        activeOpacity={0.9}
+                    >
+                        <Text style={styles.applyButtonText}>Apply Filters</Text>
+                        <Ionicons name="arrow-forward" size={18} color={COLORS.background} />
+                    </TouchableOpacity>
+                </View>
             </BottomSheetView>
         </BottomSheetModal>
     );
@@ -141,7 +159,7 @@ const FilterBottomSheet = React.forwardRef(({ filters, onApply, onReset }, ref) 
 
 const styles = StyleSheet.create({
     bottomSheetBackground: {
-        backgroundColor: COLORS.surfaceStrong,
+        backgroundColor: 'rgba(15, 58, 40, 0.95)', // Semi-transparent dark green
         borderTopLeftRadius: BORDER_RADIUS.xxl,
         borderTopRightRadius: BORDER_RADIUS.xxl,
     },
@@ -208,6 +226,24 @@ const styles = StyleSheet.create({
     chipTextActive: {
         color: COLORS.background,
         fontFamily: 'Saans-SemiBold',
+    },
+    footer: {
+        marginTop: SPACING.md,
+        backgroundColor: 'transparent',
+    },
+    applyButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: COLORS.activeCategory,
+        paddingVertical: 14,
+        borderRadius: BORDER_RADIUS.lg,
+        gap: SPACING.sm,
+    },
+    applyButtonText: {
+        fontSize: FONT_SIZES.md,
+        fontFamily: 'Saans-Bold',
+        color: COLORS.background,
     },
 });
 

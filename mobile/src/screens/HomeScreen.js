@@ -138,7 +138,7 @@ const HomeContent = ({
                 <Animated.View
                   key={restaurant.id}
                   style={styles.gridItem}
-                  layout={Layout.springify().damping(18).stiffness(180)}
+                  layout={Layout.springify().damping(28).stiffness(150)}
                   entering={FadeIn.duration(180)}
                   exiting={FadeOut.duration(140)}
                 >
@@ -374,6 +374,7 @@ const HomeScreen = ({ navigation, route }) => {
       <FilterBottomSheet
         ref={bottomSheetRef}
         filters={filters}
+        resultsCount={allFilteredRestaurants.length}
         onApply={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
         onReset={() => setFilters(DEFAULT_FILTERS)}
       />
