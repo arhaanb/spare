@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import client from '../api/client';
+import { useAuth } from './AuthContext';
 
 const StatsContext = createContext();
 
@@ -30,15 +32,47 @@ export const useStats = () => {
 export const StatsProvider = ({ children }) => {
     const [stats, setStats] = useState(DEFAULT_STATS);
     const [isLoading, setIsLoading] = useState(true);
+    const { signedIn } = useAuth(); // We need auth state
 
-    // Load stats from storage on mount
+    // Load stats from storage OR API on mount/login
     useEffect(() => {
         const loadStats = async () => {
             try {
+                // 1. Load local first (fast)
                 const savedStats = await AsyncStorage.getItem(STORAGE_KEY);
+                let localStats = DEFAULT_STATS;
                 if (savedStats) {
-                    const parsed = JSON.parse(savedStats);
-                    setStats({ ...DEFAULT_STATS, ...parsed });
+                    localStats = JSON.parse(savedStats);
+                    setStats(localStats); // Optimistic load
+                }
+
+                // 2. Load from API if signed in (source of truth)
+                if (signedIn) {
+                    try {
+                        const { data } = await client.get('/user/stats');
+                        if (data.success && data.data) {
+                            // Merge logic: server usually wins, or max?
+                            // Let's trust server if it has data.
+                            // Actually, simplistic approach: Server is master.
+                            // If server is 0 and local is > 0, we might want to push local to server?
+                            // For now, let's assume server sync.
+                            // But if server is empty (0) and we have local data from offline usage, 
+                            // we should probably keep local.
+
+                            const serverStats = data.data;
+                            if (serverStats.ordersCount >= localStats.ordersCount) {
+                                setStats(serverStats);
+                                await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(serverStats));
+                            } else {
+                                // Local is ahead (e.g. offline orders), push to server?
+                                // For simplicity, let's just stick with local and push it next time an order happens, 
+                                // OR push it right now.
+                                syncStatsToApi(localStats);
+                            }
+                        }
+                    } catch (apiErr) {
+                        console.log('API Stats fetch failed, using local', apiErr);
+                    }
                 }
             } catch (error) {
                 console.error('Error loading stats:', error);
@@ -48,16 +82,28 @@ export const StatsProvider = ({ children }) => {
         };
 
         loadStats();
-    }, []);
+    }, [signedIn]);
+
+    // Helper to sync to API
+    const syncStatsToApi = async (currentStats) => {
+        if (!signedIn) return;
+        try {
+            await client.post('/user/stats', currentStats);
+        } catch (error) {
+            console.error('Error syncing stats to API:', error);
+        }
+    };
 
     // Persist stats to storage
     const persistStats = useCallback(async (newStats) => {
         try {
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newStats));
+            // Also sync to API
+            syncStatsToApi(newStats);
         } catch (error) {
             console.error('Error saving stats:', error);
         }
-    }, []);
+    }, [signedIn]);
 
     // Record a new order and update stats
     const recordOrder = useCallback(async (itemCount, totalSpent) => {
@@ -67,17 +113,21 @@ export const StatsProvider = ({ children }) => {
         const estimatedOriginal = totalSpent / (1 - SAVINGS_RATIO);
         const savedAmount = estimatedOriginal - totalSpent;
 
-        const newStats = {
-            bagsRescued: stats.bagsRescued + itemCount,
-            moneySaved: stats.moneySaved + savedAmount,
-            carbonOffset: stats.carbonOffset + (itemCount * CARBON_PER_BAG),
-            foodSaved: stats.foodSaved + (itemCount * FOOD_PER_BAG),
-            ordersCount: stats.ordersCount + 1,
-        };
+        setStats(prevStats => {
+            const newStats = {
+                bagsRescued: prevStats.bagsRescued + itemCount,
+                moneySaved: prevStats.moneySaved + savedAmount,
+                carbonOffset: prevStats.carbonOffset + (itemCount * CARBON_PER_BAG),
+                foodSaved: prevStats.foodSaved + (itemCount * FOOD_PER_BAG),
+                ordersCount: prevStats.ordersCount + 1,
+            };
 
-        setStats(newStats);
-        await persistStats(newStats);
-    }, [stats, persistStats]);
+            // Persist (and sync)
+            persistStats(newStats);
+
+            return newStats;
+        });
+    }, [persistStats]);
 
     // Reset all stats (for logout)
     const resetStats = useCallback(async () => {

@@ -199,7 +199,7 @@ const CartScreen = ({ navigation }) => {
         await recordOrder(totalItemCount, total);
 
         // Create persistent order
-        await createOrder(orderCode, total, items.length, items[0]?.restaurant);
+        await createOrder(orderCode, total, items.length, items[0]?.restaurant, items);
 
         navigation.navigate('OrderConfirmation', {
             orderCode,

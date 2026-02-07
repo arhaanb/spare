@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
@@ -11,10 +11,11 @@ import ActiveOrderBanner from '../components/ActiveOrderBanner';
 import { useOrder } from '../context/OrderContext';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import client from '../api/client';
 import {
   categories,
   userLocation,
-  restaurants,
+  restaurants as mockRestaurants,
   getRelevantRestaurants,
   getPopularRestaurants,
   getNewlyAddedRestaurants,
@@ -224,16 +225,41 @@ const HomeScreen = ({ navigation, route }) => {
   const [activeTab, setActiveTab] = useState('explore');
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [currentLocation, setCurrentLocation] = useState(userLocation);
+  const [restaurants, setRestaurants] = useState([]); // Initialize empty, optionally use mockRestaurants as fallback
+
   const bottomSheetRef = React.useRef(null);
   const locationSheetRef = React.useRef(null);
 
   const insets = useSafeAreaInsets();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRestaurants = async () => {
+      try {
+        const { data } = await client.get('/data/home');
+        if (data.success) {
+          setRestaurants(data.data);
+        } else {
+          setRestaurants(mockRestaurants);
+        }
+      } catch (error) {
+        console.error("Failed to fetch restaurants:", error);
+        setRestaurants(mockRestaurants);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRestaurants();
+  }, []);
 
   React.useEffect(() => {
     if (route.params?.tab) {
       setActiveTab(route.params.tab);
     }
   }, [route.params?.tab]);
+
+
 
   const hasActiveFilters = useMemo(() => (
     filters.onlyVeg !== DEFAULT_FILTERS.onlyVeg
@@ -348,6 +374,15 @@ const HomeScreen = ({ navigation, route }) => {
   };
 
   const renderContent = () => {
+    if (isLoading) {
+      return (
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
+          <Text style={{ color: COLORS.textPrimary, fontFamily: 'Gargoyle', fontSize: 24 }}>Loading...</Text>
+        </View>
+      );
+    }
+
     switch (activeTab) {
       case 'explore':
         return (

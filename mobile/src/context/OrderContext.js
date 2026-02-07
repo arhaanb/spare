@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import client from '../api/client';
 
 const OrderContext = createContext();
 
@@ -48,7 +49,7 @@ export const OrderProvider = ({ children }) => {
     }, []);
 
     // Create a new active order
-    const createOrder = useCallback(async (orderCode, total, itemCount, restaurant) => {
+    const createOrder = useCallback(async (orderCode, total, itemCount, restaurant, items) => {
         const now = Date.now();
         const expiresAt = new Date(now + PICKUP_WINDOW_MS);
 
@@ -59,13 +60,29 @@ export const OrderProvider = ({ children }) => {
             restaurant,
             createdAt: now,
             expiresAt,
+            status: 'active'
         };
 
         setActiveOrder(newOrder);
+
         try {
+            // Save locally
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newOrder));
+
+            // Send to API
+            await client.post('/user/orders', {
+                orderCode,
+                restaurantId: restaurant.id,
+                restaurantName: restaurant.name,
+                items, // Pass the cart items
+                total,
+                itemCount,
+                expiresAt: expiresAt.toISOString()
+            });
+
         } catch (error) {
-            console.error('Error saving order:', error);
+            console.error('Error creating order:', error);
+            // We still proceed locally
         }
     }, []);
 
@@ -74,6 +91,7 @@ export const OrderProvider = ({ children }) => {
         setActiveOrder(null);
         try {
             await AsyncStorage.removeItem(STORAGE_KEY);
+            // Optionally notify API of completion if endpoint existed
         } catch (error) {
             console.error('Error removing order:', error);
         }
