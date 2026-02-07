@@ -134,9 +134,9 @@ const BagCard = ({ bagOption, onPress, isSelected, selectedPreference }) => {
           <View style={[styles.stockPill, { backgroundColor: COLORS.activeCategory }]}>
             <Text style={[styles.stockText, { color: COLORS.background }]}>Unavailable</Text>
           </View>
-        ) : bagOption.available <= 2 ? (
-          <View style={styles.stockPill}>
-            <Text style={styles.stockText}>Only {bagOption.available} Left</Text>
+        ) : bagOption.available < 5 ? (
+          <View style={[styles.stockPill, { backgroundColor: COLORS.inactiveCategory }]}>
+            <Text style={[styles.stockText, { color: COLORS.activeCategory }]}>Only {bagOption.available} Left</Text>
           </View>
         ) : null}
       </View>
@@ -467,7 +467,14 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
 
                 // Compute availability based on preference
                 const isUnavailableForPreference = apiData.unavailableFor?.includes(selectedPreference);
-                const computedAvailable = isUnavailableForPreference ? 0 : (apiData.available ?? 5);
+
+                let rawAvailable = apiData.available;
+                // Handle both number and object formats for backward compatibility
+                if (typeof rawAvailable === 'object' && rawAvailable !== null) {
+                  rawAvailable = rawAvailable[selectedPreference] ?? 0;
+                }
+
+                const computedAvailable = isUnavailableForPreference ? 0 : (rawAvailable ?? 5);
 
                 const bagData = {
                   ...apiData,

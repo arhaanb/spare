@@ -87,17 +87,15 @@ const BagSelectionModal = ({ visible, bagOption, restaurant, preference, onClose
     }, [visible, bagOption, backdropOpacity, modalTranslateY, modalScale]);
 
     // Update quantity when initialQuantity changes (separate effect to avoid reopening modal)
+    // Update quantity when initialQuantity changes (separate effect to avoid reopening modal)
     useEffect(() => {
         if (visible) {
-            const bagId = bagOption?.id || bagOption?.role;
-            const prevBagId = prevBagOptionRef.current?.id || prevBagOptionRef.current?.role;
-
-            // Only update if same bag
-            if (bagId === prevBagId) {
-                setQuantity(initialQuantity > 0 ? initialQuantity : 1);
-            }
+            // When preference changes, the initialProperties prop changes, updating initialQuantity
+            // We want to force update the local quantity state to match the new initialQuantity
+            // This ensures if I select Veg (Qty 2) then Jain (Qty 0), it shows 1 instead of keeping 2
+            setQuantity(initialQuantity > 0 ? initialQuantity : 1);
         }
-    }, [initialQuantity]);
+    }, [initialQuantity, visible]);
 
     const backdropStyle = useAnimatedStyle(() => ({
         opacity: backdropOpacity.value,
@@ -171,7 +169,10 @@ const BagSelectionModal = ({ visible, bagOption, restaurant, preference, onClose
     };
 
     const handleIncrement = () => {
-        if (quantity < 10) {
+        const isDiy = bagOption?.role === 'diy' || bagOption?.type === 'Make it yourself';
+        const maxQuantity = isDiy ? 20 : (bagOption?.available || 10);
+
+        if (quantity < maxQuantity) {
             setQuantity(quantity + 1);
             plusScale.value = withSequence(
                 withSpring(1.02, { damping: 14, stiffness: 360, mass: 0.7 }),
@@ -303,12 +304,12 @@ const BagSelectionModal = ({ visible, bagOption, restaurant, preference, onClose
                             <AnimatedPressable
                                 style={[styles.counterButton, plusAnimatedStyle]}
                                 onPress={handleIncrement}
-                                disabled={quantity >= 10}
+                                disabled={quantity >= ((bagOption?.role === 'diy' || bagOption?.type === 'Make it yourself') ? 20 : (bagOption?.available || 10))}
                             >
                                 <Ionicons
                                     name="add"
                                     size={20}
-                                    color={quantity >= 10 ? COLORS.textSecondary : COLORS.activeCategory}
+                                    color={quantity >= ((bagOption?.role === 'diy' || bagOption?.type === 'Make it yourself') ? 20 : (bagOption?.available || 10)) ? COLORS.textSecondary : COLORS.activeCategory}
                                 />
                             </AnimatedPressable>
                         </View>
