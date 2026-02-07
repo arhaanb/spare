@@ -90,9 +90,7 @@ const LoginScreen = () => {
           <Text style={styles.subtitle}>
             Create your account to discover discounted surplus meals nearby.
           </Text>
-          {showApple ? (
-            <AppleSignInButton onPress={handleAppleSignIn} />
-          ) : (
+          {Platform.OS === 'android' || showApple === false ? (
             <Button
               title={'Continue'}
               onPress={signIn}
@@ -100,6 +98,8 @@ const LoginScreen = () => {
               style={styles.primaryButton}
               textStyle={styles.primaryButtonText}
             />
+          ) : (
+            <AppleSignInButton onPress={handleAppleSignIn} />
           )}
 
           <Text style={styles.footnote}>

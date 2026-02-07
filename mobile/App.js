@@ -1,4 +1,5 @@
 import React from 'react';
+import { navigationRef } from './src/navigation/navigationRef';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -22,6 +23,7 @@ import {
   LoginScreen,
   CartScreen,
   OrderConfirmationScreen,
+  NotificationsScreen,
 } from './src/screens';
 import {
   LocationHeader,
@@ -30,6 +32,7 @@ import {
   RestaurantCard,
   FilterBottomSheet,
   GlobalActiveOrderIndicator,
+  CartIndicator,
 } from './src/components';
 import { COLORS } from './src/constants/theme';
 
@@ -67,10 +70,12 @@ const AppStack = () => (
     <Stack.Screen name="Reservation" component={ReservationScreen} />
     <Stack.Screen name="Cart" component={CartScreen} />
     <Stack.Screen name="OrderConfirmation" component={OrderConfirmationScreen} />
+    <Stack.Screen name="Notifications" component={NotificationsScreen} />
   </Stack.Navigator>
 );
 
-const RootNavigator = () => {
+
+const RootNavigator = ({ onRouteHub }) => {
   const { signedIn, onboardingComplete, authReady } = useAuth();
   if (!authReady) {
     return null;
@@ -95,6 +100,7 @@ const RootNavigator = () => {
 };
 
 export default function App() {
+  const [currentRoute, setCurrentRoute] = React.useState(null);
   const [fontsLoaded, fontError] = useFonts({
     Gargoyle: require('./src/fonts/gargoyle/OPTIGargoyle-Normal.otf'),
     'Gargoyle-Italic': require('./src/fonts/gargoyle/OPTIGargoyle-Italic.otf'),
@@ -129,9 +135,17 @@ export default function App() {
             <OrderProvider>
               <FavoritesProvider>
                 <SafeAreaProvider onLayout={onLayoutRootView}>
-                  <NavigationContainer>
+                  <NavigationContainer
+                    ref={navigationRef}
+                    onStateChange={() => {
+                      const route = navigationRef.getCurrentRoute();
+                      setCurrentRoute(route?.name);
+                    }}
+                  >
                     <StatusBar style="light" />
                     <RootNavigator />
+                    <GlobalActiveOrderIndicator currentRouteName={currentRoute} />
+                    <CartIndicator currentRouteName={currentRoute} />
                   </NavigationContainer>
                 </SafeAreaProvider>
               </FavoritesProvider>

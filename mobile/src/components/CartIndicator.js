@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -13,11 +13,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { useCart } from '../context/CartContext';
 
+import { navigationRef } from '../navigation/navigationRef';
+import { useOrder } from '../context/OrderContext';
+
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
-const CartIndicator = ({ onPress }) => {
+const CartIndicator = ({ currentRouteName }) => {
     const insets = useSafeAreaInsets();
-    const { items, getCartTotal, getCartItemCount } = useCart();
+    const { items, cartRestaurant, getCartTotal, getCartItemCount, clearCart } = useCart();
+    const { hasActiveOrder } = useOrder();
 
     const translateY = useSharedValue(200);
     const scale = useSharedValue(1);
@@ -78,13 +82,39 @@ const CartIndicator = ({ onPress }) => {
         transform: [{ scale: buttonScale.value }],
     }));
 
-    if (!hasItems) return null;
+    // Hide if no items or if on checkout/cart screens
+    const isHiddenScreen = ['Cart', 'OrderConfirmation', 'Login', 'Onboarding'].includes(currentRouteName);
+    if (!hasItems || isHiddenScreen) return null;
+
+    // Additional check: On RestaurantDetail, only show if it matches the current restaurant
+    if (currentRouteName === 'RestaurantDetail' && navigationRef.isReady()) {
+        const route = navigationRef.getCurrentRoute();
+        const currentRestaurantId = route?.params?.restaurant?.id;
+        if (currentRestaurantId && cartRestaurant && cartRestaurant.id !== currentRestaurantId) {
+            return null;
+        }
+    }
+
+    // Determine bottom offset
+    // If on Home (tab bar present), lift higher.
+    // If GlobalActiveOrderIndicator is present, lift even higher to stack.
+    const isTabScreen = ['Home'].includes(currentRouteName);
+    let bottomOffset = insets.bottom + 8;
+
+    if (isTabScreen) {
+        bottomOffset = Platform.OS === 'ios' ? 105 : 85;
+    }
+
+    // Stack above Active Order Indicator if both visible
+    if (hasActiveOrder) {
+        bottomOffset += 72; // Height of banner + small gap
+    }
 
     return (
         <Animated.View
             style={[
                 styles.container,
-                { bottom: insets.bottom + SPACING.md },
+                { bottom: bottomOffset },
                 containerStyle,
             ]}
         >
@@ -94,32 +124,56 @@ const CartIndicator = ({ onPress }) => {
                     <Animated.Text style={[styles.badgeText, countStyle]}>{itemCount}</Animated.Text>
                 </View>
 
-                {/* Total Price */}
+                {/* Total Price & Restaurant */}
                 <View style={styles.priceContainer}>
-                    <Text style={styles.priceLabel}>Total</Text>
-                    <Animated.Text style={[styles.priceValue, priceStyle]}>
-                        ₹{total}
-                    </Animated.Text>
+                    {cartRestaurant && (
+                        <Text style={styles.restaurantName} numberOfLines={1}>
+                            {cartRestaurant.name}
+                        </Text>
+                    )}
+                    <View style={styles.totalRow}>
+                        {/* <Text style={styles.priceLabel}>Total: </Text> */}
+                        <Animated.Text style={[styles.priceValue, priceStyle]}>
+                            ₹{total}
+                        </Animated.Text>
+                    </View>
                 </View>
 
-                {/* View Cart Button */}
-                <AnimatedTouchable
-                    style={[styles.button, buttonAnimatedStyle]}
-                    activeOpacity={0.9}
-                    onPressIn={() => {
-                        buttonScale.value = withSpring(0.97, { damping: 18, stiffness: 320, mass: 0.7 });
-                    }}
-                    onPressOut={() => {
-                        buttonScale.value = withSequence(
-                            withSpring(1.02, { damping: 14, stiffness: 360, mass: 0.7 }),
-                            withSpring(1, { damping: 16, stiffness: 300, mass: 0.7 })
-                        );
-                    }}
-                    onPress={onPress}
-                >
-                    <Text style={styles.buttonText}>View Cart</Text>
-                    <Ionicons name="arrow-forward" size={18} color={COLORS.background} />
-                </AnimatedTouchable>
+                {/* Action Section: View Cart + Clear */}
+                <View style={styles.actionSection}>
+                    {/* Clear Button */}
+                    <TouchableOpacity
+                        style={styles.clearButton}
+                        onPress={clearCart}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="close-circle" size={28} color="rgba(10, 53, 34, 0.4)" />
+                    </TouchableOpacity>
+
+
+                    {/* View Cart Button */}
+                    <AnimatedTouchable
+                        style={[styles.button, buttonAnimatedStyle]}
+                        activeOpacity={0.9}
+                        onPressIn={() => {
+                            buttonScale.value = withSpring(0.97, { damping: 18, stiffness: 320, mass: 0.7 });
+                        }}
+                        onPressOut={() => {
+                            buttonScale.value = withSequence(
+                                withSpring(1.02, { damping: 14, stiffness: 360, mass: 0.7 }),
+                                withSpring(1, { damping: 16, stiffness: 300, mass: 0.7 })
+                            );
+                        }}
+                        onPress={() => {
+                            if (navigationRef.isReady()) {
+                                navigationRef.navigate('Cart');
+                            }
+                        }}
+                    >
+                        <Text style={styles.buttonText}>View Cart</Text>
+                        <Ionicons name="arrow-forward" size={18} color={COLORS.background} />
+                    </AnimatedTouchable>
+                </View>
             </View>
         </Animated.View>
     );
@@ -130,18 +184,20 @@ const styles = StyleSheet.create({
         position: 'absolute',
         left: SPACING.lg,
         right: SPACING.lg,
-        zIndex: 1000,
+        zIndex: 9999, // Lower than active order but high enough
     },
     content: {
         backgroundColor: COLORS.activeCategory,
         borderRadius: BORDER_RADIUS.xl,
-        paddingVertical: SPACING.md,
-        paddingHorizontal: SPACING.lg,
+        paddingVertical: SPACING.sm,
+        paddingHorizontal: SPACING.md,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: SPACING.md,
+        gap: SPACING.sm,
         ...SHADOWS.lg,
         elevation: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.2)',
     },
     badge: {
         width: 32,
@@ -158,25 +214,46 @@ const styles = StyleSheet.create({
     },
     priceContainer: {
         flex: 1,
+        justifyContent: 'center',
+    },
+    restaurantName: {
+        fontFamily: 'Saans',
+        fontSize: 14,
+        color: COLORS.background,
+        opacity: 0.7,
+        marginTop: -1,
+    },
+    totalRow: {
+        flexDirection: 'row',
+        alignItems: 'baseline',
     },
     priceLabel: {
-        fontFamily: 'Saans',
-        fontSize: FONT_SIZES.xs,
+        fontFamily: 'Saans-Bold',
+        fontSize: 10,
         color: COLORS.background,
-        opacity: 0.8,
+        opacity: 0.5,
+        // letterSpacing: 1,
     },
     priceValue: {
         fontFamily: 'Saans-Bold',
         fontSize: FONT_SIZES.xl,
         color: COLORS.background,
     },
+    actionSection: {
+        flexDirection: 'row-reverse',
+        alignItems: 'center',
+        gap: 8,
+    },
+    clearButton: {
+        padding: 2,
+    },
     button: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
         backgroundColor: 'rgba(0, 0, 0, 0.2)',
-        paddingVertical: SPACING.sm,
-        paddingHorizontal: SPACING.md,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
         borderRadius: BORDER_RADIUS.lg,
     },
     buttonText: {

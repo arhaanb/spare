@@ -48,7 +48,7 @@ export const OrderProvider = ({ children }) => {
     }, []);
 
     // Create a new active order
-    const createOrder = useCallback(async (orderCode, total, itemCount) => {
+    const createOrder = useCallback(async (orderCode, total, itemCount, restaurant) => {
         const now = Date.now();
         const expiresAt = new Date(now + PICKUP_WINDOW_MS);
 
@@ -56,6 +56,7 @@ export const OrderProvider = ({ children }) => {
             orderCode,
             total,
             itemCount,
+            restaurant,
             createdAt: now,
             expiresAt,
         };

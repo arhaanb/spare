@@ -224,46 +224,59 @@ const BagSelectionModal = ({ visible, bagOption, restaurant, preference, onClose
                 </AnimatedPressable>
 
                 <Animated.View style={[styles.modalContent, modalStyle]}>
-                    {/* Close Button */}
-                    <TouchableOpacity style={styles.closeButton} onPress={handleClose} activeOpacity={0.7}>
-                        <Ionicons name="close" size={24} color={COLORS.textSecondary} />
-                    </TouchableOpacity>
-
-                    {/* Bag Details */}
-                    <View style={styles.bagHeader}>
-                        <Text style={styles.bagName}>{bagOption.type}</Text>
-                        {preference && (
-                            <View style={styles.preferenceIndicator}>
-                                <Text style={styles.preferenceIndicatorText}>
-                                    {preference === 'veg' ? '🌱 Veg' : preference === 'nonveg' ? '🍖 Non-Veg' : '🙏 Jain'}
-                                </Text>
-                            </View>
-                        )}
+                    {/* Header Row: Title + Preference Pill + Close Button */}
+                    <View style={styles.headerRow}>
+                        <View style={styles.titleRow}>
+                            <Text style={styles.bagName}>{bagOption.type}</Text>
+                            {preference && (
+                                <View style={styles.preferenceIndicator}>
+                                    <Text style={styles.preferenceIndicatorText}>
+                                        {preference === 'veg' ? 'Veg' : preference === 'nonveg' ? 'Non-Veg' : 'Jain'}
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
+                        <TouchableOpacity style={styles.closeButton} onPress={handleClose} activeOpacity={0.7}>
+                            <Ionicons name="close" size={20} color={COLORS.textSecondary} />
+                        </TouchableOpacity>
                     </View>
+
+                    {/* Description */}
                     <Text style={styles.bagDescription} numberOfLines={2}>
                         {bagOption.description}
                     </Text>
 
-                    {/* Pickup Time */}
-                    <View style={styles.pickupRow}>
-                        <Ionicons name="time-outline" size={16} color={COLORS.activeCategory} />
-                        <Text style={styles.pickupText}>Pickup: {pickupTime}</Text>
+                    {/* Pickup Time - Bordered Container */}
+                    <View style={styles.pickupContainer}>
+                        <View style={styles.pickupRow}>
+                            <View style={styles.stopwatchIcon}>
+                                <Ionicons name="stopwatch-outline" size={20} color={COLORS.textPrimary} />
+                            </View>
+                            <Text style={styles.pickupLabel}>Pickup window : </Text>
+                            <Text style={styles.pickupTime}>{pickupTime}</Text>
+                        </View>
                     </View>
 
-                    {/* Price Display */}
+                    {/* Price Section with Label */}
                     <View style={styles.priceSection}>
-                        <View style={styles.priceContainer}>
-                            <Text style={styles.originalPrice}>₹{bagOption.originalPrice}</Text>
-                            <Text style={styles.salePrice}>₹{bagOption.price}</Text>
-                        </View>
-                        <View style={styles.savingsBadge}>
-                            <Text style={styles.savingsText}>
-                                Save ₹{bagOption.originalPrice - bagOption.price}
-                            </Text>
+                        <Text style={styles.priceSectionLabel}>Price</Text>
+                        <View style={styles.priceRow}>
+                            <View style={styles.priceContainer}>
+                                <Text style={styles.salePrice}>₹{bagOption.price}</Text>
+                                <Text style={styles.originalPrice}>₹{bagOption.originalPrice}</Text>
+                            </View>
+                            <View style={styles.savingsBadge}>
+                                <Text style={styles.savingsText}>
+                                    Save ₹{bagOption.originalPrice - bagOption.price}
+                                </Text>
+                            </View>
                         </View>
                     </View>
 
-                    {/* Quantity Counter */}
+                    {/* Divider */}
+                    <View style={styles.divider} />
+
+                    {/* Quantity Section - Label on left, Counter on right */}
                     <View style={styles.quantitySection}>
                         <Text style={styles.quantityLabel}>Quantity</Text>
                         <View style={styles.counterContainer}>
@@ -316,9 +329,12 @@ const BagSelectionModal = ({ visible, bagOption, restaurant, preference, onClose
                         onPress={handleAddToCart}
                     >
                         <Text style={styles.addButtonText}>
-                            {initialQuantity === 0 ? 'Add to Cart' : 'Update Quantity'}
+                            {quantity === 0
+                                ? 'Remove from Cart'
+                                : initialQuantity === 0
+                                    ? `Add to Cart  •  ₹${totalPrice}`
+                                    : `Update Cart  •  ₹${totalPrice}`}
                         </Text>
-                        {quantity > 0 && <Text style={styles.addButtonPrice}>₹{totalPrice}</Text>}
                     </AnimatedPressable>
                 </Animated.View>
             </View>
@@ -337,157 +353,191 @@ const styles = StyleSheet.create({
         backgroundColor: '#0F3A28',
         borderRadius: 24,
         padding: SPACING.xl,
+        paddingTop: SPACING.lg,
         width: '100%',
         maxWidth: 400,
-        alignItems: 'center',
         borderWidth: 1,
         borderColor: 'rgba(198, 240, 77, 0.2)',
     },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+        marginBottom: SPACING.sm,
+    },
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: SPACING.sm,
+        flex: 1,
+    },
     closeButton: {
-        position: 'absolute',
-        top: SPACING.md,
-        right: SPACING.md,
         width: 32,
         height: 32,
         borderRadius: 16,
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 10,
-    },
-    bagHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: SPACING.sm,
-        marginBottom: SPACING.xs,
-        marginTop: SPACING.md,
     },
     bagName: {
         fontFamily: 'Gargoyle',
-        fontSize: 26,
+        fontSize: 28,
         color: COLORS.textPrimary,
-        textAlign: 'center',
     },
     preferenceIndicator: {
-        backgroundColor: 'rgba(198, 240, 77, 0.15)',
-        paddingHorizontal: SPACING.sm,
-        paddingVertical: 4,
-        borderRadius: 12,
+        backgroundColor: 'rgba(198, 240, 77, 0.25)',
+        paddingHorizontal: SPACING.md,
+        paddingVertical: 6,
+        borderRadius: 16,
+        borderColor: 'rgba(198, 240, 77, 1)',
         borderWidth: 1,
-        borderColor: 'rgba(198, 240, 77, 0.3)',
     },
     preferenceIndicatorText: {
-        fontFamily: 'Saans',
+        fontFamily: 'Saans-SemiBold',
         fontSize: FONT_SIZES.xs,
-        color: COLORS.activeCategory,
-        fontWeight: '600',
+        color: '#fff',
     },
     bagDescription: {
         fontFamily: 'Saans',
-        fontSize: FONT_SIZES.sm,
+        fontSize: FONT_SIZES.md,
         color: COLORS.textSecondary,
-        textAlign: 'center',
-        marginBottom: SPACING.md,
-        opacity: 0.8,
+        marginBottom: SPACING.lg,
+        opacity: 0.9,
+        lineHeight: 22,
+    },
+    pickupContainer: {
+        backgroundColor: 'rgba(255, 255, 255, 0.06)',
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.12)',
+        paddingVertical: SPACING.md,
+        paddingHorizontal: SPACING.md,
+        marginBottom: SPACING.xl,
     },
     pickupRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
-        marginBottom: SPACING.lg,
     },
-    pickupText: {
-        fontFamily: 'Saans-SemiBold',
-        fontSize: FONT_SIZES.sm,
+    stopwatchIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: SPACING.sm,
+    },
+    pickupLabel: {
+        fontFamily: 'Saans',
+        fontSize: FONT_SIZES.md,
+        color: COLORS.textSecondary,
+    },
+    pickupTime: {
+        fontFamily: 'Saans-Bold',
+        fontSize: FONT_SIZES.md,
         color: COLORS.activeCategory,
     },
     priceSection: {
+        width: '100%',
+        marginBottom: SPACING.md,
+    },
+    priceSectionLabel: {
+        fontFamily: 'Saans',
+        fontSize: FONT_SIZES.sm,
+        color: COLORS.textSecondary,
+        marginBottom: SPACING.xs,
+        opacity: 0.8,
+    },
+    priceRow: {
+        flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: SPACING.lg,
+        justifyContent: 'space-between',
     },
     priceContainer: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'baseline',
         gap: SPACING.sm,
-        marginBottom: SPACING.xs,
     },
     originalPrice: {
         fontFamily: 'Saans',
-        fontSize: FONT_SIZES.md,
+        fontSize: FONT_SIZES.lg,
         color: COLORS.textSecondary,
         textDecorationLine: 'line-through',
         opacity: 0.6,
     },
     salePrice: {
         fontFamily: 'Saans-Bold',
-        fontSize: 28,
+        fontSize: 32,
         color: '#F2A2ED',
     },
     savingsBadge: {
-        backgroundColor: 'rgba(198, 240, 77, 0.2)',
-        paddingHorizontal: SPACING.sm,
-        paddingVertical: 4,
-        borderRadius: BORDER_RADIUS.full,
+        backgroundColor: 'rgba(198, 240, 77, 0.25)',
+        paddingHorizontal: SPACING.lg,
+        paddingVertical: 8,
+        borderRadius: 20,
+        borderColor: 'rgba(198, 240, 77, 1)',
+        borderWidth: 1,
     },
     savingsText: {
         fontFamily: 'Saans-SemiBold',
-        fontSize: FONT_SIZES.xs,
-        color: COLORS.activeCategory,
+        fontSize: FONT_SIZES.sm,
+        color: '#fff',
+    },
+    divider: {
+        height: 1,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        width: '100%',
+        marginVertical: SPACING.lg,
     },
     quantitySection: {
         width: '100%',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         marginBottom: SPACING.xl,
     },
     quantityLabel: {
-        fontFamily: 'Saans-SemiBold',
-        fontSize: FONT_SIZES.md,
-        color: COLORS.textPrimary,
-        marginBottom: SPACING.sm,
-        textAlign: 'center',
+        fontFamily: 'Saans',
+        fontSize: FONT_SIZES.lg,
+        color: COLORS.textSecondary,
     },
     counterContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        gap: SPACING.lg,
+        gap: SPACING.md,
     },
     counterButton: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: '#134631',
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(198, 240, 77, 0.3)',
+        borderWidth: 2,
+        borderColor: 'rgba(198, 240, 77, 0.4)',
     },
     quantityValue: {
         fontFamily: 'Saans-Bold',
-        fontSize: 32,
+        fontSize: 24,
         color: COLORS.textPrimary,
-        minWidth: 50,
+        minWidth: 40,
         textAlign: 'center',
     },
     addButton: {
         width: '100%',
         backgroundColor: COLORS.activeCategory,
-        borderRadius: BORDER_RADIUS.lg,
-        paddingVertical: SPACING.md,
+        borderRadius: 16,
+        paddingVertical: SPACING.lg,
         paddingHorizontal: SPACING.lg,
-        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
     },
     addButtonText: {
         fontFamily: 'Saans-Bold',
         fontSize: FONT_SIZES.lg,
         color: COLORS.background,
-    },
-    addButtonPrice: {
-        fontFamily: 'Saans-Bold',
-        fontSize: FONT_SIZES.lg,
-        color: COLORS.background,
+        textAlign: 'center',
     },
 });
 

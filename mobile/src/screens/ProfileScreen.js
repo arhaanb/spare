@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useOrder } from '../context/OrderContext';
+import { useCart } from '../context/CartContext';
 import { useNavigation } from '@react-navigation/native';
 
 const ProfileScreen = () => {
@@ -12,6 +13,9 @@ const ProfileScreen = () => {
     const navigation = useNavigation();
     const { signOut } = useAuth();
     const { hasActiveOrder } = useOrder();
+    const { getCartItemCount } = useCart();
+
+    const paddingBottom = 100 + (getCartItemCount() > 0 ? 72 : 0) + (hasActiveOrder ? 72 : 0);
 
     return (
         <View style={[styles.container, { paddingTop: insets.top + SPACING.xl }]}>
@@ -53,7 +57,7 @@ const ProfileScreen = () => {
                 </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
+            <TouchableOpacity style={[styles.logoutButton, { marginBottom: paddingBottom }]} onPress={signOut}>
                 <Text style={styles.logoutText}>Log Out</Text>
             </TouchableOpacity>
         </View>
@@ -135,7 +139,7 @@ const styles = StyleSheet.create({
         paddingVertical: SPACING.md,
         alignItems: 'center',
         marginTop: 'auto',
-        marginBottom: 100,
+        // marginBottom is handled dynamically
     },
     logoutText: {
         fontFamily: 'Saans-Bold',

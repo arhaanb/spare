@@ -1,15 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
-import { LocationHeader, CategoryFilter, RestaurantCard, SearchBar, FilterBottomSheet, GlobalActiveOrderIndicator } from '../components';
+import { LocationHeader, CategoryFilter, RestaurantCard, SearchBar, FilterBottomSheet, LocationBottomSheet } from '../components';
 import BottomTabBar from '../components/BottomTabBar';
 import FavouritesScreen from './FavouritesScreen';
 import ProfileScreen from './ProfileScreen';
 import ActiveOrderBanner from '../components/ActiveOrderBanner';
 import { useOrder } from '../context/OrderContext';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import {
   categories,
   userLocation,
@@ -17,6 +18,7 @@ import {
   getRelevantRestaurants,
   getPopularRestaurants,
   getNewlyAddedRestaurants,
+  savedLocations,
 } from '../data/mockData';
 
 const DEFAULT_FILTERS = {
@@ -68,16 +70,30 @@ const HomeContent = ({
   relevantRestaurants,
   popularRestaurants,
   newlyAddedRestaurants,
-  handleRestaurantPress,
-  handleSeeAll,
   allFilteredRestaurants,
-  hasActiveFilters,
   activeFiltersCount,
+  hasActiveFilters,
+  navigation,
+  handleSeeAll,
+  handleRestaurantPress,
+  activeTab,
   handleActiveOrderPress,
-  activeTab, // Added prop
+  currentLocation,
+  onLocationPress,
 }) => {
-  const { activeOrder } = useOrder();
+  const { hasActiveOrder, activeOrder } = useOrder();
+  const { getCartItemCount } = useCart();
   const { user } = useAuth();
+
+  const hasItems = getCartItemCount() > 0;
+
+  // Dynamic padding calculation
+  let paddingHeight = Platform.OS === 'ios' ? 105 : 85; // Base tab bar padding
+
+  if (activeTab !== 'profile') {
+    if (hasActiveOrder) paddingHeight += 72;
+    if (hasItems) paddingHeight += 72;
+  }
 
   return (
     <ScrollView
@@ -90,8 +106,9 @@ const HomeContent = ({
       scrollEventThrottle={16} // Added scrollEventThrottle
     >
       <LocationHeader
-        location={userLocation}
-        onPress={() => console.log('Location pressed')}
+        location={currentLocation}
+        onPress={onLocationPress}
+        onNotifPress={() => navigation.navigate('Notifications')}
       />
 
       <CategoryFilter
@@ -100,7 +117,7 @@ const HomeContent = ({
         onSelectCategory={handleCategorySelect}
       />
 
-      {user && activeOrder && (
+      {user && hasActiveOrder && activeOrder && (
         <ActiveOrderBanner onPress={handleActiveOrderPress} />
       )}
 
@@ -195,7 +212,7 @@ const HomeContent = ({
 
       <View style={[
         styles.bottomPadding,
-        { height: (activeOrder && activeTab !== 'profile') ? 160 : 100 }
+        { height: paddingHeight + 20 } // Add some extra buffer
       ]} />
     </ScrollView>
   );
@@ -206,7 +223,9 @@ const HomeScreen = ({ navigation, route }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('explore');
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [currentLocation, setCurrentLocation] = useState(userLocation);
   const bottomSheetRef = React.useRef(null);
+  const locationSheetRef = React.useRef(null);
 
   const insets = useSafeAreaInsets();
 
@@ -323,6 +342,11 @@ const HomeScreen = ({ navigation, route }) => {
     setActiveTab(tabId);
   };
 
+  const handleLocationSelect = (location) => {
+    setCurrentLocation(location);
+    // In a real app, you would also trigger a refresh of restaurants based on new coordinates here
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'explore':
@@ -345,6 +369,9 @@ const HomeScreen = ({ navigation, route }) => {
               activeFiltersCount={activeFiltersCount}
               activeTab={activeTab}
               handleActiveOrderPress={handleActiveOrderPress}
+              navigation={navigation}
+              currentLocation={currentLocation}
+              onLocationPress={() => locationSheetRef.current?.present()}
             />
           </Animated.View>
         );
@@ -379,8 +406,13 @@ const HomeScreen = ({ navigation, route }) => {
         onReset={() => setFilters(DEFAULT_FILTERS)}
       />
 
+      <LocationBottomSheet
+        ref={locationSheetRef}
+        onSelectLocation={handleLocationSelect}
+        selectedLocation={currentLocation}
+      />
+
       <BottomTabBar activeTab={activeTab} onTabPress={handleTabPress} />
-      {activeTab !== 'profile' && <GlobalActiveOrderIndicator />}
     </View>
   );
 };

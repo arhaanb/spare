@@ -3,12 +3,18 @@ import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { COLORS, SPACING, FONT_SIZES } from '../constants/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFavorites } from '../context/FavoritesContext';
+import { useCart } from '../context/CartContext';
+import { useOrder } from '../context/OrderContext';
 import { RestaurantCard } from '../components';
 import { restaurants } from '../data/mockData';
 
 const FavouritesScreen = ({ onRestaurantPress }) => {
     const insets = useSafeAreaInsets();
     const { favorites } = useFavorites();
+    const { getCartItemCount } = useCart();
+    const { hasActiveOrder } = useOrder();
+
+    const paddingBottom = 100 + (getCartItemCount() > 0 ? 72 : 0) + (hasActiveOrder ? 72 : 0);
 
     const favoriteRestaurants = restaurants.filter(r => favorites.includes(r.id));
 
@@ -34,7 +40,7 @@ const FavouritesScreen = ({ onRestaurantPress }) => {
                             />
                         </View>
                     )}
-                    contentContainerStyle={styles.listContent}
+                    contentContainerStyle={[styles.listContent, { paddingBottom }]}
                     showsVerticalScrollIndicator={false}
                 />
             )}
@@ -72,7 +78,7 @@ const styles = StyleSheet.create({
         color: COLORS.textSecondary,
     },
     listContent: {
-        paddingBottom: 100,
+        // paddingBottom is handled dynamically
     },
     cardWrapper: {
         marginBottom: SPACING.lg,
