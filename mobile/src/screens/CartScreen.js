@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { useCart } from '../context/CartContext';
 import { useOrder } from '../context/OrderContext';
+import { useStats } from '../context/StatsContext';
 import RegularBagIcon from '../../assets/images/assets/bags/regular.svg';
 import LargeBagIcon from '../../assets/images/assets/bags/large.svg';
 import SustainabilityBadges from '../components/SustainabilityBadges';
@@ -164,6 +165,7 @@ const EmptyCart = ({ onBrowse }) => (
 const CartScreen = ({ navigation }) => {
     const { items, updateQuantity, removeFromCart, getCartTotal, clearCart } = useCart();
     const { createOrder } = useOrder();
+    const { recordOrder } = useStats();
     const insets = useSafeAreaInsets();
     const buttonScale = useSharedValue(1);
 
@@ -191,6 +193,10 @@ const CartScreen = ({ navigation }) => {
     const handleCheckout = async () => {
         // Generate a random order code
         const orderCode = `SP${Date.now().toString(36).toUpperCase()}`;
+
+        // Record stats for this order
+        const totalItemCount = items.reduce((acc, item) => acc + item.quantity, 0);
+        await recordOrder(totalItemCount, total);
 
         // Create persistent order
         await createOrder(orderCode, total, items.length, items[0]?.restaurant);

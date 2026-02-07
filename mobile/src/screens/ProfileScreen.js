@@ -9,6 +9,7 @@ import { useCart } from '../context/CartContext';
 import { useFavorites } from '../context/FavoritesContext';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useStats } from '../context/StatsContext';
 import SustainabilityBadges from '../components/SustainabilityBadges';
 import LocationBottomSheet from '../components/LocationBottomSheet';
 import PaymentBottomSheet from '../components/PaymentBottomSheet';
@@ -16,13 +17,6 @@ import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, BottomSheetText
 import { BlurView } from 'expo-blur';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-// Mocked user sustainability totals
-const USER_SUSTAINABILITY_TOTALS = {
-    moneySaved: 2348,
-    carbonOffset: 12.4,
-    foodSaved: 2.4,
-};
 
 // Profile image placeholder (working URI)
 const PROFILE_IMAGE_URI = 'https://arhaanb.com/new_me.jpeg';
@@ -34,6 +28,7 @@ const ProfileScreen = () => {
     const { hasActiveOrder, completeOrder } = useOrder();
     const { getCartItemCount, clearCart } = useCart();
     const { toggleFavorite, favorites } = useFavorites();
+    const { stats, formatMoneySaved, resetStats } = useStats();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [selectedPayment, setSelectedPayment] = useState(null);
