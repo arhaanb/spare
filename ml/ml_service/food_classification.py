@@ -3,17 +3,21 @@ import requests
 import json
 import time
 from typing import List, Optional, Any, Dict
+import os
+from dotenv import load_dotenv
 
 from .prompt import (
     FOOD_CLASSIFICATION_SYSTEM_PROMPT,
     RESCUE_BAG_CREATION_SYSTEM_PROMPT,
 )
 
+load_dotenv()
+
 # Load config
 config = configparser.ConfigParser()
 config.read("config.ini")
 
-LLM_API_KEY = config["GEMINI"]["api_key"]
+LLM_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_URL = config["GEMINI"]["api_url"]
 REGULAR_BAG_PRICE = float(config["RESCUE_BAG"]["regular_bag_price"])
 LARGE_BAG_PRICE = float(config["RESCUE_BAG"]["large_bag_price"])
@@ -54,7 +58,15 @@ def classify_food_from_image(
     }
 
     response = requests.post(GEMINI_URL, headers=headers, json=payload)
-    llm_json_str = response.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+    response_json = response.json()
+    
+    if response.status_code != 200:
+        raise Exception(f"Gemini API error: {response.status_code} - {response_json}")
+    
+    if "candidates" not in response_json:
+        raise Exception(f"Unexpected API response format: {response_json}")
+    
+    llm_json_str = response_json["candidates"][0]["content"]["parts"][0]["text"].strip()
     food_classification_output = json.loads(llm_json_str)
 
     # Attach prices to food classification output
@@ -103,7 +115,15 @@ def rescue_bag_creation(
     }
 
     response = requests.post(GEMINI_URL, headers=headers, json=payload)
-    llm_json_str = response.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+    response_json = response.json()
+    
+    if response.status_code != 200:
+        raise Exception(f"Gemini API error: {response.status_code} - {response_json}")
+    
+    if "candidates" not in response_json:
+        raise Exception(f"Unexpected API response format: {response_json}")
+    
+    llm_json_str = response_json["candidates"][0]["content"]["parts"][0]["text"].strip()
     rescue_bag_creation_output = json.loads(llm_json_str)
     
     return rescue_bag_creation_output

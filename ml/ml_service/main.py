@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, File, UploadFile, Form
+from fastapi import FastAPI, HTTPException, File, UploadFile, Form, Body
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, List
 import base64
@@ -11,7 +11,7 @@ from .models import (
     PriceOptimizationResponse,
     ErrorResponse
 )
-from .food_classification import classify_food_from_image
+from .food_classification import classify_food_from_image, rescue_bag_creation
 from .price_optimization import get_price_optimizer
 
 # Initialize FastAPI app
@@ -35,6 +35,37 @@ app.add_middleware(
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "service": "Spare ML Service"}
+
+
+@app.post("/api/ml/food-extraction")
+async def food_extraction_endpoint(image_base64: str = Body(...), menu: list = Body(...)):
+    """
+    Extract food items from image with prices from menu.
+    
+    Required body parameters:
+        image_base64: Base64 encoded image string
+        menu: Full menu JSON list (e.g. from menu.json "menu" array) with food_name, price, etc.
+    
+    Returns:
+        List of detected food items with type, quantity, closest_menu_item, confidence, price
+    """
+    result = classify_food_from_image(image_base64=image_base64, menu_json=menu)
+    return result
+
+
+@app.post("/api/ml/rescue-bag-creation")
+async def rescue_bag_creation_endpoint(leftover_food_items: list = Body(...)):
+    """
+    Create rescue bags from leftover food items.
+    
+    Required body parameter:
+        leftover_food_items: List of items with closest_menu_item, quantity, price
+    
+    Returns:
+        List of rescue bags with bag_type, target_price, items, estimated_total_value
+    """
+    result = rescue_bag_creation(food_classification_output=leftover_food_items)
+    return result
 
 
 @app.post(
@@ -150,6 +181,8 @@ async def root():
         "version": "1.0.0",
         "endpoints": {
             "health": "/health",
+            "food_extraction": "/api/ml/food-extraction",
+            "rescue_bag_creation": "/api/ml/rescue-bag-creation",
             "food_classification": "/api/ml/food-classification",
             "food_classification_upload": "/api/ml/food-classification/upload",
             "price_optimization": "/api/ml/price-optimization"
