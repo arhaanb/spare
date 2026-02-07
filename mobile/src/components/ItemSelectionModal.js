@@ -17,7 +17,7 @@ import {
     BottomSheetModal,
     BottomSheetView,
     BottomSheetBackdrop,
-    BottomSheetFlatList
+    BottomSheetScrollView
 } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
@@ -211,7 +211,7 @@ const ItemSelectionModal = ({ sheetRef, bagOption, restaurant, selectedPreferenc
         setSelectedItems({});
     }, [preference]);
 
-    const snapPoints = useMemo(() => ['70%', '90%'], []);
+    const snapPoints = useMemo(() => ['90%', '90%'], []);
 
     const handleIncrement = (item) => {
         setSelectedItems(prev => ({
@@ -265,15 +265,14 @@ const ItemSelectionModal = ({ sheetRef, bagOption, restaurant, selectedPreferenc
     return (
         <BottomSheetModal
             ref={sheetRef}
-            snapPoints={snapPoints}
-            index={0}
+            enableDynamicSizing
             enablePanDownToClose
             backdropComponent={renderBackdrop}
             backgroundStyle={styles.sheetBackground}
             handleIndicatorStyle={styles.indicator}
             onDismiss={handleSheetDismiss}
         >
-            <View style={styles.container}>
+            <BottomSheetScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.header}>
                     <View>
                         <Text style={styles.title}>Build Your Bag</Text>
@@ -283,39 +282,19 @@ const ItemSelectionModal = ({ sheetRef, bagOption, restaurant, selectedPreferenc
                     </View>
                 </View>
 
-                {/* Diet Preference Selector */}
-                {/* <View style={styles.preferenceSection}>
-                    <Text style={styles.preferenceSectionLabel}>Diet Preference</Text>
-                    <View style={styles.preferenceRow}>
-                        {PREFERENCES.map((pref) => (
-                            <PreferenceChip
-                                key={pref.id}
-                                active={preference === pref.id}
-                                icon={pref.icon}
-                                iconDark={pref.iconDark}
-                                label={pref.label}
-                                onPress={() => setPreference(pref.id)}
-                            />
-                        ))}
-                    </View>
-                </View> */}
-
                 <View style={styles.divider} />
 
-                <BottomSheetFlatList
-                    data={rescueItems}
-                    keyExtractor={item => item.id}
-                    renderItem={({ item }) => (
+                <View style={styles.itemsContainer}>
+                    {rescueItems.map((item) => (
                         <ItemRow
+                            key={item.id}
                             item={item}
                             quantity={selectedItems[item.id] || 0}
                             onIncrement={handleIncrement}
                             onDecrement={handleDecrement}
                         />
-                    )}
-                    contentContainerStyle={styles.listContent}
-                    showsVerticalScrollIndicator={false}
-                />
+                    ))}
+                </View>
 
                 <View style={styles.footer}>
                     <TouchableOpacity
@@ -331,7 +310,7 @@ const ItemSelectionModal = ({ sheetRef, bagOption, restaurant, selectedPreferenc
                         </Text>
                     </TouchableOpacity>
                 </View>
-            </View>
+            </BottomSheetScrollView>
         </BottomSheetModal>
     );
 };
@@ -344,13 +323,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255, 255, 255, 0.2)',
         width: 40,
     },
-    container: {
-        flex: 1,
-    },
     header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
         paddingHorizontal: SPACING.lg,
         paddingBottom: SPACING.sm,
     },
@@ -365,48 +338,16 @@ const styles = StyleSheet.create({
         fontSize: FONT_SIZES.sm,
         color: COLORS.activeCategory,
     },
-    preferenceSection: {
-        paddingHorizontal: SPACING.lg,
-        paddingVertical: SPACING.md,
-    },
-    preferenceSectionLabel: {
-        fontFamily: 'Saans',
-        fontSize: FONT_SIZES.sm,
-        color: COLORS.textSecondary,
-        marginBottom: SPACING.sm,
-    },
-    preferenceRow: {
-        flexDirection: 'row',
-        gap: SPACING.sm,
-    },
-    preferenceChip: {
-        flex: 1,
-        height: 36,
-        borderRadius: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        gap: 4,
-    },
-    chipIconContainer: {
-        height: 24,
-        width: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    preferenceLabel: {
-        fontFamily: 'Saans-SemiBold',
-        fontSize: FONT_SIZES.sm,
-    },
     divider: {
         height: 1,
         backgroundColor: 'rgba(255,255,255,0.1)',
         marginBottom: SPACING.sm,
     },
-    listContent: {
+    scrollContent: {
+        paddingBottom: SPACING.xl,
+    },
+    itemsContainer: {
         paddingHorizontal: SPACING.lg,
-        paddingBottom: 100, // Space for footer
     },
     itemRow: {
         flexDirection: 'row',
@@ -456,15 +397,9 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     footer: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        padding: SPACING.lg,
+        paddingHorizontal: SPACING.lg,
+        paddingTop: SPACING.md,
         paddingBottom: SPACING.xl,
-        backgroundColor: '#0F3A28',
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(255,255,255,0.1)',
     },
     addButton: {
         backgroundColor: COLORS.activeCategory,

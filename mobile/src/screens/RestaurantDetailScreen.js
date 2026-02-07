@@ -506,7 +506,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
 
                 return (
                   <BagCard
-                    key={`${config.role}-${selectedPreference}`}
+                    key={`${config.role}-${selectedPreference}-${isDisabled}`}
                     bagOption={{ ...bagData, available: isDisabled ? 0 : bagData.available }} // Visually disable by setting available to 0 if conflict
                     isSelected={inCart}
                     selectedPreference={selectedPreference}
