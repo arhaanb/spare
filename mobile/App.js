@@ -10,6 +10,9 @@ import * as SplashScreen from 'expo-splash-screen';
 import { FavoritesProvider } from './src/context/FavoritesContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { CartProvider } from './src/context/CartContext';
+import { OrderProvider } from './src/context/OrderContext';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
 import {
   HomeScreen,
@@ -17,7 +20,17 @@ import {
   ReservationScreen,
   OnboardingScreen,
   LoginScreen,
+  CartScreen,
+  OrderConfirmationScreen,
 } from './src/screens';
+import {
+  LocationHeader,
+  SearchBar,
+  CategoryFilter,
+  RestaurantCard,
+  FilterBottomSheet,
+  GlobalActiveOrderIndicator,
+} from './src/components';
 import { COLORS } from './src/constants/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -52,6 +65,8 @@ const AppStack = () => (
       component={RestaurantDetailScreen}
     />
     <Stack.Screen name="Reservation" component={ReservationScreen} />
+    <Stack.Screen name="Cart" component={CartScreen} />
+    <Stack.Screen name="OrderConfirmation" component={OrderConfirmationScreen} />
   </Stack.Navigator>
 );
 
@@ -107,17 +122,23 @@ export default function App() {
   }
 
   return (
-    <AuthProvider>
-      <CartProvider>
-        <FavoritesProvider>
-          <SafeAreaProvider onLayout={onLayoutRootView}>
-            <NavigationContainer>
-              <StatusBar style="light" />
-              <RootNavigator />
-            </NavigationContainer>
-          </SafeAreaProvider>
-        </FavoritesProvider>
-      </CartProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <BottomSheetModalProvider>
+        <AuthProvider>
+          <CartProvider>
+            <OrderProvider>
+              <FavoritesProvider>
+                <SafeAreaProvider onLayout={onLayoutRootView}>
+                  <NavigationContainer>
+                    <StatusBar style="light" />
+                    <RootNavigator />
+                  </NavigationContainer>
+                </SafeAreaProvider>
+              </FavoritesProvider>
+            </OrderProvider>
+          </CartProvider>
+        </AuthProvider>
+      </BottomSheetModalProvider>
+    </GestureHandlerRootView>
   );
 }

@@ -25,6 +25,7 @@ import { formatPickupTime, restaurants } from '../data/mockData';
 import { RestaurantCard } from '../components';
 import BagSelectionModal from '../components/BagSelectionModal';
 import CartIndicator from '../components/CartIndicator';
+import GlobalActiveOrderIndicator from '../components/GlobalActiveOrderIndicator';
 import { useCart } from '../context/CartContext';
 import RegularBagIconLocal from '../../assets/images/assets/bags/regular.svg';
 import LargeBagIconLocal from '../../assets/images/assets/bags/large.svg';
@@ -52,8 +53,8 @@ const BagCard = ({ bagOption, onPress, isSelected }) => {
   const checkmarkScale = useSharedValue(isSelected ? 1 : 0);
 
   React.useEffect(() => {
-    borderWidth.value = withSpring(isSelected ? 2 : 0, { damping: 16, stiffness: 300 });
-    checkmarkScale.value = withSpring(isSelected ? 1 : 0, { damping: 14, stiffness: 280 });
+    borderWidth.value = withSpring(isSelected ? 2 : 0, { damping: 20, stiffness: 300 });
+    checkmarkScale.value = withSpring(isSelected ? 1 : 0, { damping: 20, stiffness: 200 });
   }, [isSelected, borderWidth, checkmarkScale]);
 
   const cardAnimatedStyle = useAnimatedStyle(() => ({
@@ -143,13 +144,26 @@ const BagCard = ({ bagOption, onPress, isSelected }) => {
   );
 };
 
-const PreferenceChip = ({ active, icon: Icon, iconDark: IconDark, label, onPress }) => {
+const PreferenceChip = ({ active, icon: Icon, iconDark: IconDark, label, onPress, count = 0 }) => {
   const pressed = useSharedValue(1);
   const progress = useSharedValue(active ? 1 : 0);
+  const badgeScale = useSharedValue(count > 0 ? 1 : 0);
 
   React.useEffect(() => {
     progress.value = withTiming(active ? 1 : 0, { duration: 180, easing: Easing.out(Easing.cubic) });
   }, [active, progress]);
+
+  React.useEffect(() => {
+    if (count > 0) {
+      badgeScale.value = withSpring(1, {
+        damping: 20,
+        stiffness: 150,
+        mass: 1
+      });
+    } else {
+      badgeScale.value = withTiming(0, { duration: 150 });
+    }
+  }, [count]);
 
   const chipStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(progress.value, [0, 1], ['#134631', COLORS.activeCategory]),
@@ -161,19 +175,21 @@ const PreferenceChip = ({ active, icon: Icon, iconDark: IconDark, label, onPress
     color: interpolateColor(progress.value, [0, 1], [COLORS.activeCategory, COLORS.background]),
   }));
 
+  const badgeStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: badgeScale.value }],
+    opacity: badgeScale.value,
+  }));
+
   return (
     <AnimatedTouchable
       style={[styles.preferenceChip, chipStyle]}
       onPress={onPress}
       activeOpacity={0.9}
       onPressIn={() => {
-        pressed.value = withSpring(0.965, { damping: 20, stiffness: 520, mass: 0.55 });
+        pressed.value = withSpring(0.98, { damping: 25, stiffness: 400, mass: 0.8 });
       }}
       onPressOut={() => {
-        pressed.value = withSequence(
-          withSpring(1.02, { damping: 16, stiffness: 620, mass: 0.55 }),
-          withSpring(1, { damping: 18, stiffness: 520, mass: 0.55 }),
-        );
+        pressed.value = withSpring(1, { damping: 22, stiffness: 380, mass: 0.8 });
       }}
     >
       <View style={styles.chipIconContainer}>
@@ -184,17 +200,21 @@ const PreferenceChip = ({ active, icon: Icon, iconDark: IconDark, label, onPress
           {label}
         </Animated.Text>
       </View>
+      {count > 0 && (
+        <Animated.View style={[styles.preferenceBadge, badgeStyle]}>
+          <Text style={styles.preferenceBadgeText}>{count}</Text>
+        </Animated.View>
+      )}
     </AnimatedTouchable>
   );
 };
 
 const RestaurantDetailScreen = ({ route, navigation }) => {
   const { restaurant } = route.params;
-  const { lockedPreference, addToCart, isInCart, getCartItem, clearCart } = useCart();
+  const { addToCart, removeFromCart, isInCart, getCartItem, getItemCountByPreference } = useCart();
   const [selectedPreference, setSelectedPreference] = useState(restaurant.vegOnly ? 'veg' : 'nonveg');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedBag, setSelectedBag] = useState(null);
-  const [showPreferenceConfirm, setShowPreferenceConfirm] = useState(false);
 
   const pickupWindow = useMemo(() => {
     const firstOption = restaurant.bagOptions?.[0];
@@ -237,22 +257,24 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
 
   const handleAddToCart = (quantity) => {
     if (selectedBag) {
-      addToCart(selectedBag, quantity, selectedPreference, restaurant);
+      const itemId = `${restaurant.id}-${selectedBag.id || selectedBag.role}-${selectedPreference}`;
+
+      if (quantity === 0) {
+        // Remove from cart
+        removeFromCart(itemId);
+      } else {
+        // Add or update cart
+        addToCart(selectedBag, quantity, selectedPreference, restaurant);
+      }
     }
   };
 
   const handlePreferenceChange = (preferenceId) => {
-    // If cart has items and preference is locked, show confirmation
-    if (lockedPreference && lockedPreference !== preferenceId) {
-      // For now, just prevent change - will add confirmation modal later
-      return;
-    }
     setSelectedPreference(preferenceId);
   };
 
   const handleViewCart = () => {
-    // Navigate to cart screen (to be implemented)
-    console.log('Navigate to cart');
+    navigation.navigate('Cart');
   };
 
   return (
@@ -305,6 +327,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
             <View style={styles.preferenceRow}>
               {PREFERENCES.map((preference) => {
                 const isActive = selectedPreference === preference.id;
+                const count = getItemCountByPreference(preference.id);
                 return (
                   <PreferenceChip
                     key={preference.id}
@@ -312,6 +335,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
                     icon={preference.icon}
                     iconDark={preference.iconDark}
                     label={preference.label}
+                    count={count}
                     onPress={() => handlePreferenceChange(preference.id)}
                   />
                 );
@@ -340,7 +364,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
                 };
 
                 const bagId = bagData.id || bagData.role;
-                const inCart = isInCart(restaurant.id, bagId);
+                const inCart = isInCart(restaurant.id, bagId, selectedPreference);
 
                 return (
                   <BagCard
@@ -407,22 +431,21 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
               </ScrollView>
             </View>
           )}
-
-          {/* Bag Selection Modal */}
-          <BagSelectionModal
-            visible={modalVisible}
-            bagOption={selectedBag}
-            restaurant={restaurant}
-            onClose={() => setModalVisible(false)}
-            onAddToCart={handleAddToCart}
-            initialQuantity={selectedBag ? (getCartItem(restaurant.id, selectedBag.id || selectedBag.role)?.quantity || 1) : 1}
-          />
-
-          {/* Cart Indicator */}
-          <CartIndicator onPress={handleViewCart} />
-
-          {/* </View style={styles.bottomPadding} /> */}
         </ScrollView>
+
+        {/* Bag Selection Modal */}
+        <BagSelectionModal
+          visible={modalVisible}
+          bagOption={selectedBag}
+          restaurant={restaurant}
+          preference={selectedPreference}
+          onClose={() => setModalVisible(false)}
+          onAddToCart={handleAddToCart}
+          initialQuantity={selectedBag ? (getCartItem(restaurant.id, selectedBag.id || selectedBag.role, selectedPreference)?.quantity || 0) : 0}
+        />
+
+        {/* Cart Indicator */}
+        <CartIndicator onPress={handleViewCart} />
       </Animated.View>
     </SafeAreaView >
   );
@@ -580,7 +603,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#134631',
     flexDirection: 'row',
     alignItems: 'center',
-    overflow: 'hidden', // Ensures icon doesn't bleed out of rounded corners
   },
   chipIconContainer: {
     height: '100%',
@@ -598,6 +620,26 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     marginLeft: -18
+  },
+  preferenceBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    backgroundColor: '#FF6B6B',
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+    borderWidth: 2,
+    borderColor: COLORS.background,
+  },
+  preferenceBadgeText: {
+    fontFamily: 'Saans',
+    fontSize: 11,
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   preferenceLabelActive: {
     color: COLORS.background,

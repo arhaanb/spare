@@ -126,7 +126,10 @@ const RestaurantCard = ({ restaurant, onPress, variant = 'default' }) => {
 
         {/* Favorite Heart - Top Right */}
         <TouchableOpacity
-          style={styles.favoriteButton}
+          style={[
+            styles.favoriteButton,
+            variant === 'large' && styles.favoriteButtonLarge,
+          ]}
           onPress={handleFavoritePress}
           activeOpacity={0.7}
         >
@@ -204,9 +207,6 @@ const styles = StyleSheet.create({
   imageContainerLarge: {
     height: undefined,
     aspectRatio: 16 / 9,
-    // Inset so the favourite heart glow doesn’t clip on the favourites page.
-    paddingRight: 36,
-    paddingTop: 28,
   },
   imageContainerGrid: {
     height: undefined,
@@ -256,6 +256,11 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: 'rgba(0, 0, 0, 0.22)',
     overflow: 'visible',
+  },
+  favoriteButtonLarge: {
+    // Allow the glow to extend beyond the card without clipping
+    right: SPACING.sm,
+    top: SPACING.sm,
   },
   heartIconWrap: {
     width: 38,

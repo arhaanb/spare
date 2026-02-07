@@ -40,36 +40,20 @@ const CartIndicator = ({ onPress }) => {
         }
     }, [hasItems, translateY]);
 
-    // Subtle bounce when items updated
+    // Just update without bounce
     useEffect(() => {
         if (hasItems) {
-            scale.value = withSequence(
-                withSpring(1.02, { damping: 14, stiffness: 360, mass: 0.7 }),
-                withSpring(1, { damping: 16, stiffness: 300, mass: 0.7 })
-            );
-            // Animate count badge - subtle
-            countOpacity.value = withSequence(
-                withTiming(0.6, { duration: 60 }),
-                withTiming(1, { duration: 100 })
-            );
-            countScale.value = withSequence(
-                withSpring(1.08, { damping: 16, stiffness: 320, mass: 0.7 }),
-                withSpring(1, { damping: 18, stiffness: 300, mass: 0.7 })
-            );
+            scale.value = 1;
+            countOpacity.value = 1;
+            countScale.value = 1;
         }
     }, [itemCount, scale, countOpacity, countScale]);
 
-    // Gentle price flash with subtle scale
+    // Update price without animation
     useEffect(() => {
         if (hasItems) {
-            priceOpacity.value = withSequence(
-                withTiming(0.7, { duration: 80, easing: Easing.out(Easing.quad) }),
-                withTiming(1, { duration: 120, easing: Easing.in(Easing.quad) })
-            );
-            priceScale.value = withSequence(
-                withSpring(1.05, { damping: 16, stiffness: 320, mass: 0.7 }),
-                withSpring(1, { damping: 18, stiffness: 300, mass: 0.7 })
-            );
+            priceOpacity.value = 1;
+            priceScale.value = 1;
         }
     }, [total, priceOpacity, priceScale, hasItems]);
 

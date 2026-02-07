@@ -8,3 +8,5 @@ export { default as ReviewSlider } from './ReviewSlider';
 export { default as SearchBar } from './SearchBar';
 export { default as AnimatedMeshGradient } from './mesh-gradient';
 export { default as AppleSignInButton } from './AppleSignInButton';
+export { default as FilterBottomSheet } from './FilterBottomSheet';
+export { default as GlobalActiveOrderIndicator } from './GlobalActiveOrderIndicator';

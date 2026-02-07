@@ -849,6 +849,7 @@ export const getRestaurantsByCategory = (restaurantList, categoryId) => {
 // Format pickup time for display
 export const formatPickupTime = (start, end) => {
   const formatTime = (time) => {
+    if (!time) return '00:00';
     const [hours, minutes] = time.split(':');
     const hour = parseInt(hours, 10);
     const ampm = hour >= 12 ? 'PM' : 'AM';

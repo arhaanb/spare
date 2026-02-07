@@ -12,11 +12,11 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }) => {
     const [items, setItems] = useState([]);
-    const [lockedPreference, setLockedPreference] = useState(null);
 
-    // Add or update item in cart
+    // Add or update item in cart (preference-based)
     const addToCart = useCallback((bagOption, quantity, preference, restaurant) => {
-        const itemId = `${restaurant.id}-${bagOption.id || bagOption.role}`;
+        // Include preference in item ID to allow multiple preferences
+        const itemId = `${restaurant.id}-${bagOption.id || bagOption.role}-${preference}`;
 
         setItems((prevItems) => {
             const existingIndex = prevItems.findIndex((item) => item.id === itemId);
@@ -45,25 +45,11 @@ export const CartProvider = ({ children }) => {
                 ];
             }
         });
-
-        // Lock preference on first item
-        if (!lockedPreference) {
-            setLockedPreference(preference);
-        }
-    }, [lockedPreference]);
+    }, []);
 
     // Remove item from cart
     const removeFromCart = useCallback((itemId) => {
-        setItems((prevItems) => {
-            const filtered = prevItems.filter((item) => item.id !== itemId);
-
-            // Unlock preference if cart becomes empty
-            if (filtered.length === 0) {
-                setLockedPreference(null);
-            }
-
-            return filtered;
-        });
+        setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
     }, []);
 
     // Update item quantity
@@ -83,7 +69,6 @@ export const CartProvider = ({ children }) => {
     // Clear entire cart
     const clearCart = useCallback(() => {
         setItems([]);
-        setLockedPreference(null);
     }, []);
 
     // Get cart total
@@ -98,21 +83,27 @@ export const CartProvider = ({ children }) => {
         return items.reduce((count, item) => count + item.quantity, 0);
     }, [items]);
 
-    // Check if item is in cart
-    const isInCart = useCallback((restaurantId, bagOptionId) => {
-        const itemId = `${restaurantId}-${bagOptionId}`;
+    // Check if item is in cart (with preference)
+    const isInCart = useCallback((restaurantId, bagOptionId, preference) => {
+        const itemId = `${restaurantId}-${bagOptionId}-${preference}`;
         return items.some((item) => item.id === itemId);
     }, [items]);
 
-    // Get item from cart
-    const getCartItem = useCallback((restaurantId, bagOptionId) => {
-        const itemId = `${restaurantId}-${bagOptionId}`;
+    // Get item from cart (with preference)
+    const getCartItem = useCallback((restaurantId, bagOptionId, preference) => {
+        const itemId = `${restaurantId}-${bagOptionId}-${preference}`;
         return items.find((item) => item.id === itemId);
+    }, [items]);
+
+    // Get count of items for a specific preference
+    const getItemCountByPreference = useCallback((preference) => {
+        return items
+            .filter((item) => item.preference === preference)
+            .reduce((count, item) => count + item.quantity, 0);
     }, [items]);
 
     const value = {
         items,
-        lockedPreference,
         addToCart,
         removeFromCart,
         updateQuantity,
@@ -121,6 +112,7 @@ export const CartProvider = ({ children }) => {
         getCartItemCount,
         isInCart,
         getCartItem,
+        getItemCountByPreference,
     };
 
     return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

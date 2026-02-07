@@ -1,12 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity, Modal, Pressable } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
-import { LocationHeader, CategoryFilter, RestaurantCard, SearchBar } from '../components';
+import { LocationHeader, CategoryFilter, RestaurantCard, SearchBar, FilterBottomSheet, GlobalActiveOrderIndicator } from '../components';
 import BottomTabBar from '../components/BottomTabBar';
 import FavouritesScreen from './FavouritesScreen';
 import ProfileScreen from './ProfileScreen';
+import ActiveOrderBanner from '../components/ActiveOrderBanner';
+import { useOrder } from '../context/OrderContext';
+import { useAuth } from '../context/AuthContext';
 import {
   categories,
   userLocation,
@@ -24,106 +27,6 @@ const DEFAULT_FILTERS = {
   sortBy: 'relevance', // relevance | rating | distance | priceAsc
 };
 
-const FilterChip = ({ label, active, onPress }) => (
-  <TouchableOpacity
-    onPress={onPress}
-    activeOpacity={0.85}
-    style={[styles.filterChip, active && styles.filterChipActive]}
-  >
-    <Text style={[styles.filterChipText, active && styles.filterChipTextActive]}>{label}</Text>
-  </TouchableOpacity>
-);
-
-const FilterSheet = ({ visible, onClose, filters, onChange, onReset, insets }) => (
-  <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-    <Pressable style={styles.sheetOverlay} onPress={onClose} />
-    <View style={[styles.sheetContainer, { paddingBottom: Math.max(insets.bottom, 14) }]}>
-      <View style={styles.sheetGrabber} />
-      <View style={styles.sheetHeader}>
-        <Text style={styles.sheetTitle}>Filters</Text>
-        <TouchableOpacity onPress={onReset} activeOpacity={0.8}>
-          <Text style={styles.sheetReset}>Reset</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Text style={styles.sheetSectionTitle}>Diet</Text>
-      <View style={styles.sheetRow}>
-        <FilterChip
-          label="Veg Only"
-          active={filters.onlyVeg}
-          onPress={() => onChange({ onlyVeg: !filters.onlyVeg })}
-        />
-        <FilterChip
-          label="Available Now"
-          active={filters.availableOnly}
-          onPress={() => onChange({ availableOnly: !filters.availableOnly })}
-        />
-      </View>
-
-      <Text style={styles.sheetSectionTitle}>Distance</Text>
-      <View style={styles.sheetRow}>
-        <FilterChip
-          label="Any"
-          active={filters.maxDistanceKm === null}
-          onPress={() => onChange({ maxDistanceKm: null })}
-        />
-        <FilterChip
-          label="< 2 km"
-          active={filters.maxDistanceKm === 2}
-          onPress={() => onChange({ maxDistanceKm: 2 })}
-        />
-        <FilterChip
-          label="< 5 km"
-          active={filters.maxDistanceKm === 5}
-          onPress={() => onChange({ maxDistanceKm: 5 })}
-        />
-      </View>
-
-      <Text style={styles.sheetSectionTitle}>Minimum Rating</Text>
-      <View style={styles.sheetRow}>
-        <FilterChip
-          label="Any"
-          active={filters.minRating === null}
-          onPress={() => onChange({ minRating: null })}
-        />
-        <FilterChip
-          label="4.0+"
-          active={filters.minRating === 4}
-          onPress={() => onChange({ minRating: 4 })}
-        />
-        <FilterChip
-          label="4.5+"
-          active={filters.minRating === 4.5}
-          onPress={() => onChange({ minRating: 4.5 })}
-        />
-      </View>
-
-      <Text style={styles.sheetSectionTitle}>Sort</Text>
-      <View style={styles.sheetRow}>
-        <FilterChip
-          label="Relevance"
-          active={filters.sortBy === 'relevance'}
-          onPress={() => onChange({ sortBy: 'relevance' })}
-        />
-        <FilterChip
-          label="Top Rated"
-          active={filters.sortBy === 'rating'}
-          onPress={() => onChange({ sortBy: 'rating' })}
-        />
-        <FilterChip
-          label="Nearest"
-          active={filters.sortBy === 'distance'}
-          onPress={() => onChange({ sortBy: 'distance' })}
-        />
-        <FilterChip
-          label="Lowest Price"
-          active={filters.sortBy === 'priceAsc'}
-          onPress={() => onChange({ sortBy: 'priceAsc' })}
-        />
-      </View>
-    </View>
-  </Modal>
-);
 
 const SectionHeader = ({ title, onSeeAll }) => (
   <View style={styles.sectionHeader}>
@@ -170,7 +73,11 @@ const HomeContent = ({
   allFilteredRestaurants,
   hasActiveFilters,
   activeFiltersCount,
+  handleActiveOrderPress, // New prop
 }) => {
+  const { activeOrder } = useOrder();
+  const { user } = useAuth();
+
   return (
     <ScrollView
       style={styles.scrollView}
@@ -179,6 +86,7 @@ const HomeContent = ({
         styles.scrollContent,
         { paddingTop: insets.top + SPACING.sm }
       ]}
+      scrollEventThrottle={16} // Added scrollEventThrottle
     >
       <LocationHeader
         location={userLocation}
@@ -190,6 +98,10 @@ const HomeContent = ({
         selectedCategory={selectedCategory}
         onSelectCategory={handleCategorySelect}
       />
+
+      {user && activeOrder && (
+        <ActiveOrderBanner onPress={handleActiveOrderPress} />
+      )}
 
       <SearchBar
         value={searchQuery}
@@ -280,7 +192,10 @@ const HomeContent = ({
         </Animated.View>
       )}
 
-      <View style={styles.bottomPadding} />
+      <View style={[
+        styles.bottomPadding,
+        { height: (activeOrder && activeTab !== 'profile') ? 160 : 100 }
+      ]} />
     </ScrollView>
   );
 };
@@ -290,7 +205,7 @@ const HomeScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('explore');
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const bottomSheetRef = React.useRef(null);
 
   const insets = useSafeAreaInsets();
 
@@ -379,7 +294,21 @@ const HomeScreen = ({ navigation }) => {
     setSelectedCategory(selectedCategory === categoryId ? null : categoryId);
   };
 
-  const handleRestaurantPress = (restaurant) => {
+  /* Navigation Handlers */
+  const { activeOrder } = useOrder();
+
+  const handleActiveOrderPress = () => {
+    if (activeOrder) {
+      navigation.navigate('OrderConfirmation', {
+        orderCode: activeOrder.orderCode,
+        total: activeOrder.total,
+        itemCount: activeOrder.itemCount,
+        expiresAt: activeOrder.expiresAt.toISOString(),
+      });
+    }
+  };
+
+  const handleRestaurantPress = (restaurant) => { // Renamed from handleRestaurantPress
     navigation.navigate('RestaurantDetail', { restaurant });
   };
 
@@ -396,7 +325,7 @@ const HomeScreen = ({ navigation }) => {
               insets={insets}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
-              handleFilterPress={() => setFiltersOpen(true)}
+              handleFilterPress={() => bottomSheetRef.current?.present()}
               selectedCategory={selectedCategory}
               handleCategorySelect={handleCategorySelect}
               relevantRestaurants={relevantRestaurants}
@@ -433,16 +362,15 @@ const HomeScreen = ({ navigation }) => {
 
       {renderContent()}
 
-      <FilterSheet
-        visible={filtersOpen}
-        onClose={() => setFiltersOpen(false)}
+      <FilterBottomSheet
+        ref={bottomSheetRef}
         filters={filters}
-        onChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
+        onApply={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
         onReset={() => setFilters(DEFAULT_FILTERS)}
-        insets={insets}
       />
 
       <BottomTabBar activeTab={activeTab} onTabPress={handleTabPress} />
+      {activeTab !== 'profile' && <GlobalActiveOrderIndicator />}
     </View>
   );
 };
@@ -510,80 +438,6 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontFamily: 'Saans',
     marginTop: 2,
-  },
-  sheetOverlay: {
-    flex: 1,
-    backgroundColor: COLORS.overlayStrong,
-  },
-  sheetContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: COLORS.surfaceStrong,
-    borderTopLeftRadius: BORDER_RADIUS.xxl,
-    borderTopRightRadius: BORDER_RADIUS.xxl,
-    paddingHorizontal: SPACING.xl,
-    paddingTop: SPACING.sm,
-  },
-  sheetGrabber: {
-    width: 42,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: COLORS.borderLight,
-    alignSelf: 'center',
-    marginBottom: SPACING.md,
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: SPACING.sm,
-  },
-  sheetTitle: {
-    color: COLORS.textPrimary,
-    fontFamily: 'Gargoyle',
-    fontSize: FONT_SIZES.xxl,
-  },
-  sheetReset: {
-    color: COLORS.activeCategory,
-    fontFamily: 'Saans-SemiBold',
-    fontSize: FONT_SIZES.sm,
-  },
-  sheetSectionTitle: {
-    color: COLORS.textOnMuted,
-    fontFamily: 'Saans-SemiBold',
-    fontSize: FONT_SIZES.sm,
-    marginTop: SPACING.md,
-    marginBottom: SPACING.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  sheetRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: SPACING.sm,
-  },
-  filterChip: {
-    paddingVertical: SPACING.xs,
-    paddingHorizontal: SPACING.md,
-    borderRadius: BORDER_RADIUS.full,
-    borderWidth: 1,
-    borderColor: COLORS.borderLight,
-    backgroundColor: 'rgba(255,255,255,0.02)',
-  },
-  filterChipActive: {
-    borderColor: COLORS.activeCategory,
-    backgroundColor: COLORS.activeCategory,
-  },
-  filterChipText: {
-    color: COLORS.textOnDark,
-    fontFamily: 'Saans-Medium',
-    fontSize: FONT_SIZES.sm,
-  },
-  filterChipTextActive: {
-    color: COLORS.background,
-    fontFamily: 'Saans-SemiBold',
   },
 });
 

@@ -25,31 +25,79 @@ import { formatPickupTime } from '../data/mockData';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
-const BagSelectionModal = ({ visible, bagOption, restaurant, onClose, onAddToCart, initialQuantity = 1 }) => {
+const BagSelectionModal = ({ visible, bagOption, restaurant, preference, onClose, onAddToCart, initialQuantity = 0 }) => {
     const backdropOpacity = useSharedValue(0);
     const modalTranslateY = useSharedValue(500);
     const modalScale = useSharedValue(0.9);
-    const [quantity, setQuantity] = React.useState(initialQuantity);
+    const [quantity, setQuantity] = React.useState(initialQuantity > 0 ? initialQuantity : 1);
     const [isClosing, setIsClosing] = React.useState(false);
+    const prevBagOptionRef = React.useRef(null);
+    const animationFrameRef = React.useRef(null);
+    const shouldAnimateRef = React.useRef(false);
     const buttonScale = useSharedValue(1);
     const minusScale = useSharedValue(1);
     const plusScale = useSharedValue(1);
+    const isItemInCart = initialQuantity > 0; // Track if item is already in cart
 
     useEffect(() => {
         if (visible) {
-            setQuantity(initialQuantity);
-            setIsClosing(false);
-            // Entry animation - elegant and smooth
-            backdropOpacity.value = withTiming(1, { duration: 350, easing: Easing.bezier(0.25, 0.1, 0.25, 1) });
-            modalTranslateY.value = withSpring(0, { damping: 28, stiffness: 240, mass: 1 });
-            modalScale.value = withSpring(1, { damping: 26, stiffness: 220, mass: 0.9 });
-        } else if (isClosing) {
-            // Exit animation - quick and clean
-            backdropOpacity.value = withTiming(0, { duration: 220, easing: Easing.bezier(0.4, 0, 1, 1) });
-            modalTranslateY.value = withTiming(300, { duration: 240, easing: Easing.bezier(0.4, 0, 0.6, 1) });
-            modalScale.value = withTiming(0.95, { duration: 220, easing: Easing.out(Easing.quad) });
+            // Only reset quantity if it's a different bag
+            const bagId = bagOption?.id || bagOption?.role;
+            const prevBagId = prevBagOptionRef.current?.id || prevBagOptionRef.current?.role;
+
+            if (bagId !== prevBagId) {
+                setQuantity(initialQuantity > 0 ? initialQuantity : 1);
+            }
+
+            prevBagOptionRef.current = bagOption;
+            shouldAnimateRef.current = true;
+
+            // Reset to initial positions first (synchronously)
+            backdropOpacity.value = 0;
+            modalTranslateY.value = 500;
+            modalScale.value = 0.9;
+
+            // Cancel any pending animation
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+
+            // Small delay to ensure reset happens before animation
+            animationFrameRef.current = requestAnimationFrame(() => {
+                if (shouldAnimateRef.current) {
+                    // Then animate in - elegant and smooth
+                    backdropOpacity.value = withTiming(1, { duration: 350, easing: Easing.bezier(0.25, 0.1, 0.25, 1) });
+                    modalTranslateY.value = withSpring(0, { damping: 28, stiffness: 240, mass: 1 });
+                    modalScale.value = withSpring(1, { damping: 26, stiffness: 220, mass: 0.9 });
+                }
+                animationFrameRef.current = null;
+            });
+        } else {
+            shouldAnimateRef.current = false;
+            // Cancel any pending animation when closing
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+                animationFrameRef.current = null;
+            }
+            // When modal is hidden, reset to closed state
+            backdropOpacity.value = 0;
+            modalTranslateY.value = 500;
+            modalScale.value = 0.9;
         }
-    }, [visible, isClosing, initialQuantity, backdropOpacity, modalTranslateY, modalScale]);
+    }, [visible, bagOption, backdropOpacity, modalTranslateY, modalScale]);
+
+    // Update quantity when initialQuantity changes (separate effect to avoid reopening modal)
+    useEffect(() => {
+        if (visible) {
+            const bagId = bagOption?.id || bagOption?.role;
+            const prevBagId = prevBagOptionRef.current?.id || prevBagOptionRef.current?.role;
+
+            // Only update if same bag
+            if (bagId === prevBagId) {
+                setQuantity(initialQuantity > 0 ? initialQuantity : 1);
+            }
+        }
+    }, [initialQuantity]);
 
     const backdropStyle = useAnimatedStyle(() => ({
         opacity: backdropOpacity.value,
@@ -75,17 +123,31 @@ const BagSelectionModal = ({ visible, bagOption, restaurant, onClose, onAddToCar
     }));
 
     const handleBackdropPress = () => {
-        setIsClosing(true);
-        setTimeout(() => {
-            onClose();
-        }, 250);
+        backdropOpacity.value = withTiming(0, { duration: 220, easing: Easing.bezier(0.4, 0, 1, 1) });
+        modalTranslateY.value = withTiming(300, { duration: 240, easing: Easing.bezier(0.4, 0, 0.6, 1) });
+        modalScale.value = withTiming(0.95, {
+            duration: 220,
+            easing: Easing.out(Easing.quad)
+        }, (finished) => {
+            if (finished) {
+                runOnJS(setIsClosing)(false);
+                runOnJS(onClose)();
+            }
+        });
     };
 
     const handleClose = () => {
-        setIsClosing(true);
-        setTimeout(() => {
-            onClose();
-        }, 250);
+        backdropOpacity.value = withTiming(0, { duration: 220, easing: Easing.bezier(0.4, 0, 1, 1) });
+        modalTranslateY.value = withTiming(300, { duration: 240, easing: Easing.bezier(0.4, 0, 0.6, 1) });
+        modalScale.value = withTiming(0.95, {
+            duration: 220,
+            easing: Easing.out(Easing.quad)
+        }, (finished) => {
+            if (finished) {
+                runOnJS(setIsClosing)(false);
+                runOnJS(onClose)();
+            }
+        });
     };
 
     const handleAddToCart = () => {
@@ -95,10 +157,17 @@ const BagSelectionModal = ({ visible, bagOption, restaurant, onClose, onAddToCar
         } else {
             onAddToCart(quantity);
         }
-        setIsClosing(true);
-        setTimeout(() => {
-            onClose();
-        }, 250);
+        backdropOpacity.value = withTiming(0, { duration: 220, easing: Easing.bezier(0.4, 0, 1, 1) });
+        modalTranslateY.value = withTiming(300, { duration: 240, easing: Easing.bezier(0.4, 0, 0.6, 1) });
+        modalScale.value = withTiming(0.95, {
+            duration: 220,
+            easing: Easing.out(Easing.quad)
+        }, (finished) => {
+            if (finished) {
+                runOnJS(setIsClosing)(false);
+                runOnJS(onClose)();
+            }
+        });
     };
 
     const handleIncrement = () => {
@@ -112,7 +181,15 @@ const BagSelectionModal = ({ visible, bagOption, restaurant, onClose, onAddToCar
     };
 
     const handleDecrement = () => {
-        if (quantity > 0) {
+        if (isItemInCart && quantity > 0) {
+            // If item is in cart, allow going to 0
+            setQuantity(quantity - 1);
+            minusScale.value = withSequence(
+                withSpring(1.02, { damping: 14, stiffness: 360, mass: 0.7 }),
+                withSpring(1, { damping: 16, stiffness: 300, mass: 0.7 })
+            );
+        } else if (!isItemInCart && quantity > 1) {
+            // If item is NOT in cart, only allow going down to 1
             setQuantity(quantity - 1);
             minusScale.value = withSequence(
                 withSpring(1.02, { damping: 14, stiffness: 360, mass: 0.7 }),
@@ -152,15 +229,17 @@ const BagSelectionModal = ({ visible, bagOption, restaurant, onClose, onAddToCar
                         <Ionicons name="close" size={24} color={COLORS.textSecondary} />
                     </TouchableOpacity>
 
-                    {/* Bag Icon/Image */}
-                    <View style={styles.iconContainer}>
-                        <View style={styles.iconCircle}>
-                            <Text style={styles.iconEmoji}>🛍️</Text>
-                        </View>
-                    </View>
-
                     {/* Bag Details */}
-                    <Text style={styles.bagName}>{bagOption.type}</Text>
+                    <View style={styles.bagHeader}>
+                        <Text style={styles.bagName}>{bagOption.type}</Text>
+                        {preference && (
+                            <View style={styles.preferenceIndicator}>
+                                <Text style={styles.preferenceIndicatorText}>
+                                    {preference === 'veg' ? '🌱 Veg' : preference === 'nonveg' ? '🍖 Non-Veg' : '🙏 Jain'}
+                                </Text>
+                            </View>
+                        )}
+                    </View>
                     <Text style={styles.bagDescription} numberOfLines={2}>
                         {bagOption.description}
                     </Text>
@@ -172,9 +251,11 @@ const BagSelectionModal = ({ visible, bagOption, restaurant, onClose, onAddToCar
                     </View>
 
                     {/* Price Display */}
-                    <View style={styles.priceContainer}>
-                        <Text style={styles.originalPrice}>₹{bagOption.originalPrice}</Text>
-                        <Text style={styles.salePrice}>₹{bagOption.price}</Text>
+                    <View style={styles.priceSection}>
+                        <View style={styles.priceContainer}>
+                            <Text style={styles.originalPrice}>₹{bagOption.originalPrice}</Text>
+                            <Text style={styles.salePrice}>₹{bagOption.price}</Text>
+                        </View>
                         <View style={styles.savingsBadge}>
                             <Text style={styles.savingsText}>
                                 Save ₹{bagOption.originalPrice - bagOption.price}
@@ -189,12 +270,18 @@ const BagSelectionModal = ({ visible, bagOption, restaurant, onClose, onAddToCar
                             <AnimatedPressable
                                 style={[styles.counterButton, minusAnimatedStyle]}
                                 onPress={handleDecrement}
-                                disabled={quantity <= 0}
+                                disabled={isItemInCart ? quantity <= 0 : quantity <= 1}
                             >
                                 <Ionicons
-                                    name={quantity === 1 ? "trash-outline" : "remove"}
+                                    name={isItemInCart && quantity === 1 ? "trash-outline" : "remove"}
                                     size={20}
-                                    color={quantity <= 0 ? COLORS.textSecondary : quantity === 1 ? '#FF6B6B' : COLORS.activeCategory}
+                                    color={
+                                        (isItemInCart && quantity <= 0) || (!isItemInCart && quantity <= 1)
+                                            ? COLORS.textSecondary
+                                            : isItemInCart && quantity === 1
+                                                ? '#FF6B6B'
+                                                : COLORS.activeCategory
+                                    }
                                 />
                             </AnimatedPressable>
 
@@ -228,7 +315,9 @@ const BagSelectionModal = ({ visible, bagOption, restaurant, onClose, onAddToCar
                         }}
                         onPress={handleAddToCart}
                     >
-                        <Text style={styles.addButtonText}>{quantity === 0 ? 'Remove from Cart' : 'Add to Cart'}</Text>
+                        <Text style={styles.addButtonText}>
+                            {initialQuantity === 0 ? 'Add to Cart' : 'Update Quantity'}
+                        </Text>
                         {quantity > 0 && <Text style={styles.addButtonPrice}>₹{totalPrice}</Text>}
                     </AnimatedPressable>
                 </Animated.View>
@@ -266,26 +355,33 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         zIndex: 10,
     },
-    iconContainer: {
-        marginBottom: SPACING.md,
-    },
-    iconCircle: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: 'rgba(198, 240, 77, 0.15)',
+    bagHeader: {
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    iconEmoji: {
-        fontSize: 40,
+        gap: SPACING.sm,
+        marginBottom: SPACING.xs,
+        marginTop: SPACING.md,
     },
     bagName: {
         fontFamily: 'Gargoyle',
         fontSize: 26,
         color: COLORS.textPrimary,
-        marginBottom: SPACING.xs,
         textAlign: 'center',
+    },
+    preferenceIndicator: {
+        backgroundColor: 'rgba(198, 240, 77, 0.15)',
+        paddingHorizontal: SPACING.sm,
+        paddingVertical: 4,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(198, 240, 77, 0.3)',
+    },
+    preferenceIndicatorText: {
+        fontFamily: 'Saans',
+        fontSize: FONT_SIZES.xs,
+        color: COLORS.activeCategory,
+        fontWeight: '600',
     },
     bagDescription: {
         fontFamily: 'Saans',
@@ -306,11 +402,15 @@ const styles = StyleSheet.create({
         fontSize: FONT_SIZES.sm,
         color: COLORS.activeCategory,
     },
+    priceSection: {
+        alignItems: 'center',
+        marginBottom: SPACING.lg,
+    },
     priceContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: SPACING.sm,
-        marginBottom: SPACING.lg,
+        marginBottom: SPACING.xs,
     },
     originalPrice: {
         fontFamily: 'Saans',
