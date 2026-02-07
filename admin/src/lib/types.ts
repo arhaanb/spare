@@ -76,3 +76,87 @@ export interface DailyStats {
     revenue: number;
     bagsSold: number;
 }
+
+// Merchant Types
+export interface NutritionalValue {
+    calories: number;
+    protein: number;
+    fat: number;
+    carbs: number;
+}
+
+export interface MenuItem {
+    food_type: string;
+    food_name: string;
+    non_veg: boolean;
+    price: number;
+    units?: string;
+    nutritional_value: NutritionalValue;
+}
+
+export interface BagPricing {
+    regular_bag_price: number;
+    large_bag_price: number;
+}
+
+export interface OperatingHours {
+    opening: string;
+    closing: string;
+}
+
+export interface Contact {
+    phone: string;
+}
+
+export interface Merchant {
+    merchant_id: string;
+    merchant_name: string;
+    email: string;
+    password?: string;
+    location: string;
+    contact: Contact;
+    menu: MenuItem[];
+    bag_pricing: BagPricing;
+    operating_hours: OperatingHours;
+    created_at: string;
+    updated_at: string;
+}
+
+// ML API Response Types
+export interface ExtractedFoodItem {
+    type: string;
+    quantity: number;
+    closest_menu_item: string;
+    confidence: number;
+    price: number;
+    non_veg: boolean;
+}
+
+export interface FoodExtractionResponse {
+    merchant_id: string;
+    date: string;
+    items: ExtractedFoodItem[];
+    created_at: string;
+}
+
+export interface RescueBagItem {
+    food_name: string;
+    quantity: number;
+    unit_price: number;
+}
+
+export type BagType = "regular_veg" | "regular_non_veg" | "large_veg" | "large_non_veg";
+
+export interface RescueBagSuggestion {
+    bag_type: BagType;
+    target_price: number;
+    items: RescueBagItem[];
+    estimated_total_value: number;
+}
+
+export interface RescueBagCreationResponse {
+    merchant_id: string;
+    date: string;
+    bags: RescueBagSuggestion[];
+    created_at: string;
+}

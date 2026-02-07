@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Literal
+from datetime import datetime
 
 
 # Food Classification Models
@@ -51,6 +52,111 @@ class PriceOptimizationResponse(BaseModel):
     reasoning: PriceReasoning
     price_range: PriceRange
     expected_sell_through: float = Field(..., ge=0, le=1)
+
+
+# Merchant Models
+class ContactInfo(BaseModel):
+    phone: str
+
+
+class NutritionalValue(BaseModel):
+    calories: int
+    protein: int
+    fat: int
+    carbs: int
+
+
+class MenuItem(BaseModel):
+    food_type: str
+    food_name: str
+    non_veg: bool
+    price: float
+    nutritional_value: NutritionalValue
+
+
+class BagPricing(BaseModel):
+    regular_bag_price: float
+    large_bag_price: float
+
+
+class OperatingHours(BaseModel):
+    opening: str
+    closing: str
+
+
+class MerchantCreate(BaseModel):
+    merchant_name: str
+    email: EmailStr
+    password: str
+    location: str
+    contact: ContactInfo
+    menu: List[MenuItem]
+    bag_pricing: BagPricing
+    operating_hours: OperatingHours
+
+
+class MerchantLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class MerchantResponse(BaseModel):
+    merchant_id: str
+    merchant_name: str
+    email: str
+    location: str
+    contact: ContactInfo
+    menu: List[MenuItem]
+    bag_pricing: BagPricing
+    operating_hours: OperatingHours
+    created_at: str
+    updated_at: str
+
+
+# Leftover Items Models
+class LeftoverItem(BaseModel):
+    type: str
+    quantity: int
+    closest_menu_item: str
+    confidence: int
+    price: float
+    non_veg: bool
+
+
+class LeftoverItemsRequest(BaseModel):
+    merchant_id: str
+    date: str
+    items: List[LeftoverItem]
+
+
+class LeftoverItemsResponse(BaseModel):
+    success: bool
+    message: str
+
+
+# Rescue Bags Models
+class RescueBagItem(BaseModel):
+    food_name: str
+    quantity: int
+    unit_price: float
+
+
+class RescueBag(BaseModel):
+    bag_type: str
+    target_price: float
+    items: List[RescueBagItem]
+    estimated_total_value: float
+
+
+class RescueBagsRequest(BaseModel):
+    merchant_id: str
+    date: str
+    bags: List[RescueBag]
+
+
+class RescueBagsResponse(BaseModel):
+    success: bool
+    message: str
 
 
 # Error Models
