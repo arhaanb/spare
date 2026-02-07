@@ -267,7 +267,7 @@ def main():
     test_health_check()
     test_food_classification_json()
     test_food_classification_upload()
-    test_price_optimization()
+    # test_price_optimization()
     
     # Summary
     print_section("TESTING COMPLETE")

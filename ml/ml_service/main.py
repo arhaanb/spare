@@ -45,17 +45,17 @@ async def health_check():
 async def food_classification_endpoint(request: FoodClassificationRequest):
     """
     Classify food items from a base64-encoded image
-    
+
     Args:
-        request: FoodClassificationRequest with image_base64 and optional menu_items
-        
+        request: FoodClassificationRequest with image_base64 and optional menu (JSON list)
+
     Returns:
         FoodClassificationResponse with detected food items
     """
     try:
         result = classify_food_from_image(
             image_base64=request.image_base64,
-            menu_items=request.menu_items
+            menu_json=request.menu,
         )
         return result
     except Exception as e:
@@ -72,37 +72,36 @@ async def food_classification_endpoint(request: FoodClassificationRequest):
 )
 async def food_classification_upload_endpoint(
     image: UploadFile = File(...),
-    menu_items: Optional[str] = Form(None)
+    menu: Optional[str] = Form(None),
 ):
     """
-    Classify food items from an uploaded image file
-    
+    Classify food items from an uploaded image file.
+
     Args:
         image: Image file upload
-        menu_items: Optional JSON string of menu items array
-        
+        menu: Optional JSON string: either {"menu": [...]} or direct array [...]
+
     Returns:
         FoodClassificationResponse with detected food items
     """
     try:
-        # Read and encode image
         image_bytes = await image.read()
         image_base64 = base64.b64encode(image_bytes).decode("utf-8")
-        
-        # Parse menu items if provided
-        menu_items_list = None
-        if menu_items:
-            menu_items_list = json.loads(menu_items)
-        
+
+        menu_json = None
+        if menu:
+            parsed = json.loads(menu)
+            menu_json = parsed.get("menu", parsed) if isinstance(parsed, dict) else parsed
+
         result = classify_food_from_image(
             image_base64=image_base64,
-            menu_items=menu_items_list
+            menu_json=menu_json,
         )
         return result
     except json.JSONDecodeError:
         raise HTTPException(
             status_code=400,
-            detail="Invalid menu_items JSON format"
+            detail="Invalid menu JSON format",
         )
     except Exception as e:
         raise HTTPException(

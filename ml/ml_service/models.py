@@ -12,7 +12,10 @@ class FoodItem(BaseModel):
 
 class FoodClassificationRequest(BaseModel):
     image_base64: str = Field(..., description="Base64 encoded image")
-    menu_items: Optional[List[str]] = Field(None, description="Optional list of menu items for matching")
+    menu: Optional[List[dict]] = Field(
+        None,
+        description="Optional menu as list of items (e.g. from menu.json 'menu' array) for matching and quantification",
+    )
 
 
 class FoodClassificationResponse(BaseModel):

@@ -1,0 +1,62 @@
+[
+  {
+    "type": "4700 BC Butter Popcorn",
+    "quantity": 4,
+    "closest_menu_item": "Popcorn",
+    "confidence": 95
+  },
+  {
+    "type": "4700 BC Devil Popcorn",
+    "quantity": 3,
+    "closest_menu_item": "Popcorn",
+    "confidence": 95
+  },
+  {
+    "type": "Cornitos Sizzlin Jalapeno Nacho Crisps",
+    "quantity": 2,
+    "closest_menu_item": "Nachos",
+    "confidence": 98
+  },
+  {
+    "type": "Malkist Cheese Crackers",
+    "quantity": 2,
+    "closest_menu_item": "Cheese Crackers",
+    "confidence": 98
+  },
+  {
+    "type": "Snickers Chocolate Bar",
+    "quantity": 2,
+    "closest_menu_item": "Chocolate Bar",
+    "confidence": 98
+  },
+  {
+    "type": "Waffy Choco Roll",
+    "quantity": 1,
+    "closest_menu_item": "Wafer Rolls",
+    "confidence": 98
+  },
+  {
+    "type": "Oreo Chocolate Cream Biscuits",
+    "quantity": 1,
+    "closest_menu_item": "Biscuits",
+    "confidence": 98
+  },
+  {
+    "type": "Real Mixed Fruit Juice",
+    "quantity": 1,
+    "closest_menu_item": "Fruit Juice",
+    "confidence": 98
+  },
+  {
+    "type": "Frooti Mango Drink",
+    "quantity": 1,
+    "closest_menu_item": "Fruit Juice",
+    "confidence": 98
+  },
+  {
+    "type": "Pink Snack Container",
+    "quantity": 1,
+    "closest_menu_item": "not found",
+    "confidence": 75
+  }
+]
