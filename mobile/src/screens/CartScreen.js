@@ -7,7 +7,7 @@ import {
     TouchableOpacity,
     Image,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
     FadeIn,
     FadeOut,
@@ -87,7 +87,7 @@ const CartItemCard = ({ item, onIncrement, onDecrement, onRemove }) => {
                 <Text style={styles.restaurantName} numberOfLines={1}>
                     {item.restaurant.name}
                 </Text>
-                <Text style={styles.categoryText}>{item.restaurant.category}</Text>
+                <Text style={styles.categoryText}>{preference.label}</Text>
             </View>
 
             {/* Price & Quantity */}
@@ -145,6 +145,7 @@ const EmptyCart = ({ onBrowse }) => (
 const CartScreen = ({ navigation }) => {
     const { items, updateQuantity, removeFromCart, getCartTotal, clearCart } = useCart();
     const { createOrder } = useOrder();
+    const insets = useSafeAreaInsets();
     const buttonScale = useSharedValue(1);
 
     const total = getCartTotal();
@@ -272,7 +273,10 @@ const CartScreen = ({ navigation }) => {
 
                     {/* Checkout Footer */}
                     <Animated.View
-                        style={styles.checkoutFooter}
+                        style={[
+                            styles.checkoutFooter,
+                            { paddingBottom: Math.max(insets.bottom, SPACING.md) + SPACING.md }
+                        ]}
                         entering={FadeIn.delay(100).duration(250)}
                     >
                         <View style={styles.totalSection}>
@@ -413,9 +417,9 @@ const styles = StyleSheet.create({
         color: COLORS.textSecondary,
     },
     categoryText: {
-        fontFamily: 'Saans',
-        fontSize: FONT_SIZES.xs,
-        color: COLORS.textMuted,
+        fontFamily: 'Saans-Medium',
+        fontSize: FONT_SIZES.sm,
+        color: COLORS.textSecondary,
         marginTop: 2,
     },
     priceQuantitySection: {
@@ -477,8 +481,7 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderTopColor: 'rgba(255, 255, 255, 0.08)',
         paddingHorizontal: SPACING.lg,
-        paddingTop: SPACING.md,
-        paddingBottom: SPACING.xl,
+        paddingTop: SPACING.lg,
         flexDirection: 'row',
         alignItems: 'center',
         gap: SPACING.lg,
