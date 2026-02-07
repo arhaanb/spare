@@ -13,15 +13,15 @@ const LocationHeader = ({ location, onPress, onNotifPress }) => {
         />
       </TouchableOpacity>
 
-      <View style={styles.textContainer}>
-        <TouchableOpacity style={styles.labelRow} onPress={onPress}>
-          <Text style={styles.label}>Current location</Text>
+      <TouchableOpacity style={styles.textContainer} onPress={onPress}>
+        <View style={styles.labelRow}>
+          <Text style={styles.label}>{location?.label || 'Current Location'}</Text>
           <Text style={styles.dropdownIcon}>▼</Text>
-        </TouchableOpacity>
+        </View>
         <Text style={styles.address}>
           {location?.address || 'Set your location'}
         </Text>
-      </View>
+      </TouchableOpacity>
 
       <TouchableOpacity style={styles.headerIconBox} onPress={onNotifPress}>
         <View style={styles.iconWrapper}>

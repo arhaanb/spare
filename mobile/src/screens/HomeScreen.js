@@ -3,7 +3,7 @@ import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity, Platfo
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
-import { LocationHeader, CategoryFilter, RestaurantCard, SearchBar, FilterBottomSheet } from '../components';
+import { LocationHeader, CategoryFilter, RestaurantCard, SearchBar, FilterBottomSheet, LocationBottomSheet } from '../components';
 import BottomTabBar from '../components/BottomTabBar';
 import FavouritesScreen from './FavouritesScreen';
 import ProfileScreen from './ProfileScreen';
@@ -18,6 +18,7 @@ import {
   getRelevantRestaurants,
   getPopularRestaurants,
   getNewlyAddedRestaurants,
+  savedLocations,
 } from '../data/mockData';
 
 const DEFAULT_FILTERS = {
@@ -77,6 +78,8 @@ const HomeContent = ({
   handleRestaurantPress,
   activeTab,
   handleActiveOrderPress,
+  currentLocation,
+  onLocationPress,
 }) => {
   const { hasActiveOrder, activeOrder } = useOrder();
   const { getCartItemCount } = useCart();
@@ -103,8 +106,8 @@ const HomeContent = ({
       scrollEventThrottle={16} // Added scrollEventThrottle
     >
       <LocationHeader
-        location={userLocation}
-        onPress={() => console.log('Location pressed')}
+        location={currentLocation}
+        onPress={onLocationPress}
         onNotifPress={() => navigation.navigate('Notifications')}
       />
 
@@ -220,7 +223,9 @@ const HomeScreen = ({ navigation, route }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('explore');
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [currentLocation, setCurrentLocation] = useState(userLocation);
   const bottomSheetRef = React.useRef(null);
+  const locationSheetRef = React.useRef(null);
 
   const insets = useSafeAreaInsets();
 
@@ -337,6 +342,11 @@ const HomeScreen = ({ navigation, route }) => {
     setActiveTab(tabId);
   };
 
+  const handleLocationSelect = (location) => {
+    setCurrentLocation(location);
+    // In a real app, you would also trigger a refresh of restaurants based on new coordinates here
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'explore':
@@ -360,6 +370,8 @@ const HomeScreen = ({ navigation, route }) => {
               activeTab={activeTab}
               handleActiveOrderPress={handleActiveOrderPress}
               navigation={navigation}
+              currentLocation={currentLocation}
+              onLocationPress={() => locationSheetRef.current?.present()}
             />
           </Animated.View>
         );
@@ -392,6 +404,12 @@ const HomeScreen = ({ navigation, route }) => {
         resultsCount={allFilteredRestaurants.length}
         onApply={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
         onReset={() => setFilters(DEFAULT_FILTERS)}
+      />
+
+      <LocationBottomSheet
+        ref={locationSheetRef}
+        onSelectLocation={handleLocationSelect}
+        selectedLocation={currentLocation}
       />
 
       <BottomTabBar activeTab={activeTab} onTabPress={handleTabPress} />

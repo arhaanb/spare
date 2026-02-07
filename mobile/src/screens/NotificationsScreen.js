@@ -13,14 +13,32 @@ import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
 import { notifications } from '../data/mockData';
 import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 
+import TrophyIcon from '../../assets/images/notifs/trophy.svg';
+import DeliveredIcon from '../../assets/images/notifs/delivered.svg';
+import RestaurantsIcon from '../../assets/images/notifs/restaurants.svg';
+
 const NotificationItem = ({ item, index }) => {
+    const renderIcon = () => {
+        const iconSize = 40;
+        switch (item.icon) {
+            case 'trophy':
+                return <TrophyIcon width={iconSize} height={iconSize} />;
+            case 'delivered':
+                return <DeliveredIcon width={iconSize} height={iconSize} />;
+            case 'restaurants':
+                return <RestaurantsIcon width={iconSize} height={iconSize} />;
+            default:
+                return <Ionicons name="notifications" size={32} color={COLORS.primary} />;
+        }
+    };
+
     return (
         <Animated.View
             entering={FadeInDown.delay(index * 100).duration(400)}
             style={styles.notificationCard}
         >
             <View style={styles.iconContainer}>
-                <Text style={styles.emojiIcon}>{item.icon}</Text>
+                {renderIcon()}
             </View>
             <View style={styles.textContainer}>
                 <View style={styles.itemHeader}>
@@ -116,16 +134,13 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(255, 255, 255, 0.08)',
     },
     iconContainer: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
         backgroundColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: SPACING.md,
-    },
-    emojiIcon: {
-        fontSize: 24,
     },
     textContainer: {
         flex: 1,

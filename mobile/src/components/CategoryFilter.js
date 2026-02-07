@@ -32,8 +32,9 @@ const CategoryCard = ({ category, isSelected, onPress }) => {
   const selectedProgress = useSharedValue(isSelected ? 1 : 0);
 
   React.useEffect(() => {
-    selectedProgress.value = withTiming(isSelected ? 1 : 0, { duration: 160 });
+    selectedProgress.value = withTiming(isSelected ? 1 : 0, { duration: 100 });
   }, [isSelected, selectedProgress]);
+
 
   const cardAnimatedStyle = useAnimatedStyle(() => {
     const backgroundColor = interpolateColor(
@@ -62,13 +63,10 @@ const CategoryCard = ({ category, isSelected, onPress }) => {
       onPress={() => onPress(category.id)}
       activeOpacity={0.7}
       onPressIn={() => {
-        pressed.value = withSpring(0.96, { damping: 20, stiffness: 520, mass: 0.55 });
+        pressed.value = withSpring(0.97, { damping: 20, stiffness: 600, mass: 0.5 });
       }}
       onPressOut={() => {
-        pressed.value = withSequence(
-          withSpring(1.02, { damping: 16, stiffness: 620, mass: 0.55 }),
-          withSpring(1, { damping: 18, stiffness: 520, mass: 0.55 }),
-        );
+        pressed.value = withSpring(1, { damping: 15, stiffness: 600, mass: 0.5 });
       }}
     >
       <View style={[styles.imageContainer, { marginTop: iconOffsetY }]}>

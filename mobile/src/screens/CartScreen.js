@@ -77,7 +77,11 @@ const CartItemCard = ({ item, onIncrement, onDecrement, onRemove }) => {
             {/* Item Details */}
             <View style={styles.itemDetails}>
                 <View style={styles.itemHeader}>
-                    <Text style={styles.bagType}>{item.bagOption.type}</Text>
+                    <Text style={styles.bagType}>
+                        {item.bagOption.type === 'Make it yourself'
+                            ? 'Custom Rescue Bag'
+                            : `${item.bagOption.type} Rescue Bag`}
+                    </Text>
                     {/* <View style={[styles.preferenceBadge, { backgroundColor: `${preference.color}20` }]}>
                         <Text style={[styles.preferenceText, { color: preference.color }]}>
                             {preference.emoji} {preference.label}
@@ -87,7 +91,19 @@ const CartItemCard = ({ item, onIncrement, onDecrement, onRemove }) => {
                 <Text style={styles.restaurantName} numberOfLines={1}>
                     {item.restaurant.name}
                 </Text>
-                <Text style={styles.categoryText}>{preference.label}</Text>
+
+                {/* DIY Items List */}
+                {item.bagOption.isCustom && item.bagOption.selectedItems ? (
+                    <View style={styles.selectedItemsContainer}>
+                        {item.bagOption.selectedItems.map((selectedItem, index) => (
+                            <Text key={index} style={styles.selectedItemText}>
+                                {selectedItem.quantity}x {selectedItem.name}
+                            </Text>
+                        ))}
+                    </View>
+                ) : (
+                    <Text style={styles.categoryText}>{preference.label}</Text>
+                )}
             </View>
 
             {/* Price & Quantity */}
@@ -110,13 +126,15 @@ const CartItemCard = ({ item, onIncrement, onDecrement, onRemove }) => {
 
                     <Text style={styles.quantityText}>{item.quantity}</Text>
 
-                    <AnimatedTouchable
-                        style={[styles.quantityButton, plusStyle]}
-                        onPress={handleIncrement}
-                        activeOpacity={0.8}
-                    >
-                        <Ionicons name="add" size={16} color={COLORS.activeCategory} />
-                    </AnimatedTouchable>
+                    {!item.bagOption.isCustom && (
+                        <AnimatedTouchable
+                            style={[styles.quantityButton, plusStyle]}
+                            onPress={handleIncrement}
+                            activeOpacity={0.8}
+                        >
+                            <Ionicons name="add" size={16} color={COLORS.activeCategory} />
+                        </AnimatedTouchable>
+                    )}
                 </View>
             </View>
         </Animated.View>
@@ -421,6 +439,15 @@ const styles = StyleSheet.create({
         fontSize: FONT_SIZES.sm,
         color: COLORS.textSecondary,
         marginTop: 2,
+    },
+    selectedItemsContainer: {
+        marginTop: 4,
+    },
+    selectedItemText: {
+        fontFamily: 'Saans',
+        fontSize: 12,
+        color: COLORS.textSecondary,
+        opacity: 0.9,
     },
     priceQuantitySection: {
         alignItems: 'flex-end',

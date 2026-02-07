@@ -185,7 +185,7 @@ const RestaurantCard = ({ restaurant, onPress, variant = 'default' }) => {
 const styles = StyleSheet.create({
   container: {
     width: 170,
-    backgroundColor: COLORS.cardBackground,
+    backgroundColor: '#00472E',
     borderRadius: BORDER_RADIUS.lg,
     overflow: 'hidden',
     marginRight: SPACING.md,
@@ -227,14 +227,14 @@ const styles = StyleSheet.create({
     left: SPACING.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.primaryAccent,
+    backgroundColor: '#BCEB42',
     borderRadius: BORDER_RADIUS.full,
     paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.xs,
   },
   originalPrice: {
     fontSize: FONT_SIZES.xs,
-    color: COLORS.background,
+    color: '#00472E',
     textDecorationLine: 'line-through',
     marginRight: SPACING.xs,
     opacity: 0.8,
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   discountedPrice: {
     fontSize: FONT_SIZES.sm,
     fontWeight: '700',
-    color: COLORS.background,
+    color: "#00472E",
     fontFamily: 'Saans-Bold',
   },
   favoriteButton: {
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: FONT_SIZES.md,
     fontWeight: '700',
-    color: COLORS.textPrimary,
+    color: 'white',
     marginRight: SPACING.xs,
     fontFamily: 'Gargoyle',
   },

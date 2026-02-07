@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
+
 import {
   View,
   Text,
@@ -6,7 +7,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
+  Linking,
 } from 'react-native';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   Easing,
@@ -24,6 +27,7 @@ import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constant
 import { formatPickupTime, restaurants } from '../data/mockData';
 import { RestaurantCard, ActiveOrderBanner } from '../components';
 import BagSelectionModal from '../components/BagSelectionModal';
+import ItemSelectionModal from '../components/ItemSelectionModal';
 import { useCart } from '../context/CartContext';
 import { useOrder } from '../context/OrderContext';
 import RegularBagIconLocal from '../../assets/images/assets/bags/regular.svg';
@@ -50,16 +54,28 @@ const BagCard = ({ bagOption, onPress, isSelected, selectedPreference }) => {
   const pressed = useSharedValue(1);
   const borderWidth = useSharedValue(isSelected ? 2 : 0);
   const checkmarkScale = useSharedValue(isSelected ? 1 : 0);
+  const isUnavailable = bagOption.available === 0;
+  const opacity = useSharedValue(isUnavailable ? 0.5 : 1);
 
   React.useEffect(() => {
     borderWidth.value = withSpring(isSelected ? 2 : 0, { damping: 20, stiffness: 300 });
     checkmarkScale.value = withSpring(isSelected ? 1 : 0, { damping: 20, stiffness: 200 });
   }, [isSelected, borderWidth, checkmarkScale]);
 
+  React.useEffect(() => {
+    const targetOpacity = bagOption.available === 0 ? 0.5 : 1;
+    opacity.value = withSpring(targetOpacity, {
+      damping: 15,
+      stiffness: 150,
+      mass: 0.8
+    });
+  }, [bagOption.available, opacity]);
+
   const cardAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pressed.value }],
     borderWidth: borderWidth.value,
     borderColor: COLORS.activeCategory,
+    opacity: opacity.value,
   }));
 
   const checkmarkStyle = useAnimatedStyle(() => ({
@@ -96,20 +112,29 @@ const BagCard = ({ bagOption, onPress, isSelected, selectedPreference }) => {
   return (
     <AnimatedTouchable
       style={[styles.bagCard, cardAnimatedStyle]}
-      activeOpacity={0.9}
-      onPress={() => onPress(bagOption)}
+      activeOpacity={isUnavailable ? 1 : 0.9}
+      onPress={() => !isUnavailable && onPress(bagOption)}
+      disabled={isUnavailable}
       onPressIn={() => {
-        pressed.value = withSpring(0.96, { damping: 20, stiffness: 520, mass: 0.55 });
+        if (!isUnavailable) {
+          pressed.value = withSpring(0.96, { damping: 20, stiffness: 520, mass: 0.55 });
+        }
       }}
       onPressOut={() => {
-        pressed.value = withSequence(
-          withSpring(1.02, { damping: 16, stiffness: 620, mass: 0.55 }),
-          withSpring(1, { damping: 18, stiffness: 520, mass: 0.55 }),
-        );
+        if (!isUnavailable) {
+          pressed.value = withSequence(
+            withSpring(1.02, { damping: 16, stiffness: 620, mass: 0.55 }),
+            withSpring(1, { damping: 18, stiffness: 520, mass: 0.55 }),
+          );
+        }
       }}
     >
       <View style={styles.pillContainer}>
-        {bagOption.available <= 2 ? (
+        {isUnavailable ? (
+          <View style={[styles.stockPill, { backgroundColor: COLORS.activeCategory }]}>
+            <Text style={[styles.stockText, { color: COLORS.background }]}>Unavailable</Text>
+          </View>
+        ) : bagOption.available <= 2 ? (
           <View style={styles.stockPill}>
             <Text style={styles.stockText}>Only {bagOption.available} Left</Text>
           </View>
@@ -150,27 +175,40 @@ const PreferenceChip = ({ active, icon: Icon, iconDark: IconDark, label, onPress
   const pressed = useSharedValue(1);
   const progress = useSharedValue(active ? 1 : 0);
   const badgeScale = useSharedValue(count > 0 ? 1 : 0);
+  const selectionScale = useSharedValue(1);
 
   React.useEffect(() => {
-    progress.value = withTiming(active ? 1 : 0, { duration: 180, easing: Easing.out(Easing.cubic) });
-  }, [active, progress]);
+    // Bouncy spring animation for the chip background/border
+    progress.value = withSpring(active ? 1 : 0, {
+      damping: 15,
+      stiffness: 200,
+      mass: 0.8
+    });
+    // Add a subtle bounce when selected
+    if (active) {
+      selectionScale.value = withSequence(
+        withSpring(1.05, { damping: 12, stiffness: 400 }),
+        withSpring(1, { damping: 15, stiffness: 300 })
+      );
+    }
+  }, [active, progress, selectionScale]);
 
   React.useEffect(() => {
     if (count > 0) {
       badgeScale.value = withSpring(1, {
-        damping: 20,
-        stiffness: 150,
-        mass: 1
+        damping: 12,
+        stiffness: 180,
+        mass: 0.8
       });
     } else {
-      badgeScale.value = withTiming(0, { duration: 150 });
+      badgeScale.value = withSpring(0, { damping: 20, stiffness: 200 });
     }
-  }, [count]);
+  }, [count, badgeScale]);
 
   const chipStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(progress.value, [0, 1], ['#134631', COLORS.activeCategory]),
     borderColor: interpolateColor(progress.value, [0, 1], ['#1B6C41', COLORS.activeCategory]),
-    transform: [{ scale: pressed.value }],
+    transform: [{ scale: pressed.value * selectionScale.value }],
   }));
 
   const labelStyle = useAnimatedStyle(() => ({
@@ -213,11 +251,22 @@ const PreferenceChip = ({ active, icon: Icon, iconDark: IconDark, label, onPress
 
 const RestaurantDetailScreen = ({ route, navigation }) => {
   const { restaurant } = route.params;
-  const { addToCart, removeFromCart, isInCart, getCartItem, getItemCountByPreference, getCartItemCount } = useCart();
+  const { addToCart, removeFromCart, isInCart, getCartItem, getItemCountByPreference, getCartItemCount, items } = useCart();
   const { hasActiveOrder, activeOrder } = useOrder();
   const [selectedPreference, setSelectedPreference] = useState('veg');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedBag, setSelectedBag] = useState(null);
+  const itemSelectionRef = useRef(null);
+  const scrollViewRef = useRef(null);
+  const ratingsY = useRef(0);
+
+  const scrollToRatings = () => {
+    scrollViewRef.current?.scrollTo({
+      y: ratingsY.current,
+      animated: true,
+    });
+  };
+
 
   const pickupWindow = useMemo(() => {
     const firstOption = restaurant.bagOptions?.[0];
@@ -236,6 +285,13 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
     [restaurant.reviews, restaurant.rating],
   );
 
+  const handleLocationPress = () => {
+    const query = encodeURIComponent(`${restaurant.name}, ${restaurant.location}`);
+    const url = `https://www.google.com/maps/search/?api=1&query=${query}`;
+    Linking.openURL(url).catch((err) => console.error("Couldn't load page", err));
+  };
+
+
   const ingredientSummary = useMemo(() => {
     if (!restaurant.possibleIngredients?.length) {
       return 'A changing mix prepared from the day\'s best surplus items.';
@@ -250,7 +306,10 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
 
   const handleBagPress = (bagOption) => {
     // Don't open modal for "Make it yourself" - will be handled differently later
+    // For "Make it yourself", open the item selection modal
     if (bagOption.role === 'diy') {
+      setSelectedBag(bagOption);
+      itemSelectionRef.current?.present();
       return;
     }
 
@@ -269,6 +328,24 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
         // Add or update cart
         addToCart(selectedBag, quantity, selectedPreference, restaurant);
       }
+    }
+  };
+
+  const handleDiyAddToCart = (selectedItems) => {
+    if (selectedBag) {
+      // Create a unique bag option for this specific selection
+      // We append a timestamp or random string to ID to allow multiple DIY bags with different items
+      const uniqueId = `diy-${Date.now()}`;
+
+      const customBag = {
+        ...selectedBag,
+        id: uniqueId,
+        selectedItems: selectedItems, // Pass the list of selected items
+        isCustom: true
+      };
+
+      // Add to cart with quantity 1 (since it's a specific custom bag)
+      addToCart(customBag, 1, selectedPreference, restaurant);
     }
   };
 
@@ -295,6 +372,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
     <SafeAreaView style={styles.container}>
       <Animated.View entering={FadeIn.duration(260)} style={styles.animatedContainer}>
         <ScrollView
+          ref={scrollViewRef}
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
@@ -315,17 +393,28 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
                   <Text style={styles.metaAccent}>{restaurant.timeToReach}-{restaurant.timeToReach + 10} mins</Text>
                   <Text style={styles.metaSeparator}>|</Text>
                   <Text style={styles.metaDefault}>{restaurant.distance.toFixed(1)} kms</Text>
-                  <Text style={styles.metaSeparator}>|</Text>
-                  <Ionicons name="location-sharp" size={12} color="#E8A7F8" />
-                  <Text style={styles.metaDefault}>{restaurant.location}</Text>
-                  <Ionicons name="chevron-forward" size={12} color="#415B50" style={{ marginLeft: 2 }} />
                 </View>
+
+                <TouchableOpacity
+                  style={styles.locationRow}
+                  onPress={handleLocationPress}
+                  activeOpacity={0.6}
+                >
+                  <Ionicons name="location-sharp" size={14} color="#E8A7F8" />
+                  <Text style={styles.locationText} numberOfLines={1}>{restaurant.location}</Text>
+                  <Ionicons name="chevron-forward" size={10} color="#415B50" style={{ marginLeft: 2 }} />
+                </TouchableOpacity>
+
               </View>
 
-              <View style={styles.ratingPill}>
+              <TouchableOpacity
+                style={styles.ratingPill}
+                onPress={scrollToRatings}
+                activeOpacity={0.7}
+              >
                 <Text style={styles.ratingValue}>{restaurant.rating.toFixed(1)} <Text style={{ fontSize: 13 }}>★</Text></Text>
                 <Text style={styles.ratingCount}>{(restaurant.reviewCount / 100).toFixed(1)}k+ ratings</Text>
-              </View>
+              </TouchableOpacity>
             </View>
 
             <View style={styles.pickupRow}>
@@ -372,6 +461,11 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
                 // Map mock data bagOptions to these roles by index
                 // ensuring we always show 3 bags as requested
                 const apiData = restaurant.bagOptions?.[index] || {};
+
+                // Compute availability based on preference
+                const isUnavailableForPreference = apiData.unavailableFor?.includes(selectedPreference);
+                const computedAvailable = isUnavailableForPreference ? 0 : (apiData.available ?? 5);
+
                 const bagData = {
                   ...apiData,
                   role: config.role,
@@ -379,15 +473,38 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
                   // Use provided prices if missing in data
                   price: apiData.price || (config.role === 'regular' ? 79 : config.role === 'large' ? 109 : 129),
                   originalPrice: apiData.originalPrice || (config.role === 'diy' ? 299 : 199),
+                  available: computedAvailable,
                 };
 
                 const bagId = bagData.id || bagData.role;
-                const inCart = isInCart(restaurant.id, bagId, selectedPreference);
+                let inCart = false;
+
+                if (config.role === 'diy') {
+                  // For DIY, check if ANY item in cart is a custom bag with this preference
+                  inCart = items.some(item =>
+                    item.bagOption.role === 'diy' &&
+                    item.preference === selectedPreference &&
+                    item.restaurant.id === restaurant.id
+                  );
+                } else {
+                  inCart = isInCart(restaurant.id, bagId, selectedPreference);
+                }
+
+                // Mutual exclusivity logic
+                const hasCustomBags = items.some(i => i.restaurant.id === restaurant.id && i.bagOption.role === 'diy');
+                const hasRegularBags = items.some(i => i.restaurant.id === restaurant.id && i.bagOption.role !== 'diy');
+
+                let isDisabled = false;
+                if (config.role === 'diy' && hasRegularBags) {
+                  isDisabled = true;
+                } else if (config.role !== 'diy' && hasCustomBags) {
+                  isDisabled = true;
+                }
 
                 return (
                   <BagCard
-                    key={config.role}
-                    bagOption={bagData}
+                    key={`${config.role}-${selectedPreference}`}
+                    bagOption={{ ...bagData, available: isDisabled ? 0 : bagData.available }} // Visually disable by setting available to 0 if conflict
                     isSelected={inCart}
                     selectedPreference={selectedPreference}
                     onPress={handleBagPress}
@@ -395,6 +512,9 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
                 );
               })}
             </View>
+            <Text style={styles.bagRestrictionCaption}>
+              *You can only order Custom Bags OR Regular/Large Bags, not both.
+            </Text>
           </View>
 
           <View style={styles.section}>
@@ -403,7 +523,12 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
             <View style={styles.sectionDivider} />
           </View>
 
-          <View style={styles.section}>
+          <View
+            style={styles.section}
+            onLayout={(event) => {
+              ratingsY.current = event.nativeEvent.layout.y;
+            }}
+          >
             <View style={styles.ratingHeroRow}>
               <Image
                 source={require('../../assets/images/assets/left_leaf.png')}
@@ -456,6 +581,14 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
             { height: (getCartItemCount() > 0 ? 80 : 0) + (hasActiveOrder ? 80 : 0) + 20 }
           ]} />
         </ScrollView>
+
+        {/* Item Selection Modal for DIY */}
+        <ItemSelectionModal
+          sheetRef={itemSelectionRef}
+          bagOption={selectedBag}
+          restaurant={restaurant}
+          onAddToCart={handleDiyAddToCart}
+        />
 
         {/* Bag Selection Modal */}
         <BagSelectionModal
@@ -548,10 +681,24 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.sm,
   },
   metaSeparator: {
-    marginHorizontal: 6,
-    color: '#88A29A',
+    marginHorizontal: 8,
+    color: '#E2E8E5',
     fontSize: FONT_SIZES.sm,
   },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  locationText: {
+    fontFamily: 'Saans',
+    color: '#415B50',
+    fontSize: FONT_SIZES.sm,
+    marginLeft: 4,
+    marginRight: 2,
+    textDecorationLine: 'none',
+  },
+
   ratingPill: {
     backgroundColor: '#C6F04D',
     borderRadius: 16,
@@ -674,6 +821,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: SPACING.sm,
     width: '100%',
+  },
+  bagRestrictionCaption: {
+    fontFamily: 'Saans',
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.textSecondary,
+    marginTop: SPACING.sm,
+    fontStyle: 'italic',
+    opacity: 0.8,
   },
   bagCard: {
     flex: 1,
