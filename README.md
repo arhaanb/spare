@@ -155,57 +155,11 @@ Python FastAPI service for AI-powered features.
 
 ## User Flows
 
-### Consumer Flow
+The flow is divided into teh **Consumer** and **Merchant** flow which includes onboarding, setup, and placing / receiving orders. The [FigJam can be found here](https://www.figma.com/board/Xb8Gax2yGLjwoEKlD264iV/Spare-%7C-User-Flows?node-id=0-1&t=m7dd50qxlRqr9NDE-1).
 
-```mermaid
-flowchart LR
-    A[Open App] --> B[Browse Restaurants]
-    B --> C[Select Restaurant]
-    C --> D[Choose Diet Preference<br/>Veg / Non-Veg / Jain]
-    D --> E{Select Bag Type}
-    E -->|Pre-made| F[Regular or Large Bag]
-    E -->|Custom| G[Make Your Own<br/>Select Items]
-    F --> H[Add to Cart]
-    G --> H
-    H --> I[Checkout]
-    I --> J[Receive QR Code]
-    J --> K[Pickup at Restaurant]
-    K --> L[Confirm & Rate]
-```
+<br>
 
-### Merchant Flow
-
-```mermaid
-flowchart LR
-    A[Login to Admin] --> B[Dashboard]
-    B --> C[Near Closing Time]
-    C --> D[Upload Surplus Photos]
-    D --> E[AI Classifies Items]
-    E --> F[Set Bag Availability]
-    F --> G[Receive Orders]
-    G --> H[Scan QR at Pickup]
-    H --> I[Complete Handoff]
-```
-
----
-
-## Impact Metrics
-
-### For Merchants
-- Average monthly INR recovered
-- Daily surplus sold vs. discarded ratio
-- Repeat participation rate
-- Cross-selling opportunities
-
-### For Consumers
-- Pickup frequency
-- Satisfaction rate (price, value, freshness)
-
-### Platform Health
-- Average user rating
-- Vendor listing/delisting rate
-- Time-to-clear metrics
-- Total food rescued (kg)
+<a href="https://www.figma.com/board/Xb8Gax2yGLjwoEKlD264iV/Spare-%7C-User-Flows?node-id=0-1&t=m7dd50qxlRqr9NDE-1"><img width="9736" height="5168" alt="image" src="https://github.com/user-attachments/assets/a75901d8-31f1-4d25-833e-6f4af17b6d5c" /></a>
 
 ---
 
@@ -262,7 +216,7 @@ api_url = https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash
 
 ---
 
-## 👥 Team
+## Team
 
 - [Arhaan Bahadur](https://arhaanb.com)
 - Hrijul Chauhan
