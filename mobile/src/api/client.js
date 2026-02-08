@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Replace with your machine's IP address for Android Emulator to work, 
 // or 'http://localhost:3000' for iOS Simulator
-const BASE_URL = 'http://localhost:3000/api';
+const BASE_URL = 'http://localhost:6767/api';
 
 const client = axios.create({
     baseURL: BASE_URL,

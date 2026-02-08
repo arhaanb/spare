@@ -11,11 +11,13 @@ import {
     ClipboardList,
     Upload,
     Settings,
-    LogOut
+    LogOut,
+    TrendingUp
 } from "lucide-react";
 
 const navItems = [
     { label: "Dashboard", href: "/", icon: LayoutDashboard },
+    { label: "Demand Forecast", href: "/forecast", icon: TrendingUp },
     { label: "Rescue Bags", href: "/rescue-bags", icon: ShoppingBag },
     { label: "Upload & Extract", href: "/rescue-flow", icon: Upload },
     { label: "Orders", href: "/orders", icon: ClipboardList },
