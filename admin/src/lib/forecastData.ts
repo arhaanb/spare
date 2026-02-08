@@ -283,6 +283,7 @@ export interface DailyAggregates {
     costOfWaste: number;
     moneySaved: number; // From selling discounted rescue bags
     carbonSaved: number; // kg CO2 equivalent
+    bagsCreated: number; // Number of rescue bags created
 }
 
 // ===== Generate Historical Data (last 90 days) =====
@@ -319,12 +320,20 @@ const generateHistoricalData = (): {
             const variance = (Math.random() - 0.5) * 2 * (item.demandVariance / 100) * baseDemand;
             const actualDemand = Math.max(0, Math.round(baseDemand + variance));
 
-            // Restaurants typically prepare 10-20% more than expected
-            const overPrepFactor = 1.1 + Math.random() * 0.15;
-            const quantityPrepared = Math.round(actualDemand * overPrepFactor);
+            // Restaurants prepare 10-25% more than expected, but with variation
+            // Some items are harder to predict, leading to more frequent waste
+            const overPrepFactor = 1.05 + Math.random() * 0.25; // 5-30% over-prep
+            
+            // Some items just don't sell well on certain days (skip prep sometimes)
+            // Increased to 40-50% chance to skip, so items appear ~50-60% of days
+            const skipPrepChance = Math.random();
+            const shouldSkipPrep = skipPrepChance > 0.55; // 45% chance to not prep this item today
+            
+            const quantityPrepared = shouldSkipPrep ? 0 : Math.round(actualDemand * overPrepFactor);
 
-            // Actual sold is min of demand and prepared (with some variance)
-            const quantitySold = Math.min(quantityPrepared, Math.round(actualDemand * (0.9 + Math.random() * 0.15)));
+            // Actual sold is min of demand and prepared (with more variance)
+            const soldMultiplier = 0.85 + Math.random() * 0.20; // 85%-105% of demand
+            const quantitySold = Math.min(quantityPrepared, Math.round(actualDemand * soldMultiplier));
             const quantityWasted = Math.max(0, quantityPrepared - quantitySold);
 
             const revenue = quantitySold * item.price;
@@ -355,6 +364,38 @@ const generateHistoricalData = (): {
         const rescueRate = 0.3 + Math.random() * 0.2;
         const moneySaved = dayCostOfWaste * rescueRate * 0.7; // 70% recovery through rescue bags
         const carbonSaved = dayItemsWasted * rescueRate * 0.25; // ~0.25kg CO2 per food item
+        
+        // Calculate bags created with realistic variation and weekend spikes
+        // Range: 2-10 bags per day with more natural distribution
+        const itemsPerBag = 8 + Math.random() * 4; // 8-12 items per bag
+        const baseWasteForBags = dayItemsWasted * rescueRate;
+        
+        // Weekend spike: Much stronger on Saturdays and Sundays
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        const isFriday = dayOfWeek === 5;
+        
+        // Base bags calculation - adjusted to not constantly hit 10
+        let baseBags = (baseWasteForBags / itemsPerBag) * 2.0; // Reduced from 2.5
+        
+        // Day-of-week patterns - more moderate
+        if (isWeekend) {
+            baseBags *= 1.8 + Math.random() * 0.5; // Weekends: 1.8-2.3x (reduced from 2.2-2.8x)
+        } else if (isFriday) {
+            baseBags *= 1.4 + Math.random() * 0.3; // Friday: 1.4-1.7x (reduced from 1.6-1.9x)
+        } else {
+            baseBags *= 0.7 + Math.random() * 0.5; // Weekdays: 0.7-1.2x
+        }
+        
+        // Add daily variation
+        baseBags *= 0.8 + Math.random() * 0.4; // 80%-120% variation
+        
+        // Occasional special event days (reduced from 8% to 5%)
+        if (Math.random() > 0.95) {
+            baseBags *= 1.2 + Math.random() * 0.3; // 1.2-1.5x spike (reduced)
+        }
+        
+        // Clamp to 2-10 range (more often in 3-8 range)
+        const bagsCreated = Math.max(2, Math.min(10, Math.round(baseBags)));
 
         dailyAggregates.push({
             date: dateStr,
@@ -368,6 +409,7 @@ const generateHistoricalData = (): {
             costOfWaste: Math.round(dayCostOfWaste),
             moneySaved: Math.round(moneySaved),
             carbonSaved: Number(carbonSaved.toFixed(1)),
+            bagsCreated,
         });
     }
 
@@ -422,6 +464,62 @@ export interface ForecastDay {
     upperBound: number;
 }
 
+export interface WasteForecast {
+    date: string;
+    dayOfWeek: number;
+    predictedWasteQuantity: number; // Total items expected to be wasted
+    predictedBagCount: number; // Number of rescue bags
+    confidence: number; // 0-100
+}
+
+export const generateXGBoostWasteForecast = (): WasteForecast[] => {
+    const forecast: WasteForecast[] = [];
+    const today = new Date();
+    
+    // XGBoost features (mocked):
+    // 1. Day-of-week patterns
+    // 2. Historical 7-day rolling average waste
+    // 3. Trend (increasing/decreasing)
+    // 4. Seasonal multiplier
+    
+    const last7Days = dailyStats.slice(-7);
+    const avgWaste = last7Days.reduce((sum, d) => sum + d.totalItemsWasted, 0) / 7;
+    const trend = calculateTrend();
+    
+    for (let i = 1; i <= 14; i++) {
+        const forecastDate = new Date(today);
+        forecastDate.setDate(forecastDate.getDate() + i);
+        const dayOfWeek = forecastDate.getDay();
+        
+        // Feature: Day-of-week multiplier
+        const dowMultiplier = dayOfWeekMultipliers[dayOfWeek];
+        
+        // Feature: Trend adjustment (more waste if demand is increasing)
+        const trendImpact = trend.slope * i * 0.15;
+        
+        // Feature: Seasonal (simulate winter = less waste due to preservation)
+        const seasonalMultiplier = 1 + Math.sin((forecastDate.getMonth() / 12) * Math.PI * 2) * 0.12;
+        
+        // XGBoost prediction (mock formula combining features)
+        const baseWaste = avgWaste * dowMultiplier * seasonalMultiplier;
+        const predictedWaste = Math.round(baseWaste + trendImpact + (Math.random() - 0.5) * 5);
+        
+        // Convert to rescue bags (assume 8-12 items per bag)
+        const itemsPerBag = 10;
+        const bagCount = Math.max(1, Math.round(predictedWaste / itemsPerBag));
+        
+        forecast.push({
+            date: forecastDate.toISOString().split('T')[0],
+            dayOfWeek,
+            predictedWasteQuantity: predictedWaste,
+            predictedBagCount: bagCount,
+            confidence: 88 - i * 3, // Confidence decreases over time
+        });
+    }
+    
+    return forecast;
+};
+
 export const generate7DayForecast = (): ForecastDay[] => {
     const forecast: ForecastDay[] = [];
     const today = new Date();
@@ -459,11 +557,11 @@ export const generate7DayForecast = (): ForecastDay[] => {
 export interface ForecastStats {
     avgWasteReduction: number; // % reduction vs baseline
     totalMoneySaved: number;
+    bagsCreated: number;
+    bagsSold: number;
+    avgMoneyPerDay: number;
     totalCarbonSaved: number;
-    predictionAccuracy: number;
-    topWastedItems: Array<{ name: string; wastePercentage: number; quantity: number }>;
-    bestPerformingDays: Array<{ day: string; wastePercentage: number }>;
-    worstPerformingDays: Array<{ day: string; wastePercentage: number }>;
+    topWastedItems: Array<{ name: string; wastePercentage: number; quantity: number; occurrences: number }>;
 }
 
 export const calculateForecastStats = (): ForecastStats => {
@@ -478,46 +576,51 @@ export const calculateForecastStats = (): ForecastStats => {
     // Total savings
     const totalMoneySaved = last30Days.reduce((sum, d) => sum + d.moneySaved, 0);
     const totalCarbonSaved = last30Days.reduce((sum, d) => sum + d.carbonSaved, 0);
+    
+    // Calculate bags created (estimate 1-3 bags per day based on waste levels)
+    const bagsCreated = last30Days.reduce((sum, d) => {
+        const dailyBags = Math.round(1 + (d.wastePercentage / 10)); // More waste = more bags
+        return sum + Math.min(3, dailyBags); // Max 3 bags per day
+    }, 0);
+    
+    const avgMoneyPerDay = Math.round(totalMoneySaved / last30Days.length);
 
-    // Calculate top wasted items
-    const itemWaste: Record<string, { total: number; wasted: number }> = {};
-    historicalSales.slice(-30 * menuItems.length).forEach(record => {
+    // Calculate top wasted items with occurrences
+    const itemWaste: Record<string, { total: number; wasted: number; days: number }> = {};
+    const last30Records = historicalSales.slice(-30 * menuItems.length);
+    
+    last30Records.forEach(record => {
         if (!itemWaste[record.itemName]) {
-            itemWaste[record.itemName] = { total: 0, wasted: 0 };
+            itemWaste[record.itemName] = { total: 0, wasted: 0, days: 0 };
         }
         itemWaste[record.itemName].total += record.quantityPrepared;
         itemWaste[record.itemName].wasted += record.quantityWasted;
+        if (record.quantityWasted > 0) {
+            itemWaste[record.itemName].days += 1;
+        }
     });
 
     const topWastedItems = Object.entries(itemWaste)
         .map(([name, data]) => ({
             name,
-            wastePercentage: data.total > 0 ? Number(((data.wasted / data.total) * 100).toFixed(1)) : 0,
+            wastePercentage: Number(((data.days / 30) * 100).toFixed(1)), // % of 30 days item appeared as waste
             quantity: data.wasted,
+            occurrences: data.days, // Number of days this item appeared as waste
         }))
-        .sort((a, b) => b.wastePercentage - a.wastePercentage)
+        .sort((a, b) => b.occurrences - a.occurrences)
         .slice(0, 5);
 
-    // Day performance
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const dayPerformance = dayNames.map((day, i) => {
-        const dayData = last30Days.filter(d => d.dayOfWeek === i);
-        const avgWaste = dayData.length > 0
-            ? dayData.reduce((sum, d) => sum + d.wastePercentage, 0) / dayData.length
-            : 0;
-        return { day, wastePercentage: Number(avgWaste.toFixed(1)) };
-    });
-
-    const sortedByWaste = [...dayPerformance].sort((a, b) => a.wastePercentage - b.wastePercentage);
+    // Calculate bags sold (assume 80-95% of bags created are sold)
+    const bagsSold = Math.round(bagsCreated * (0.8 + Math.random() * 0.15));
 
     return {
         avgWasteReduction: Number(wasteReduction.toFixed(1)),
         totalMoneySaved: Math.round(totalMoneySaved),
+        bagsCreated,
+        bagsSold,
+        avgMoneyPerDay,
         totalCarbonSaved: Number(totalCarbonSaved.toFixed(1)),
-        predictionAccuracy: 82 + Math.random() * 8, // Simulated accuracy 82-90%
         topWastedItems,
-        bestPerformingDays: sortedByWaste.slice(0, 2),
-        worstPerformingDays: sortedByWaste.slice(-2).reverse(),
     };
 };
 
@@ -570,44 +673,127 @@ export const calculateMaterialForecast = (): MaterialForecast[] => {
         .sort((a, b) => b.costFor7Days - a.costFor7Days);
 };
 
+// ===== Worst Performing Rescue Bag Items =====
+export interface WorstPerformingItem {
+    name: string;
+    occurrences: number; // Number of times appeared in rescue bags
+    lossAmount: number; // Loss in INR
+    wastedPercentage: number; // % of times unsold in rescue bags
+}
+
+export const generateWorstPerformingItems = (): WorstPerformingItem[] => {
+    // Generate realistic worst performing items from menu with high variance
+    const worstItems: WorstPerformingItem[] = [
+        {
+            name: 'Pain Au Chocolat',
+            occurrences: Math.round(18 + Math.random() * 15), // 18-33 times
+            lossAmount: Math.round(2400 + Math.random() * 1200), // ₹2,400-3,600
+            wastedPercentage: Number((23 + Math.random() * 19).toFixed(1)), // 23-42%
+        },
+        {
+            name: 'Pistachio Croissant',
+            occurrences: Math.round(14 + Math.random() * 18), // 14-32 times
+            lossAmount: Math.round(2800 + Math.random() * 1500), // ₹2,800-4,300
+            wastedPercentage: Number((27 + Math.random() * 21).toFixed(1)), // 27-48%
+        },
+        {
+            name: 'Mocha Brownie',
+            occurrences: Math.round(22 + Math.random() * 12), // 22-34 times
+            lossAmount: Math.round(1800 + Math.random() * 1100), // ₹1,800-2,900
+            wastedPercentage: Number((19 + Math.random() * 17).toFixed(1)), // 19-36%
+        },
+        {
+            name: 'Almond Croissant',
+            occurrences: Math.round(16 + Math.random() * 16), // 16-32 times
+            lossAmount: Math.round(3200 + Math.random() * 1600), // ₹3,200-4,800
+            wastedPercentage: Number((31 + Math.random() * 23).toFixed(1)), // 31-54%
+        },
+        {
+            name: 'Chocolate Hazelnut Croissant',
+            occurrences: Math.round(19 + Math.random() * 14), // 19-33 times
+            lossAmount: Math.round(2900 + Math.random() * 1400), // ₹2,900-4,300
+            wastedPercentage: Number((28 + Math.random() * 20).toFixed(1)), // 28-48%
+        },
+        {
+            name: 'Korean Bun',
+            occurrences: Math.round(25 + Math.random() * 10), // 25-35 times
+            lossAmount: Math.round(1500 + Math.random() * 900), // ₹1,500-2,400
+            wastedPercentage: Number((15 + Math.random() * 15).toFixed(1)), // 15-30%
+        },
+        {
+            name: 'Mushroom Cream Cheese Croissata',
+            occurrences: Math.round(20 + Math.random() * 13), // 20-33 times
+            lossAmount: Math.round(2100 + Math.random() * 1200), // ₹2,100-3,300
+            wastedPercentage: Number((21 + Math.random() * 18).toFixed(1)), // 21-39%
+        },
+        {
+            name: 'Roasted Tomato Croissata',
+            occurrences: Math.round(17 + Math.random() * 15), // 17-32 times
+            lossAmount: Math.round(2300 + Math.random() * 1300), // ₹2,300-3,600
+            wastedPercentage: Number((24 + Math.random() * 19).toFixed(1)), // 24-43%
+        },
+    ];
+
+    // Return top 5 sorted by loss amount
+    return worstItems.sort((a, b) => b.lossAmount - a.lossAmount).slice(0, 5);
+};
+
 // ===== Waste Heatmap Data =====
 export interface HeatmapCell {
-    dayOfWeek: number;
+    week: number; // 1-4
+    dayOfWeek: number; // 0-6 (Mon=0, Sun=6)
     dayName: string;
-    hour: number;
     wastePercentage: number;
     intensity: number; // 0-1 for color scaling
 }
 
 export const generateWasteHeatmap = (): HeatmapCell[] => {
     const heatmap: HeatmapCell[] = [];
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-    for (let day = 0; day < 7; day++) {
-        for (let hour = 7; hour <= 21; hour++) {
-            // Generate realistic waste patterns
-            let baseWaste = 12; // Base waste percentage
-
-            // Higher waste at end of day
-            if (hour >= 19) baseWaste += 8;
-
-            // Higher waste on slower days
-            if (day === 1 || day === 2) baseWaste += 4;
-
-            // Lower waste during peak hours
-            if (hour >= 8 && hour <= 10) baseWaste -= 3;
-            if (hour >= 12 && hour <= 13) baseWaste -= 2;
-
-            // Add random variance
-            const variance = (Math.random() - 0.5) * 6;
-            const wastePercentage = Math.max(0, Math.min(30, baseWaste + variance));
+    // Generate 28 days with GitHub-style variation
+    for (let week = 0; week < 4; week++) {
+        for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+            // Base waste with high variance (5-35%)
+            let baseWaste = 8 + Math.random() * 15; // 8-23% base
+            
+            // Weekend pattern (Sat/Sun have higher waste)
+            const isWeekend = dayOfWeek === 5 || dayOfWeek === 6;
+            if (isWeekend) {
+                baseWaste += 5 + Math.random() * 10; // +5-15% on weekends
+            }
+            
+            // Random "hot spots" like GitHub (some days just have way more waste)
+            const hotSpotChance = Math.random();
+            if (hotSpotChance > 0.85) {
+                // 15% chance of high waste day
+                baseWaste += 10 + Math.random() * 15; // Spike
+            } else if (hotSpotChance < 0.15) {
+                // 15% chance of very low waste day
+                baseWaste = 3 + Math.random() * 5; // Very low
+            }
+            
+            // Mid-week dip (Wed-Thu sometimes lower)
+            if (dayOfWeek === 2 || dayOfWeek === 3) {
+                if (Math.random() > 0.6) {
+                    baseWaste *= 0.7; // 40% chance of reduction
+                }
+            }
+            
+            // Occasional "dead days" with minimal waste
+            if (Math.random() > 0.92) {
+                baseWaste = 2 + Math.random() * 3; // Very minimal waste
+            }
+            
+            // Clamp to reasonable range
+            const wastePercentage = Math.max(2, Math.min(40, baseWaste));
 
             heatmap.push({
-                dayOfWeek: day,
-                dayName: dayNames[day],
-                hour,
+                week: week + 1,
+                dayOfWeek,
+                dayName: dayNames[dayOfWeek],
                 wastePercentage: Number(wastePercentage.toFixed(1)),
-                intensity: wastePercentage / 30, // Normalize to 0-1
+                intensity: Math.min(wastePercentage / 40, 1), // Normalize to 0-1, max at 40%
             });
         }
     }
