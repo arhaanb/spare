@@ -9,6 +9,7 @@ import {
     LayoutDashboard,
     ShoppingBag,
     ClipboardList,
+    Upload,
     Settings,
     LogOut
 } from "lucide-react";
@@ -16,6 +17,7 @@ import {
 const navItems = [
     { label: "Dashboard", href: "/", icon: LayoutDashboard },
     { label: "Rescue Bags", href: "/rescue-bags", icon: ShoppingBag },
+    { label: "Upload & Extract", href: "/rescue-flow", icon: Upload },
     { label: "Orders", href: "/orders", icon: ClipboardList },
     { label: "Settings", href: "/settings", icon: Settings },
 ];

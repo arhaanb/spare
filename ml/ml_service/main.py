@@ -9,14 +9,27 @@ from .models import (
     FoodClassificationResponse,
     PriceOptimizationRequest,
     PriceOptimizationResponse,
+    MerchantCreate,
+    MerchantLogin,
+    MerchantResponse,
+    LeftoverItemsRequest,
+    LeftoverItemsResponse,
+    RescueBagsRequest,
+    RescueBagsResponse,
     ErrorResponse
 )
 from .food_classification import classify_food_from_image, rescue_bag_creation
 from .price_optimization import get_price_optimizer
 from .db_helper import (
+    ensure_indexes,
+    create_merchant,
+    login_merchant,
+    get_merchant_by_id,
     upsert_leftover_items,
+    upsert_leftover_items_by_request,
     get_leftover_items,
     get_merchant_menu,
+    save_rescue_bags,
     upsert_rescue_bags
 )
 
@@ -37,11 +50,160 @@ app.add_middleware(
 )
 
 
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database indexes on startup"""
+    ensure_indexes()
+
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "service": "Spare ML Service"}
 
+
+# ============================================================================
+# MERCHANT CRUD ENDPOINTS
+# ============================================================================
+
+@app.post(
+    "/api/merchants",
+    response_model=MerchantResponse,
+    status_code=201,
+    responses={400: {"model": ErrorResponse}}
+)
+async def create_merchant_endpoint(merchant: MerchantCreate):
+    """
+    Register a new merchant account
+    
+    Args:
+        merchant: Merchant data including email, password, menu, etc.
+        
+    Returns:
+        Created merchant document (without password)
+    """
+    try:
+        merchant_data = merchant.model_dump()
+        result = create_merchant(merchant_data)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail={"error": str(e)})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": f"Internal server error: {str(e)}"})
+
+
+@app.post(
+    "/api/merchants/login",
+    response_model=MerchantResponse,
+    responses={401: {"model": ErrorResponse}}
+)
+async def login_merchant_endpoint(credentials: MerchantLogin):
+    """
+    Authenticate merchant with email and password
+    
+    Args:
+        credentials: Email and password
+        
+    Returns:
+        Merchant document (without password)
+    """
+    try:
+        result = login_merchant(credentials.email, credentials.password)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail={"error": str(e)})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": f"Internal server error: {str(e)}"})
+
+
+@app.get(
+    "/api/merchants/{merchant_id}",
+    response_model=MerchantResponse,
+    responses={404: {"model": ErrorResponse}}
+)
+async def get_merchant_endpoint(merchant_id: str):
+    """
+    Get merchant by merchant_id
+    
+    Args:
+        merchant_id: Merchant UUID
+        
+    Returns:
+        Merchant document (without password)
+    """
+    try:
+        result = get_merchant_by_id(merchant_id)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail={"error": str(e)})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": f"Internal server error: {str(e)}"})
+
+
+# ============================================================================
+# LEFTOVER ITEMS & RESCUE BAGS ENDPOINTS
+# ============================================================================
+
+@app.post(
+    "/api/leftover-items",
+    response_model=LeftoverItemsResponse,
+    responses={400: {"model": ErrorResponse}}
+)
+async def save_leftover_items_endpoint(request: LeftoverItemsRequest):
+    """
+    Save or update leftover food items for a merchant on a specific date (UPSERT)
+    
+    Args:
+        request: merchant_id, date, and items array
+        
+    Returns:
+        Success message
+    """
+    try:
+        if not request.merchant_id or not request.date or not request.items:
+            raise ValueError("merchant_id, date, and items are required")
+        
+        items_data = [item.model_dump() for item in request.items]
+        result = upsert_leftover_items_by_request(request.merchant_id, request.date, items_data)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail={"error": str(e)})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": f"Internal server error: {str(e)}"})
+
+
+@app.post(
+    "/api/rescue-bags",
+    response_model=RescueBagsResponse,
+    status_code=201,
+    responses={400: {"model": ErrorResponse}}
+)
+async def save_rescue_bags_endpoint(request: RescueBagsRequest):
+    """
+    Save generated rescue bags for a merchant (INSERT)
+    
+    Args:
+        request: merchant_id, date, and bags array
+        
+    Returns:
+        Success message
+    """
+    try:
+        if not request.merchant_id or not request.date or not request.bags:
+            raise ValueError("merchant_id, date, and bags are required")
+        
+        bags_data = [bag.model_dump() for bag in request.bags]
+        result = save_rescue_bags(request.merchant_id, request.date, bags_data)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail={"error": str(e)})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": f"Internal server error: {str(e)}"})
+
+
+# ============================================================================
+# ML ENDPOINTS (Existing)
+# ============================================================================
 
 @app.post("/api/ml/food-extraction")
 async def food_extraction_endpoint(request: dict = Body(...)):
@@ -135,11 +297,14 @@ async def root():
         "version": "1.0.0",
         "endpoints": {
             "health": "/health",
-            "food_extraction": "/api/ml/food-extraction",
-            "rescue_bag_creation": "/api/ml/rescue-bag-creation",
-            "food_classification": "/api/ml/food-classification",
-            "food_classification_upload": "/api/ml/food-classification/upload",
-            "price_optimization": "/api/ml/price-optimization"
+            "create_merchant": "POST /api/merchants",
+            "login_merchant": "POST /api/merchants/login",
+            "get_merchant": "GET /api/merchants/{merchant_id}",
+            "save_leftover_items": "POST /api/leftover-items",
+            "save_rescue_bags": "POST /api/rescue-bags",
+            "food_extraction": "POST /api/ml/food-extraction",
+            "rescue_bag_creation": "POST /api/ml/rescue-bag-creation",
+            "price_optimization": "POST /api/ml/price-optimization"
         }
     }
 
