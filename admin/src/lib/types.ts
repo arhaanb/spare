@@ -133,10 +133,7 @@ export interface ExtractedFoodItem {
 }
 
 export interface FoodExtractionResponse {
-    merchant_id: string;
-    date: string;
     items: ExtractedFoodItem[];
-    created_at: string;
 }
 
 export interface RescueBagItem {
@@ -155,8 +152,5 @@ export interface RescueBagSuggestion {
 }
 
 export interface RescueBagCreationResponse {
-    merchant_id: string;
-    date: string;
     bags: RescueBagSuggestion[];
-    created_at: string;
 }

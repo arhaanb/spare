@@ -1,12 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     mockRestaurantStats,
     mockDailyStats,
     mockOrders,
-    mockRescueBags,
     formatCurrency,
     getCategoryLabel
 } from "@/lib/mockData";
@@ -17,11 +17,57 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { useAuth } from "@/components/AuthProvider";
+import { getTodaysRescueBags, TodaysRescueBagsStats } from "@/lib/api/backend-api";
 
 export default function DashboardPage() {
+    const { user } = useAuth();
     const stats = mockRestaurantStats;
     const recentOrders = mockOrders.slice(0, 5);
-    const availableBags = mockRescueBags.filter(b => b.status === 'available');
+    
+    const [rescueBagsData, setRescueBagsData] = useState<TodaysRescueBagsStats | null>(null);
+    const [isLoadingBags, setIsLoadingBags] = useState(true);
+
+    useEffect(() => {
+        if (user?.merchantId) {
+            loadTodaysRescueBags();
+        }
+    }, [user]);
+
+    const loadTodaysRescueBags = async () => {
+        if (!user?.merchantId) return;
+        
+        setIsLoadingBags(true);
+        try {
+            const data = await getTodaysRescueBags(user.merchantId);
+            setRescueBagsData(data);
+        } catch (error) {
+            console.error('Failed to load rescue bags:', error);
+            // Set empty data on error
+            setRescueBagsData({
+                available: 0,
+                sold: 0,
+                pending_pickup: 0,
+                bags: []
+            });
+        } finally {
+            setIsLoadingBags(false);
+        }
+    };
+
+    const getBagTypeLabel = (bagType: string): string => {
+        const labels: Record<string, string> = {
+            'regular_veg': 'Regular Veg',
+            'regular_non_veg': 'Regular Non-Veg',
+            'large_veg': 'Large Veg',
+            'large_non_veg': 'Large Non-Veg'
+        };
+        return labels[bagType] || bagType;
+    };
+
+    const countItemsInBag = (bag: any): number => {
+        return bag.items.reduce((sum: number, item: any) => sum + item.quantity, 0);
+    };
 
     return (
         <>
@@ -108,13 +154,13 @@ export default function DashboardPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Today's Bags - More functional */}
+                    {/* Today's Bags - Real data from MongoDB */}
                     <Card className="bg-spare-bg-light border-white/5">
                         <CardHeader className="pb-2">
                             <div className="flex items-center justify-between">
                                 <CardTitle className="text-base font-medium text-white">Today's Rescue Bags</CardTitle>
                                 <Link
-                                    href="/rescue-bags"
+                                    href="/rescue-flow"
                                     className="text-xs text-accent hover:text-accent-hover flex items-center gap-1 transition-colors"
                                 >
                                     Manage <ArrowRight className="w-3 h-3" />
@@ -122,39 +168,58 @@ export default function DashboardPage() {
                             </div>
                         </CardHeader>
                         <CardContent className="pt-4">
-                            {/* Summary stats */}
-                            <div className="grid grid-cols-3 gap-4 mb-4 pb-4 border-b border-white/5">
-                                <div className="text-center">
-                                    <p className="text-2xl font-bold text-accent">{stats.bagsAvailable}</p>
-                                    <p className="text-xs text-muted-foreground mt-1">Available</p>
+                            {isLoadingBags ? (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    Loading...
                                 </div>
-                                <div className="text-center">
-                                    <p className="text-2xl font-bold text-pink">{stats.bagsSoldToday}</p>
-                                    <p className="text-xs text-muted-foreground mt-1">Sold</p>
-                                </div>
-                                <div className="text-center">
-                                    <p className="text-2xl font-bold text-yellow-500">{stats.pendingPickups}</p>
-                                    <p className="text-xs text-muted-foreground mt-1">Pending Pickup</p>
-                                </div>
-                            </div>
-
-                            {/* Available bags list */}
-                            <div className="space-y-2">
-                                {availableBags.slice(0, 3).map((bag) => (
-                                    <div key={bag.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
-                                        <div>
-                                            <p className="text-sm font-medium text-white">{getCategoryLabel(bag.category)}</p>
-                                            <p className="text-xs text-muted-foreground">{bag.quantityRemaining} left</p>
+                            ) : rescueBagsData ? (
+                                <>
+                                    {/* Summary stats */}
+                                    <div className="grid grid-cols-3 gap-4 mb-4 pb-4 border-b border-white/5">
+                                        <div className="text-center">
+                                            <p className="text-2xl font-bold text-accent">{rescueBagsData.available}</p>
+                                            <p className="text-xs text-muted-foreground mt-1">Available</p>
                                         </div>
-                                        <Badge className="bg-accent/20 text-accent border-0 text-xs">
-                                            {formatCurrency(bag.price)}
-                                        </Badge>
+                                        <div className="text-center">
+                                            <p className="text-2xl font-bold text-pink">{rescueBagsData.sold}</p>
+                                            <p className="text-xs text-muted-foreground mt-1">Sold</p>
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="text-2xl font-bold text-yellow-500">{rescueBagsData.pending_pickup}</p>
+                                            <p className="text-xs text-muted-foreground mt-1">Pending Pickup</p>
+                                        </div>
                                     </div>
-                                ))}
-                                {availableBags.length === 0 && (
-                                    <p className="text-sm text-muted-foreground text-center py-4">No bags available</p>
-                                )}
-                            </div>
+
+                                    {/* Available bags list */}
+                                    <div className="space-y-2">
+                                        {rescueBagsData.bags.length > 0 ? (
+                                            rescueBagsData.bags.slice(0, 3).map((bag, index) => (
+                                                <div key={index} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                                                    <div>
+                                                        <p className="text-sm font-medium text-white">{getBagTypeLabel(bag.bag_type)}</p>
+                                                        <p className="text-xs text-muted-foreground">{countItemsInBag(bag)} items</p>
+                                                    </div>
+                                                    <Badge className="bg-accent/20 text-accent border-0 text-xs">
+                                                        ₹{bag.target_price}
+                                                    </Badge>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-8">
+                                                <p className="text-sm text-muted-foreground mb-2">No bags created yet</p>
+                                                <Link
+                                                    href="/rescue-flow"
+                                                    className="text-xs text-accent hover:text-accent-hover"
+                                                >
+                                                    Create your first rescue bags →
+                                                </Link>
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            ) : (
+                                <p className="text-sm text-muted-foreground text-center py-4">Failed to load rescue bags</p>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
