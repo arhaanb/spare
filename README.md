@@ -49,8 +49,8 @@ Students, interns, and early-career workers survive on **₹80–₹200/day** fo
 <td>
 
 1. Near closing time (60–90 min before), mark Rescue Bags as available
-2. Upload photos of surplus items — AI classifies & quantifies automatically
-3. Set bag types: **Regular**, **Large**, or **Make Your Own**. These are distributed and priced automatically throigh our distribution engine.
+2. Upload photos of surplus items - AI classifies & quantifies automatically
+3. Set bag types: **Regular**, **Large**, or **Make Your Own**. These are distributed and priced automatically through our distribution engine.
 4. Pack orders in provided branding and hand off during pickup window
 
 </td>
@@ -70,19 +70,10 @@ Students, interns, and early-career workers survive on **₹80–₹200/day** fo
 
 ## Tech Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                              SPARE PLATFORM                             │
-├──────────────────┬──────────────────┬──────────────────┬───────────────┤
-│   📱 Mobile App  │  🖥️ Admin Portal │   ⚙️ API Server  │   🤖 ML Service│
-│   (Consumer)     │   (Merchant)     │    (Backend)     │   (AI/Pricing)│
-├──────────────────┼──────────────────┼──────────────────┼───────────────┤
-│ React Native     │ Next.js 16       │ Express.js       │ FastAPI       │
-│ Expo SDK 54      │ Tailwind CSS     │ MongoDB          │ Gemini AI     │
-│ React Navigation │ Radix UI         │ Mongoose         │ Scikit-learn  │
-│ Reanimated       │ Better-Auth      │ REST API         │ Pydantic      │
-└──────────────────┴──────────────────┴──────────────────┴───────────────┘
-```
+<a href="https://www.figma.com/board/Xb8Gax2yGLjwoEKlD264iV/Spare-%7C-User-Flows?node-id=0-1&t=m7dd50qxlRqr9NDE-1">
+  <img width="3984" height="3918" alt="image" src="https://github.com/user-attachments/assets/1ba248c2-e5d8-4227-9089-8b9e5efaad9b" />
+</a>
+
 
 ### `/mobile` — Consumer App
 React Native + Expo mobile app for end consumers.
@@ -107,12 +98,6 @@ Next.js web portal for restaurant/bakery owners to manage surplus inventory.
 | Components | Radix UI primitives |
 | Auth | Better-Auth |
 | Icons | Lucide React |
-
-**Features:**
-- Dashboard overview
-- Create/manage Rescue Bags
-- Upload food photos for AI classification
-- View orders and analytics
 
 ---
 
