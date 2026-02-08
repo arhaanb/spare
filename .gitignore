@@ -43,3 +43,11 @@ yarn-error.*
 ./admin/.next
 */.next
 */.next/*
+
+*.env
+./api/.env
+./admin/.env
+./mobile/.env
+./api/node_modules
+./admin/node_modules
+./mobile/node_modules   

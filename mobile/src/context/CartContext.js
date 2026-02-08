@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import client from '../api/client';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext();
 
@@ -12,6 +14,39 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }) => {
     const [items, setItems] = useState([]);
+    const { signedIn } = useAuth();
+
+    // Sync to API helper
+    const syncCartToApi = async (cartItems) => {
+        if (!signedIn) return;
+        try {
+            const restaurantId = cartItems.length > 0 ? cartItems[0].restaurant.id : null;
+            await client.post('/user/cart', { items: cartItems, restaurantId });
+        } catch (error) {
+            console.error('Error syncing cart:', error);
+        }
+    };
+
+    // Load cart on login
+    useEffect(() => {
+        if (!signedIn) {
+            setItems([]);
+            return;
+        }
+
+        const fetchCart = async () => {
+            try {
+                const { data } = await client.get('/user/cart');
+                if (data.success && data.data.items) {
+                    setItems(data.data.items);
+                }
+            } catch (error) {
+                console.error('Error fetching cart:', error);
+            }
+        };
+
+        fetchCart();
+    }, [signedIn]);
 
     // Add or update item in cart (preference-based)
     const addToCart = useCallback((bagOption, quantity, preference, restaurant) => {
@@ -19,9 +54,10 @@ export const CartProvider = ({ children }) => {
         const itemId = `${restaurant.id}-${bagOption.id || bagOption.role}-${preference}`;
 
         setItems((prevItems) => {
+            let newItems;
             // Enforce single restaurant: if adding from a different restaurant, clear first
             if (prevItems.length > 0 && prevItems[0].restaurant.id !== restaurant.id) {
-                return [
+                newItems = [
                     {
                         id: itemId,
                         bagOption,
@@ -31,40 +67,48 @@ export const CartProvider = ({ children }) => {
                         addedAt: Date.now(),
                     },
                 ];
-            }
-
-            const existingIndex = prevItems.findIndex((item) => item.id === itemId);
-
-            if (existingIndex >= 0) {
-                // Update existing item
-                const updated = [...prevItems];
-                updated[existingIndex] = {
-                    ...updated[existingIndex],
-                    quantity,
-                    preference,
-                };
-                return updated;
             } else {
-                // Add new item
-                return [
-                    ...prevItems,
-                    {
-                        id: itemId,
-                        bagOption,
+                const existingIndex = prevItems.findIndex((item) => item.id === itemId);
+
+                if (existingIndex >= 0) {
+                    // Update existing item
+                    const updated = [...prevItems];
+                    updated[existingIndex] = {
+                        ...updated[existingIndex],
                         quantity,
                         preference,
-                        restaurant,
-                        addedAt: Date.now(),
-                    },
-                ];
+                    };
+                    newItems = updated;
+                } else {
+                    // Add new item
+                    newItems = [
+                        ...prevItems,
+                        {
+                            id: itemId,
+                            bagOption,
+                            quantity,
+                            preference,
+                            restaurant,
+                            addedAt: Date.now(),
+                        },
+                    ];
+                }
             }
+
+            // Sync
+            syncCartToApi(newItems);
+            return newItems;
         });
-    }, []);
+    }, [signedIn]);
 
     // Remove item from cart
     const removeFromCart = useCallback((itemId) => {
-        setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
-    }, []);
+        setItems((prevItems) => {
+            const newItems = prevItems.filter((item) => item.id !== itemId);
+            syncCartToApi(newItems);
+            return newItems;
+        });
+    }, [signedIn]);
 
     // Update item quantity
     const updateQuantity = useCallback((itemId, quantity) => {
@@ -73,17 +117,20 @@ export const CartProvider = ({ children }) => {
             return;
         }
 
-        setItems((prevItems) =>
-            prevItems.map((item) =>
+        setItems((prevItems) => {
+            const newItems = prevItems.map((item) =>
                 item.id === itemId ? { ...item, quantity } : item
-            )
-        );
-    }, [removeFromCart]);
+            );
+            syncCartToApi(newItems);
+            return newItems;
+        });
+    }, [removeFromCart, signedIn]);
 
     // Clear entire cart
     const clearCart = useCallback(() => {
         setItems([]);
-    }, []);
+        syncCartToApi([]);
+    }, [signedIn]);
 
     // Get cart total
     const getCartTotal = useCallback(() => {
