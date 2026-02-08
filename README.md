@@ -74,6 +74,8 @@ Students, interns, and early-career workers survive on **₹80–₹200/day** fo
   <img width="3984" height="3386" alt="image" src="https://github.com/user-attachments/assets/08856248-efb2-43a3-baf1-818921c3dc68" />
 </a>
 
+<br>
+
 
 ### `/mobile` — Consumer App
 React Native + Expo mobile app for end consumers.
