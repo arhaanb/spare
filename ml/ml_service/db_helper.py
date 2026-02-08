@@ -1,22 +1,23 @@
 """
 MongoDB helper functions for food extraction and rescue bag operations
 """
-import configparser
+import os
 from pymongo import MongoClient
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 import bcrypt
 import uuid
+from dotenv import load_dotenv
 
-# Load config
-config = configparser.ConfigParser()
-config.read("config.ini")
+# Load environment variables
+load_dotenv()
 
-MONGO_URL = config["MONGODB"]["mongo_url"]
-DATABASE_NAME = config["MONGODB"]["database"]
-COLLECTION_MERCHANTS = config["MONGODB"]["collection_merchants"]
-COLLECTION_LEFTOVER_ITEMS = config["MONGODB"]["collection_leftover_items"]
-COLLECTION_RESCUE_BAGS = config["MONGODB"]["collection_rescue_bags"]
+# MongoDB configuration from environment variables
+MONGO_URL = os.getenv("MONGODB_URI")
+DATABASE_NAME = os.getenv("MONGODB_DATABASE", "spare")
+COLLECTION_MERCHANTS = "merchants"
+COLLECTION_LEFTOVER_ITEMS = "leftover_items"
+COLLECTION_RESCUE_BAGS = "rescue_bags"
 
 
 def get_db():

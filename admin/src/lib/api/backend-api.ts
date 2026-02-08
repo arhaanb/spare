@@ -21,6 +21,72 @@ export class BackendAPIError extends Error {
 }
 
 // ============================================================================
+// RESCUE BAGS QUERIES
+// ============================================================================
+
+export interface TodaysRescueBagsStats {
+  available: number;
+  sold: number;
+  pending_pickup: number;
+  bags: Array<{
+    bag_type: string;
+    target_price: number;
+    items: Array<{
+      food_name: string;
+      quantity: number;
+      unit_price: number;
+    }>;
+    estimated_total_value: number;
+  }>;
+}
+
+/**
+ * Get today's rescue bags statistics
+ * This would ideally be a GET endpoint on the backend
+ * For now, we'll need to add this endpoint
+ */
+export async function getTodaysRescueBags(merchant_id: string): Promise<TodaysRescueBagsStats> {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const response = await fetch(`${BACKEND_API_URL}/rescue-bags/today?merchant_id=${merchant_id}&date=${today}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      // If not found, return empty stats
+      if (response.status === 404) {
+        return {
+          available: 0,
+          sold: 0,
+          pending_pickup: 0,
+          bags: []
+        };
+      }
+      
+      const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new BackendAPIError(
+        error.error || error.detail || 'Failed to fetch rescue bags',
+        response.status,
+        error
+      );
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (error instanceof BackendAPIError) {
+      throw error;
+    }
+    throw new BackendAPIError(
+      `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      0
+    );
+  }
+}
+
+// ============================================================================
 // MERCHANT ENDPOINTS
 // ============================================================================
 

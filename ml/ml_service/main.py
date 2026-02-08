@@ -25,12 +25,11 @@ from .db_helper import (
     create_merchant,
     login_merchant,
     get_merchant_by_id,
-    upsert_leftover_items,
     upsert_leftover_items_by_request,
     get_leftover_items,
     get_merchant_menu,
     save_rescue_bags,
-    upsert_rescue_bags
+    get_rescue_bags_collection
 )
 
 # Initialize FastAPI app
@@ -201,6 +200,51 @@ async def save_rescue_bags_endpoint(request: RescueBagsRequest):
         raise HTTPException(status_code=500, detail={"error": f"Internal server error: {str(e)}"})
 
 
+@app.get("/api/rescue-bags/today")
+async def get_todays_rescue_bags_endpoint(merchant_id: str, date: str = None):
+    """
+    Get today's rescue bags for a merchant
+    
+    Args:
+        merchant_id: Merchant UUID (query parameter)
+        date: Optional date (YYYY-MM-DD), defaults to today
+        
+    Returns:
+        Rescue bags data with stats
+    """
+    try:
+        from datetime import datetime as dt
+        
+        if not date:
+            date = dt.now().strftime("%Y-%m-%d")
+        
+        # Get rescue bags from DB
+        rescue_bags_collection = get_rescue_bags_collection()
+        doc = rescue_bags_collection.find_one(
+            {"merchant_id": merchant_id, "date": date},
+            {"_id": 0}
+        )
+        
+        if not doc:
+            raise HTTPException(status_code=404, detail={"error": "No rescue bags found for this date"})
+        
+        bags = doc.get("bags", [])
+        
+        # Calculate stats (for now, everything is "available" until we have order tracking)
+        stats = {
+            "available": len(bags),
+            "sold": 0,  # TODO: Calculate from orders
+            "pending_pickup": 0,  # TODO: Calculate from orders
+            "bags": bags
+        }
+        
+        return stats
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": f"Internal server error: {str(e)}"})
+
+
 # ============================================================================
 # ML ENDPOINTS (Existing)
 # ============================================================================
@@ -208,14 +252,15 @@ async def save_rescue_bags_endpoint(request: RescueBagsRequest):
 @app.post("/api/ml/food-extraction")
 async def food_extraction_endpoint(request: dict = Body(...)):
     """
-    Extract food items from image, save to DB, return saved document.
+    Extract food items from image and return results immediately.
+    Does NOT save to database - that happens when user confirms items.
     
     Required body parameters:
         merchant_id: Merchant UUID
         image_base64: Base64 encoded image string
     
     Returns:
-        MongoDB document with leftover items
+        List of extracted food items (direct LLM response)
     """
     merchant_id = request.get("merchant_id")
     image_base64 = request.get("image_base64")
@@ -223,38 +268,38 @@ async def food_extraction_endpoint(request: dict = Body(...)):
     # Call LLM to classify food (pulls menu from DB internally)
     leftover_items = classify_food_from_image(merchant_id=merchant_id, image_base64=image_base64)
     
-    # Upsert to DB by merchant_id + date
-    saved_doc = upsert_leftover_items(merchant_id, leftover_items)
-    
-    return saved_doc
+    # Return LLM response directly - frontend will handle saving after confirmation
+    return {"items": leftover_items}
 
 
 @app.post("/api/ml/rescue-bag-creation")
 async def rescue_bag_creation_endpoint(request: dict = Body(...)):
     """
-    Create rescue bags from leftover food items in DB.
+    Create rescue bags from leftover food items.
+    Does NOT save to database - that happens when user confirms bags.
     
-    Required body parameter:
+    Required body parameters:
         merchant_id: Merchant UUID
+        items: List of leftover items (optional - will pull from DB if not provided)
     
     Returns:
-        MongoDB document with rescue bags
+        List of suggested rescue bags (direct LLM response)
     """
     merchant_id = request.get("merchant_id")
+    items = request.get("items")
     
-    # Pull leftover items from DB
-    leftover_items = get_leftover_items(merchant_id)
+    # If items not provided, pull from DB
+    if not items:
+        items = get_leftover_items(merchant_id)
     
     # Pull menu from DB
     menu = get_merchant_menu(merchant_id)
     
     # Call LLM to create rescue bags
-    rescue_bags = rescue_bag_creation(merchant_id=merchant_id, food_classification_output=leftover_items, menu_json=menu)
+    rescue_bags = rescue_bag_creation(merchant_id=merchant_id, food_classification_output=items, menu_json=menu)
     
-    # Upsert to DB by merchant_id + date
-    saved_doc = upsert_rescue_bags(merchant_id, rescue_bags)
-    
-    return saved_doc
+    # Return LLM response directly - frontend will handle saving after confirmation
+    return {"bags": rescue_bags}
 
 
 @app.post(
