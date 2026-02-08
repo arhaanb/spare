@@ -47,12 +47,28 @@ def ensure_indexes():
     """Ensure database indexes are created"""
     merchants = get_merchants_collection()
     leftover_items = get_leftover_items_collection()
+    rescue_bags = get_rescue_bags_collection()
     
-    # Unique index on email for merchants
-    merchants.create_index("email", unique=True)
+    try:
+        # Unique index on email for merchants
+        merchants.create_index("email", unique=True)
+    except Exception as e:
+        print(f"Warning: Could not create email index: {e}")
+        print("This is okay if the index already exists")
     
-    # Compound index on merchant_id + date for leftover_items
-    leftover_items.create_index([("merchant_id", 1), ("date", 1)], unique=True)
+    try:
+        # Compound index on merchant_id + date for leftover_items
+        leftover_items.create_index([("merchant_id", 1), ("date", 1)], unique=True)
+    except Exception as e:
+        print(f"Warning: Could not create leftover_items index: {e}")
+        print("This is okay if the index already exists")
+    
+    try:
+        # Compound index on merchant_id + date for rescue_bags (prevents duplicates)
+        rescue_bags.create_index([("merchant_id", 1), ("date", 1)], unique=True)
+    except Exception as e:
+        print(f"Warning: Could not create rescue_bags index: {e}")
+        print("This is okay if the index already exists")
 
 
 def hash_password(password: str) -> str:
@@ -286,7 +302,7 @@ def get_leftover_items(merchant_id: str) -> List[Dict[str, Any]]:
 
 def save_rescue_bags(merchant_id: str, date: str, bags: List[Dict[str, Any]]) -> Dict[str, str]:
     """
-    Save rescue bags for merchant (INSERT, not upsert)
+    Save rescue bags for merchant (UPSERT - replaces existing bags for the same date)
     
     Args:
         merchant_id: Merchant UUID
@@ -302,10 +318,16 @@ def save_rescue_bags(merchant_id: str, date: str, bags: List[Dict[str, Any]]) ->
         "merchant_id": merchant_id,
         "date": date,
         "bags": bags,
-        "created_at": datetime.now().isoformat()
+        "created_at": datetime.now().isoformat(),
+        "updated_at": datetime.now().isoformat()
     }
     
-    collection.insert_one(doc)
+    # Use upsert to replace existing bags for the same merchant_id + date
+    collection.update_one(
+        {"merchant_id": merchant_id, "date": date},
+        {"$set": doc},
+        upsert=True
+    )
     
     return {"success": True, "message": "Rescue bags saved successfully"}
 

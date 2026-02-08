@@ -66,8 +66,23 @@ def classify_food_from_image(
 
     response = requests.post(GEMINI_URL, headers=headers, json=payload)
     response_json = response.json()
-    llm_raw_output = response_json["candidates"][0]["content"]["parts"][0]["text"].strip()
-    food_classification_output = json.loads(llm_raw_output)
+    
+    # Check for API errors
+    if "error" in response_json:
+        error_msg = response_json.get("error", {}).get("message", "Unknown error")
+        raise Exception(f"Gemini API error: {error_msg}")
+    
+    # Check if candidates exist in response
+    if "candidates" not in response_json or len(response_json["candidates"]) == 0:
+        print("Full API response:", json.dumps(response_json, indent=2))
+        raise Exception(f"No candidates in Gemini API response. This usually means the API request was blocked or failed. Response: {response_json}")
+    
+    try:
+        llm_raw_output = response_json["candidates"][0]["content"]["parts"][0]["text"].strip()
+        food_classification_output = json.loads(llm_raw_output)
+    except (KeyError, IndexError, json.JSONDecodeError) as e:
+        print("Full API response:", json.dumps(response_json, indent=2))
+        raise Exception(f"Failed to parse Gemini API response: {str(e)}. Response: {response_json}")
 
     # Attach prices and non_veg field to food classification output
     menu_by_name: Dict[str, Any] = {item.get("food_name"): item for item in menu_json}
@@ -177,8 +192,22 @@ def rescue_bag_creation(
     response = requests.post(GEMINI_URL, headers=headers, json=payload)
     response_json = response.json()
     
-    llm_raw_output = response_json["candidates"][0]["content"]["parts"][0]["text"].strip()
-    suggested_rescue_bags = json.loads(llm_raw_output)
+    # Check for API errors
+    if "error" in response_json:
+        error_msg = response_json.get("error", {}).get("message", "Unknown error")
+        raise Exception(f"Gemini API error: {error_msg}")
+    
+    # Check if candidates exist in response
+    if "candidates" not in response_json or len(response_json["candidates"]) == 0:
+        print("Full API response:", json.dumps(response_json, indent=2))
+        raise Exception(f"No candidates in Gemini API response. This usually means the API request was blocked or failed. Response: {response_json}")
+    
+    try:
+        llm_raw_output = response_json["candidates"][0]["content"]["parts"][0]["text"].strip()
+        suggested_rescue_bags = json.loads(llm_raw_output)
+    except (KeyError, IndexError, json.JSONDecodeError) as e:
+        print("Full API response:", json.dumps(response_json, indent=2))
+        raise Exception(f"Failed to parse Gemini API response: {str(e)}. Response: {response_json}")
     
     # Validate and fix veg bags - remove any non-veg items from menu.json
     validated_rescue_bags = check_veg_rescue_bag_creation(suggested_rescue_bags, menu_json)
