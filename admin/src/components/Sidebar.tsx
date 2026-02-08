@@ -8,9 +8,7 @@ import { useAuth } from "@/components/AuthProvider";
 import {
     LayoutDashboard,
     ShoppingBag,
-    ClipboardList,
     Upload,
-    Settings,
     LogOut,
     TrendingUp
 } from "lucide-react";
@@ -20,8 +18,6 @@ const navItems = [
     { label: "Demand Forecast", href: "/forecast", icon: TrendingUp },
     { label: "Rescue Bags", href: "/rescue-bags", icon: ShoppingBag },
     { label: "Upload & Extract", href: "/rescue-flow", icon: Upload },
-    { label: "Orders", href: "/orders", icon: ClipboardList },
-    { label: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function Sidebar() {

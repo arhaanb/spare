@@ -25,35 +25,41 @@ export default function DashboardPage() {
     const stats = mockRestaurantStats;
     const recentOrders = mockOrders.slice(0, 5);
     
-    const [rescueBagsData, setRescueBagsData] = useState<TodaysRescueBagsStats | null>(null);
-    const [isLoadingBags, setIsLoadingBags] = useState(true);
-
-    useEffect(() => {
-        if (user?.merchantId) {
-            loadTodaysRescueBags();
-        }
-    }, [user]);
-
-    const loadTodaysRescueBags = async () => {
-        if (!user?.merchantId) return;
-        
-        setIsLoadingBags(true);
-        try {
-            const data = await getTodaysRescueBags(user.merchantId);
-            setRescueBagsData(data);
-        } catch (error) {
-            console.error('Failed to load rescue bags:', error);
-            // Set empty data on error
-            setRescueBagsData({
-                available: 0,
-                sold: 0,
-                pending_pickup: 0,
-                bags: []
-            });
-        } finally {
-            setIsLoadingBags(false);
-        }
+    // Hardcoded rescue bags data
+    const rescueBagsData: TodaysRescueBagsStats = {
+        available: 8,
+        sold: 12,
+        pending_pickup: 3,
+        bags: [
+            {
+                bag_type: 'regular_veg',
+                target_price: 120,
+                items: [
+                    { name: 'Paneer Sandwich', quantity: 2 },
+                    { name: 'Veg Croissant', quantity: 1 },
+                    { name: 'Fruit Salad', quantity: 1 }
+                ]
+            },
+            {
+                bag_type: 'regular_non_veg',
+                target_price: 150,
+                items: [
+                    { name: 'Chicken Wrap', quantity: 2 },
+                    { name: 'Egg Muffin', quantity: 2 }
+                ]
+            },
+            {
+                bag_type: 'large_veg',
+                target_price: 280,
+                items: [
+                    { name: 'Veg Pizza Slice', quantity: 3 },
+                    { name: 'Paneer Tikka', quantity: 2 },
+                    { name: 'Veg Burger', quantity: 2 }
+                ]
+            }
+        ]
     };
+    const isLoadingBags = false;
 
     const getBagTypeLabel = (bagType: string): string => {
         const labels: Record<string, string> = {

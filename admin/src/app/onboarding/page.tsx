@@ -18,7 +18,7 @@ type MenuInputMode = "form" | "json";
 export default function OnboardingPage() {
   const router = useRouter();
   const { setMerchantSession } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>("new");
+  const [activeTab, setActiveTab] = useState<TabType>("returning");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -79,6 +79,12 @@ export default function OnboardingPage() {
     }
   };
 
+  const handleAutofillLogin = () => {
+    setLoginEmail("admin@bluetokaicoffee.com");
+    setLoginPassword("admin@bluetokaicoffee.com");
+    setError("");
+  };
+
   const handleAddMenuItem = () => {
     if (currentItem.food_name && currentItem.food_type && currentItem.price > 0) {
       setMenuItems([...menuItems, currentItem]);
@@ -113,6 +119,110 @@ export default function OnboardingPage() {
     } catch (err) {
       setError("Invalid JSON format");
     }
+  };
+
+  const handleAutofillBlueTokai = () => {
+    // Autofill Blue Tokai merchant details
+    setMerchantName("Blue Tokai Coffee Roasters");
+    setEmail("admin@bluetokaicoffee.com");
+    setPassword("admin@bluetokaicoffee.com");
+    setLocation("Lado Sarai, New Delhi, Delhi 110030");
+    setPhone("+919876543210");
+    setOpening("07:00");
+    setClosing("21:00");
+    setRegularBagPrice("150");
+    setLargeBagPrice("450");
+    
+    // Load menu from menu.json
+    const blueTokenMenu = [
+      {
+        food_type: "bakery",
+        food_name: "Pain Au Chocolate",
+        non_veg: false,
+        price: 95,
+        nutritional_value: { calories: 320, protein: 6, fat: 18, carbs: 34 }
+      },
+      {
+        food_type: "bakery",
+        food_name: "Korean Bun",
+        non_veg: true,
+        price: 72,
+        nutritional_value: { calories: 300, protein: 7, fat: 12, carbs: 40 }
+      },
+      {
+        food_type: "bakery",
+        food_name: "pistachio croissant",
+        non_veg: false,
+        price: 118,
+        nutritional_value: { calories: 300, protein: 7, fat: 12, carbs: 40 }
+      },
+      {
+        food_type: "bakery",
+        food_name: "butter croissant",
+        non_veg: false,
+        price: 64,
+        nutritional_value: { calories: 300, protein: 7, fat: 12, carbs: 40 }
+      },
+      {
+        food_type: "dessert",
+        food_name: "Mocha Brownie",
+        non_veg: false,
+        price: 130,
+        nutritional_value: { calories: 340, protein: 5, fat: 19, carbs: 36 }
+      },
+      {
+        food_type: "bakery",
+        food_name: "Almond Croissant",
+        non_veg: true,
+        price: 142,
+        nutritional_value: { calories: 330, protein: 8, fat: 19, carbs: 32 }
+      },
+      {
+        food_type: "savory_bakery",
+        food_name: "Mushroom Cream Cheese Croissata",
+        non_veg: true,
+        price: 88,
+        nutritional_value: { calories: 380, protein: 11, fat: 22, carbs: 36 }
+      },
+      {
+        food_type: "savory_bakery",
+        food_name: "Roasted Tomatoes Croissata",
+        non_veg: true,
+        price: 105,
+        nutritional_value: { calories: 360, protein: 9, fat: 18, carbs: 38 }
+      },
+      {
+        food_type: "bakery",
+        food_name: "Chocolate Hazelnut Croissant",
+        non_veg: false,
+        price: 149,
+        nutritional_value: { calories: 350, protein: 7, fat: 20, carbs: 36 }
+      },
+      {
+        food_type: "cookie",
+        food_name: "Brownie Crinkle Cookie",
+        non_veg: false,
+        price: 58,
+        nutritional_value: { calories: 260, protein: 4, fat: 12, carbs: 32 }
+      },
+      {
+        food_type: "beverage",
+        food_name: "Cold Brew Coffee (Canned)",
+        non_veg: false,
+        price: 83,
+        nutritional_value: { calories: 15, protein: 1, fat: 0, carbs: 3 }
+      },
+      {
+        food_type: "beverage",
+        food_name: "bottled juice",
+        non_veg: false,
+        price: 47,
+        nutritional_value: { calories: 15, protein: 1, fat: 0, carbs: 3 }
+      }
+    ];
+    
+    setMenuItems(blueTokenMenu);
+    setError("");
   };
 
   const handleOnboard = async (e: React.FormEvent) => {
@@ -203,6 +313,18 @@ export default function OnboardingPage() {
           {/* Returning Merchant Form */}
           {activeTab === "returning" && (
             <form onSubmit={handleLogin} className="space-y-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-semibold text-white">Login</h3>
+                <Button
+                  type="button"
+                  onClick={handleAutofillLogin}
+                  variant="outline"
+                  className="border-accent text-accent hover:bg-accent hover:text-spare-bg text-xs"
+                >
+                  Autofill Blue Tokai
+                </Button>
+              </div>
+              
               <div className="grid gap-2">
                 <Label htmlFor="login-email" className="font-serif text-xs text-muted-foreground">
                   Email
@@ -257,7 +379,17 @@ export default function OnboardingPage() {
             <form onSubmit={handleOnboard} className="space-y-6">
               {/* Basic Info */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-white">Basic Information</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-white">Basic Information</h3>
+                  <Button
+                    type="button"
+                    onClick={handleAutofillBlueTokai}
+                    variant="outline"
+                    className="border-accent text-accent hover:bg-accent hover:text-spare-bg text-xs"
+                  >
+                    Autofill Blue Tokai
+                  </Button>
+                </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="grid gap-2">
