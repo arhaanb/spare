@@ -71,7 +71,7 @@ Students, interns, and early-career workers survive on **₹80–₹200/day** fo
 ## Tech Architecture
 
 <a href="https://www.figma.com/board/Xb8Gax2yGLjwoEKlD264iV/Spare-%7C-User-Flows?node-id=0-1&t=m7dd50qxlRqr9NDE-1">
-  <img width="3984" height="3918" alt="image" src="https://github.com/user-attachments/assets/1ba248c2-e5d8-4227-9089-8b9e5efaad9b" />
+  <img width="3984" height="3386" alt="image" src="https://github.com/user-attachments/assets/08856248-efb2-43a3-baf1-818921c3dc68" />
 </a>
 
 
