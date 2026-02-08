@@ -144,7 +144,9 @@ The flow is divided into teh **Consumer** and **Merchant** flow which includes o
 
 <br>
 
-<a href="https://www.figma.com/board/Xb8Gax2yGLjwoEKlD264iV/Spare-%7C-User-Flows?node-id=0-1&t=m7dd50qxlRqr9NDE-1"><img width="9736" height="5168" alt="image" src="https://github.com/user-attachments/assets/a75901d8-31f1-4d25-833e-6f4af17b6d5c" /></a>
+<a href="https://www.figma.com/board/Xb8Gax2yGLjwoEKlD264iV/Spare-%7C-User-Flows?node-id=0-1&t=m7dd50qxlRqr9NDE-1">
+  <img width="9416" height="5318" alt="image" src="https://github.com/user-attachments/assets/16dd3cb6-b5da-455e-b307-1ff79010303b" />
+</a>
 
 ---
 
