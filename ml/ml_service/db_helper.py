@@ -2,6 +2,7 @@
 MongoDB helper functions for food extraction and rescue bag operations
 """
 import os
+import certifi
 from pymongo import MongoClient
 from datetime import datetime
 from typing import Dict, List, Any, Optional
@@ -22,7 +23,7 @@ COLLECTION_RESCUE_BAGS = "rescue_bags"
 
 def get_db():
     """Get database instance"""
-    client = MongoClient(MONGO_URL)
+    client = MongoClient(MONGO_URL, tlsCAFile=certifi.where())
     return client[DATABASE_NAME]
 
 

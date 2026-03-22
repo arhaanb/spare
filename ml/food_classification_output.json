@@ -1,0 +1,98 @@
+[
+  {
+    "type": "Mocha Brownie",
+    "quantity": 2,
+    "closest_menu_item": "Mocha Brownie",
+    "confidence": 100,
+    "price": 130.0,
+    "non_veg": false
+  },
+  {
+    "type": "Pain Au Chocolate",
+    "quantity": 1,
+    "closest_menu_item": "Pain Au Chocolate",
+    "confidence": 100,
+    "price": 95.0,
+    "non_veg": false
+  },
+  {
+    "type": "pistachio croissant",
+    "quantity": 2,
+    "closest_menu_item": "pistachio croissant",
+    "confidence": 100,
+    "price": 118.0,
+    "non_veg": false
+  },
+  {
+    "type": "butter croissant",
+    "quantity": 2,
+    "closest_menu_item": "butter croissant",
+    "confidence": 100,
+    "price": 64.0,
+    "non_veg": false
+  },
+  {
+    "type": "Almond Croissant",
+    "quantity": 2,
+    "closest_menu_item": "Almond Croissant",
+    "confidence": 100,
+    "price": 142.0,
+    "non_veg": true
+  },
+  {
+    "type": "Korean Bun",
+    "quantity": 2,
+    "closest_menu_item": "Korean Bun",
+    "confidence": 100,
+    "price": 72.0,
+    "non_veg": true
+  },
+  {
+    "type": "Mushroom Cream Cheese Croissata",
+    "quantity": 2,
+    "closest_menu_item": "Mushroom Cream Cheese Croissata",
+    "confidence": 100,
+    "price": 88.0,
+    "non_veg": true
+  },
+  {
+    "type": "Roasted Tomatoes Croissata",
+    "quantity": 2,
+    "closest_menu_item": "Roasted Tomatoes Croissata",
+    "confidence": 100,
+    "price": 105.0,
+    "non_veg": true
+  },
+  {
+    "type": "Brownie Crinkle Cookie",
+    "quantity": 2,
+    "closest_menu_item": "Brownie Crinkle Cookie",
+    "confidence": 100,
+    "price": 58.0,
+    "non_veg": false
+  },
+  {
+    "type": "Chocolate Hazelnut Croissant",
+    "quantity": 2,
+    "closest_menu_item": "Chocolate Hazelnut Croissant",
+    "confidence": 100,
+    "price": 149.0,
+    "non_veg": false
+  },
+  {
+    "type": "Cold Brew Coffee (Canned)",
+    "quantity": 10,
+    "closest_menu_item": "Cold Brew Coffee (Canned)",
+    "confidence": 100,
+    "price": 83.0,
+    "non_veg": false
+  },
+  {
+    "type": "bottled juice",
+    "quantity": 8,
+    "closest_menu_item": "bottled juice",
+    "confidence": 100,
+    "price": 47.0,
+    "non_veg": false
+  }
+]

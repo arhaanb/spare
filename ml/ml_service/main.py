@@ -3,6 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, List
 import base64
 import json
+import time
+import os
+import random
+from datetime import datetime
 
 from .models import (
     FoodClassificationRequest,
@@ -263,12 +267,33 @@ async def food_extraction_endpoint(request: dict = Body(...)):
         List of extracted food items (direct LLM response)
     """
     merchant_id = request.get("merchant_id")
-    image_base64 = request.get("image_base64")
     
-    # Call LLM to classify food (pulls menu from DB internally)
-    leftover_items = classify_food_from_image(merchant_id=merchant_id, image_base64=image_base64)
+    # Sleep for random 2-5 seconds to simulate processing
+    time.sleep(random.uniform(2, 5))
     
-    # Return LLM response directly - frontend will handle saving after confirmation
+    # Load mock data from food_classification_output.json
+    mock_json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "food_classification_output.json")
+    with open(mock_json_path, "r") as f:
+        leftover_items = json.load(f)
+    
+    # Check if document already exists in MongoDB for this merchant_id
+    from .db_helper import get_leftover_items_collection
+    collection = get_leftover_items_collection()
+    today = datetime.now().strftime("%Y-%m-%d")
+    
+    existing_doc = collection.find_one({"merchant_id": merchant_id})
+    
+    # Save to MongoDB if it doesn't already exist for this merchant_id
+    if not existing_doc:
+        doc = {
+            "merchant_id": merchant_id,
+            "date": today,
+            "items": leftover_items,
+            "created_at": datetime.now().isoformat()
+        }
+        collection.insert_one(doc)
+    
+    # Return mock data directly
     return {"items": leftover_items}
 
 
@@ -286,19 +311,30 @@ async def rescue_bag_creation_endpoint(request: dict = Body(...)):
         List of suggested rescue bags (direct LLM response)
     """
     merchant_id = request.get("merchant_id")
-    items = request.get("items")
+    time.sleep(random.uniform(2, 5))
     
-    # If items not provided, pull from DB
-    if not items:
-        items = get_leftover_items(merchant_id)
     
-    # Pull menu from DB
-    menu = get_merchant_menu(merchant_id)
+    mock_json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "rescue_bags_creation_output.json")
+    with open(mock_json_path, "r") as f:
+        rescue_bags = json.load(f)
     
-    # Call LLM to create rescue bags
-    rescue_bags = rescue_bag_creation(merchant_id=merchant_id, food_classification_output=items, menu_json=menu)
+    # Check if document already exists in MongoDB for this merchant_id
+    from .db_helper import get_rescue_bags_collection
+    collection = get_rescue_bags_collection()
+    today = datetime.now().strftime("%Y-%m-%d")
     
-    # Return LLM response directly - frontend will handle saving after confirmation
+    existing_doc = collection.find_one({"merchant_id": merchant_id})
+    
+    # Save to MongoDB if it doesn't already exist for this merchant_id
+    if not existing_doc:
+        doc = {
+            "merchant_id": merchant_id,
+            "date": today,
+            "bags": rescue_bags,
+            "created_at": datetime.now().isoformat()
+        }
+        collection.insert_one(doc)
+    
     return {"bags": rescue_bags}
 
 

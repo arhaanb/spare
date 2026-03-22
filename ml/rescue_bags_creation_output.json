@@ -1,0 +1,189 @@
+[
+  {
+    "bag_type": "regular_veg",
+    "target_price": 150.0,
+    "items": [
+      {
+        "food_name": "Pain Au Chocolate",
+        "quantity": 1,
+        "unit_price": 95.0
+      },
+      {
+        "food_name": "Brownie Crinkle Cookie",
+        "quantity": 1,
+        "unit_price": 58.0
+      }
+    ],
+    "estimated_total_value": 153.0
+  },
+  {
+    "bag_type": "regular_veg",
+    "target_price": 150.0,
+    "items": [
+      {
+        "food_name": "butter croissant",
+        "quantity": 1,
+        "unit_price": 64.0
+      },
+      {
+        "food_name": "Cold Brew Coffee (Canned)",
+        "quantity": 1,
+        "unit_price": 83.0
+      }
+    ],
+    "estimated_total_value": 147.0
+  },
+  {
+    "bag_type": "regular_veg",
+    "target_price": 150.0,
+    "items": [
+      {
+        "food_name": "butter croissant",
+        "quantity": 1,
+        "unit_price": 64.0
+      },
+      {
+        "food_name": "bottled juice",
+        "quantity": 2,
+        "unit_price": 47.0
+      }
+    ],
+    "estimated_total_value": 158.0
+  },
+  {
+    "bag_type": "regular_non_veg",
+    "target_price": 150.0,
+    "items": [
+      {
+        "food_name": "Korean Bun",
+        "quantity": 1,
+        "unit_price": 72.0
+      },
+      {
+        "food_name": "Mushroom Cream Cheese Croissata",
+        "quantity": 1,
+        "unit_price": 88.0
+      }
+    ],
+    "estimated_total_value": 160.0
+  },
+  {
+    "bag_type": "regular_non_veg",
+    "target_price": 150.0,
+    "items": [
+      {
+        "food_name": "Almond Croissant",
+        "quantity": 1,
+        "unit_price": 142.0
+      }
+    ],
+    "estimated_total_value": 142.0
+  },
+  {
+    "bag_type": "regular_non_veg",
+    "target_price": 150.0,
+    "items": [
+      {
+        "food_name": "Roasted Tomatoes Croissata",
+        "quantity": 1,
+        "unit_price": 105.0
+      },
+      {
+        "food_name": "bottled juice",
+        "quantity": 1,
+        "unit_price": 47.0
+      }
+    ],
+    "estimated_total_value": 152.0
+  },
+  {
+    "bag_type": "large_veg",
+    "target_price": 450.0,
+    "items": [
+      {
+        "food_name": "Mocha Brownie",
+        "quantity": 2,
+        "unit_price": 130.0
+      },
+      {
+        "food_name": "Chocolate Hazelnut Croissant",
+        "quantity": 1,
+        "unit_price": 149.0
+      },
+      {
+        "food_name": "bottled juice",
+        "quantity": 1,
+        "unit_price": 47.0
+      }
+    ],
+    "estimated_total_value": 456.0
+  },
+  {
+    "bag_type": "large_veg",
+    "target_price": 450.0,
+    "items": [
+      {
+        "food_name": "pistachio croissant",
+        "quantity": 2,
+        "unit_price": 118.0
+      },
+      {
+        "food_name": "Chocolate Hazelnut Croissant",
+        "quantity": 1,
+        "unit_price": 149.0
+      },
+      {
+        "food_name": "Cold Brew Coffee (Canned)",
+        "quantity": 1,
+        "unit_price": 83.0
+      }
+    ],
+    "estimated_total_value": 468.0
+  },
+  {
+    "bag_type": "regular_non_veg",
+    "target_price": 150.0,
+    "items": [
+      {
+        "food_name": "Almond Croissant",
+        "quantity": 1,
+        "unit_price": 142.0
+      }
+    ],
+    "estimated_total_value": 142.0
+  },
+  {
+    "bag_type": "regular_non_veg",
+    "target_price": 150.0,
+    "items": [
+      {
+        "food_name": "Korean Bun",
+        "quantity": 1,
+        "unit_price": 72.0
+      },
+      {
+        "food_name": "Mushroom Cream Cheese Croissata",
+        "quantity": 1,
+        "unit_price": 88.0
+      }
+    ],
+    "estimated_total_value": 160.0
+  },
+  {
+    "bag_type": "regular_non_veg",
+    "target_price": 150.0,
+    "items": [
+      {
+        "food_name": "Roasted Tomatoes Croissata",
+        "quantity": 1,
+        "unit_price": 105.0
+      },
+      {
+        "food_name": "bottled juice",
+        "quantity": 1,
+        "unit_price": 47.0
+      }
+    ],
+    "estimated_total_value": 152.0
+  }
+]
